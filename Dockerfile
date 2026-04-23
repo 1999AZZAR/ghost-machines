@@ -52,8 +52,14 @@ RUN apt-get install -y micro \
     curl -L "https://github.com/jesseduffield/lazygit/releases/download/v0.61.1/lazygit_0.61.1_Linux_${LAZY_ARCH}.tar.gz" | tar xz lazygit && \
     install lazygit /usr/local/bin
 
-# 7. AI CLIs (Gemini, Codex)
-RUN npm install -g @google/gemini-cli @openai/codex
+# 7. AI CLIs (Gemini, Codex, RTK)
+RUN npm install -g @google/gemini-cli @openai/codex \
+    && ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
+    elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
+    fi && \
+    curl -L "https://github.com/rtk-ai/rtk/releases/latest/download/rtk-${RTK_ARCH}.tar.gz" | tar xz && \
+    install rtk /usr/local/bin/rtk && rm rtk
 
 # 8. UI/UX STACK (1. Fastfetch, 2. Oh-My-Bash, 3. Alias-Hub)
 RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \

@@ -76,7 +76,7 @@ Containers are named dynamically based on the active mode:
 - **Editors:** Micro, Helix, Lazygit.
 - **Utilities:** nnn (File Manager), fzf (Fuzzy Finder), ripgrep (Search), tmux (Multiplexer).
 - **Modern CLI:** bat (cat with syntax), eza (better ls), zoxide (smarter cd), fd (faster find), jq (json processor).
-- **AI Integrations:** Gemini CLI, OpenAI Codex.
+- **AI Integrations:** Gemini CLI, OpenAI Codex, RTK (Rust Token Killer).
 - **Monitoring:** btop, htop, nmap, fastfetch, oh-my-bash, alias-hub.
 
 ## Security and Access
