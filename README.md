@@ -59,10 +59,17 @@ chmod +x clean.sh
 ## Technical Specifications
 
 ### Deployment Modes
-- **Dual:** Orchestrates two separate containers (`ghost-machine1` and `ghost-machine2`).
-- **Single:** Orchestrates a single container with standard resources.
-- **Power:** Orchestrates a single container with doubled CPU and Memory resources.
-- **Half-Host:** Allocates 50% of host CPU/RAM to a single container.
+| Mode | Instances | CPU Limit | RAM Limit | Use Case |
+| :--- | :--- | :--- | :--- | :--- |
+| **Dual** | 2 | 1.0 (each) | 8G (each) | Standard distributed development. |
+| **Single** | 1 | 1.0 | 8G | Minimal resource footprint. |
+| **Power** | 1 | 2.0 | 16G | High-performance computing tasks. |
+| **Half-Host** | 1 | 50% Host | 50% Host | Dynamic scaling based on host power. |
+
+### Naming Conventions
+Containers are named dynamically based on the active mode:
+- **Dual:** `ghost-machine1`, `ghost-machine2`
+- **Single/Power/Half:** `ghost-machine-single`, `ghost-machine-power`, `ghost-machine-half`
 
 ### Included Software Stack
 - **Runtimes:** Node.js, Go 1.24, Python 3, Bun.
