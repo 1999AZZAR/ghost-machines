@@ -14,16 +14,16 @@ if [ -d "$LXCFS_BASE" ]; then
     export LXCFS_UPTIME="$LXCFS_BASE/uptime"
 fi
 
-# 2. Host Resource Calculation
+# 2. Host Resource Calculation (Using POSIX arithmetic)
 TOTAL_CORES=$(nproc)
 TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
-HALF_CORES=$(echo "$TOTAL_CORES / 2" | bc)
-HALF_MEM_MB=$(echo "$TOTAL_MEM_KB / 1024 / 2" | bc)
+HALF_CORES=$((TOTAL_CORES / 2))
+HALF_MEM_MB=$((TOTAL_MEM_KB / 1024 / 2))
 
 if [ "$HALF_CORES" -lt 1 ]; then HALF_CORES=1; fi
 
 # 3. Mode Selection
-if [ -z "$1" ]; then
+if [ -z "$1" ] || [[ "$1" == -* ]]; then
     echo "------------------------------------------------"
     echo " GHOST MACHINES: DEPLOYMENT SELECTION"
     echo "------------------------------------------------"
@@ -42,6 +42,7 @@ if [ -z "$1" ]; then
     esac
 else
     MODE=$1
+    shift
 fi
 
 case $MODE in
@@ -77,10 +78,10 @@ case $MODE in
         COMPOSE_ARGS="up -d ghost1"
         ;;
     *)
-        echo "Usage: ./start.sh [dual|single|power|half]"
+        echo "Usage: ./start.sh [dual|single|power|half] [extra_args]"
         exit 1
         ;;
 esac
 
 # 4. Execution
-docker compose $COMPOSE_ARGS
+docker compose $COMPOSE_ARGS "$@"
