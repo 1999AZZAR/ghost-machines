@@ -71,6 +71,17 @@ RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
+# 10. MCP Servers
+RUN mkdir -p /root/MCPservers \
+    && git clone https://github.com/1999AZZAR/terminal-mcp-server.git /root/MCPservers/terminal \
+    && cd /root/MCPservers/terminal && npm install && npm run build \
+    && git clone https://github.com/1999AZZAR/filesystem-mcp-server.git /root/MCPservers/filesystem \
+    && cd /root/MCPservers/filesystem && npm install && npm run build \
+    && npm install -g @modelcontextprotocol/server-sequential-thinking \
+    && echo '#!/bin/bash\nnode /root/MCPservers/terminal/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
+    && echo '#!/bin/bash\nnode /root/MCPservers/filesystem/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
+    && chmod +x /usr/local/bin/mcp-terminal /usr/local/bin/mcp-filesystem
+
 EXPOSE 22
 
 CMD ["/usr/sbin/sshd", "-D"]

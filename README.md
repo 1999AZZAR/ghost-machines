@@ -77,6 +77,7 @@ Containers are named dynamically based on the active mode:
 - **Utilities:** nnn (File Manager), fzf (Fuzzy Finder), ripgrep (Search), tmux (Multiplexer).
 - **Modern CLI:** bat (cat with syntax), eza (better ls), zoxide (smarter cd), fd (faster find), jq (json processor).
 - **AI Integrations:** Gemini CLI, OpenAI Codex, RTK (Rust Token Killer).
+- **MCP Servers:** Terminal, Filesystem, and Sequential Thinking (pre-installed in `/root/MCPservers`).
 - **Monitoring:** btop, htop, nmap, fastfetch, oh-my-bash, alias-hub.
 
 ## Security and Access
