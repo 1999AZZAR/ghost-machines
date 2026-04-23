@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
     curl gnupg git wget unzip software-properties-common \
     build-essential gdb make cmake \
     python3 python-is-python3 python3-pip python3-venv \
-    htop net-tools glances sysstat inxi ncdu tree \
+    htop btop net-tools glances sysstat inxi ncdu tree \
     zip p7zip-full nmap lsof xclip \
+    nnn fzf ripgrep tmux \
     openssh-server \
     && mkdir /var/run/sshd
 
@@ -45,7 +46,7 @@ RUN apt-get install -y micro \
     mv helix-25.01.1-${HELIX_ARCH}-linux/hx /usr/local/bin/ && \
     mkdir -p /root/.config/helix && mv helix-25.01.1-${HELIX_ARCH}-linux/runtime /root/.config/helix/ && \
     rm -rf helix-25.01.1-${HELIX_ARCH}-linux && \
-    curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_0.48.2_Linux_${LAZY_ARCH}.tar.gz" | tar xz lazygit && \
+    curl -L "https://github.com/jesseduffield/lazygit/releases/download/v0.61.1/lazygit_0.61.1_Linux_${LAZY_ARCH}.tar.gz" | tar xz lazygit && \
     install lazygit /usr/local/bin
 
 # 7. AI CLIs (Gemini, Codex)

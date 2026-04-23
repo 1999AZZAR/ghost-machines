@@ -73,9 +73,10 @@ Containers are named dynamically based on the active mode:
 
 ### Included Software Stack
 - **Runtimes:** Node.js, Go 1.24, Python 3, Bun.
-- **Development Tools:** Micro, Helix, Lazygit.
+- **Editors:** Micro, Helix, Lazygit.
+- **Utilities:** nnn (File Manager), fzf (Fuzzy Finder), ripgrep (Search), tmux (Multiplexer).
 - **AI Integrations:** Gemini CLI, OpenAI Codex.
-- **System Utilities:** htop, nmap, fastfetch, oh-my-bash, alias-hub.
+- **Monitoring:** btop, htop, nmap, fastfetch, oh-my-bash, alias-hub.
 
 ## Security and Access
 
