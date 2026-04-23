@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  ubuntu-container:
+    image: ubuntu-template:latest
+    container_name: ubuntu-container
+    restart: unless-stopped
+    command: /usr/sbin/sshd -D
+    ports:
+      - "2223:22"
+    cpuset: "0"
+    volumes:
+      - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
+      - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
+      - /var/lib/lxcfs/proc/stat:/proc/stat:ro
+      - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
+      - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
+      - /home/ubuntu/projects/deployments/ghost-machines/mounts/ubuntu1:/home/ubuntu
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 8G
+    networks:
+      - sandbox_net
+
+  ubuntu2:
+    image: ubuntu-template:latest
+    container_name: ubuntu2
+    restart: unless-stopped
+    command: /usr/sbin/sshd -D
+    ports:
+      - "2224:22"
+    cpuset: "1"
+    volumes:
+      - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
+      - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
+      - /var/lib/lxcfs/proc/stat:/proc/stat:ro
+      - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
+      - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
+      - /home/ubuntu/projects/deployments/ghost-machines/mounts/ubuntu2:/home/ubuntu
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 8G
+    networks:
+      - sandbox_net
+
+networks:
+  sandbox_net:
+    name: ghost_sandbox
+    driver: bridge
