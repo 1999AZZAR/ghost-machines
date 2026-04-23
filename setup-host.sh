@@ -5,6 +5,13 @@
 
 set -e
 
+# OS Compatibility Check
+if ! command -v apt-get &> /dev/null; then
+    echo "[ERROR] This script requires 'apt-get' (Debian/Ubuntu)."
+    echo "[INFO] If you are on macOS or another Linux distribution, please refer to the README for manual LXCFS setup."
+    exit 1
+fi
+
 echo "Starting host configuration..."
 
 # 1. Update package list
@@ -27,4 +34,4 @@ else
     exit 1
 fi
 
-echo "Host setup complete. You can now run 'docker compose up -d'."
+echo "Host setup complete. You can now run './start.sh'."

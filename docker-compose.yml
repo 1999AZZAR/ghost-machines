@@ -7,7 +7,6 @@ services:
     command: /usr/sbin/sshd -D
     ports:
       - "${G1_PORT:-2223}:22"
-    cpuset: "${G1_CPUSET:-0}"
     volumes:
       - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
       - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro
@@ -31,7 +30,6 @@ services:
     command: /usr/sbin/sshd -D
     ports:
       - "${G2_PORT:-2224}:22"
-    cpuset: "${G2_CPUSET:-1}"
     volumes:
       - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
       - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro

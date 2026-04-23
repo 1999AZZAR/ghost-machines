@@ -16,15 +16,15 @@ read -p "Select cleanup level [1-4]: " CHOICE
 case $CHOICE in
     1)
         echo "[INFO] Performing standard stop..."
-        docker compose --profile dual down
+        docker compose --profile dual --profile remote down
         ;;
     2)
         echo "[INFO] Performing deep clean (removing volumes)..."
-        docker compose --profile dual down -v
+        docker compose --profile dual --profile remote down -v
         ;;
     3)
         echo "[INFO] Performing full reset (removing volumes and image)..."
-        docker compose --profile dual down -v --rmi local
+        docker compose --profile dual --profile remote down -v --rmi local
         ;;
     *)
         echo "Cleanup cancelled."
