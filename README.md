@@ -10,16 +10,18 @@ Orchestration and master template for Ubuntu-based development environments.
    cd ghost-machines
    ```
 
-2. **Configure Host (Optional - for LXCFS):**
-   Run the setup script to install and configure LXCFS on the host machine:
+2. **Configure Host (Optional):**
+   Install LXCFS for accurate hardware reporting:
    ```bash
    chmod +x setup-host.sh
    ./setup-host.sh
    ```
 
-3. **Build and initialize:**
+3. **Initialize Environments:**
+   The start script automatically detects LXCFS and launches the containers:
    ```bash
-   docker compose up -d --build
+   chmod +x start.sh
+   ./start.sh
    ```
 
 4. **Configure shell aliases:**

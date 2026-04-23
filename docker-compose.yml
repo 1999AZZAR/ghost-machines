@@ -11,11 +11,11 @@ services:
       - "2223:22"
     cpuset: "0"
     volumes:
-      - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
-      - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
-      - /var/lib/lxcfs/proc/stat:/proc/stat:ro
-      - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
-      - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
+      - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
+      - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro
+      - ${LXCFS_STAT:-/dev/null}:/proc/stat:ro
+      - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
+      - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
       - ./mounts/ubuntu1:/home/ubuntu
     deploy:
       resources:
@@ -35,11 +35,11 @@ services:
       - "2224:22"
     cpuset: "1"
     volumes:
-      - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
-      - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
-      - /var/lib/lxcfs/proc/stat:/proc/stat:ro
-      - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
-      - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
+      - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
+      - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro
+      - ${LXCFS_STAT:-/dev/null}:/proc/stat:ro
+      - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
+      - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
       - ./mounts/ubuntu2:/home/ubuntu
     deploy:
       resources:
