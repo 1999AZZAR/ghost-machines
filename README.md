@@ -39,6 +39,13 @@ chmod +x start.sh
 
 ## Technical Specifications
 
+### Machine Specifications (Per Instance)
+By default, each ghost machine is configured with the following resource limits:
+- **CPU:** 1.0 Core (Dedicated via `cpuset`).
+- **Memory:** 8 GB RAM.
+- **Storage:** Shared host storage via volume mounts.
+- **Operating System:** Ubuntu 24.04 LTS (Latest).
+
 ### Included Software Stack
 - **Runtimes:** Node.js (Latest), Go 1.24, Python 3, Bun.
 - **Development Tools:** Micro, Helix, Lazygit.
