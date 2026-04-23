@@ -19,8 +19,11 @@ RUN apt-get update && apt-get install -y \
     htop btop net-tools glances sysstat inxi ncdu tree \
     zip p7zip-full nmap lsof xclip \
     nnn fzf ripgrep tmux \
+    bat eza zoxide fd-find jq \
     openssh-server \
-    && mkdir /var/run/sshd
+    && mkdir /var/run/sshd \
+    && ln -s /usr/bin/batcat /usr/local/bin/bat \
+    && ln -s /usr/bin/fdfind /usr/local/bin/fd
 
 # 3. Node.js (Latest Current)
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
