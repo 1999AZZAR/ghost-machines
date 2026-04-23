@@ -4,7 +4,7 @@ services:
   ubuntu-container:
     build: .
     image: ubuntu-template:latest
-    container_name: ubuntu-container
+    container_name: "${G1_NAME:-ghost-machine1}"
     restart: unless-stopped
     command: /usr/sbin/sshd -D
     ports:
@@ -28,7 +28,7 @@ services:
   ubuntu2:
     build: .
     image: ubuntu-template:latest
-    container_name: ubuntu2
+    container_name: "${G2_NAME:-ghost-machine2}"
     restart: unless-stopped
     command: /usr/sbin/sshd -D
     ports:

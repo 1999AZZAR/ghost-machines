@@ -87,5 +87,6 @@ cat aliases.sh >> ~/.bashrc
 source ~/.bashrc
 ```
 **Commands:**
-- `start-ubuntu`: Enters the primary instance.
-- `start-ubuntu2`: Enters the secondary instance (available in `dual` mode).
+- `start-ghost`: Enters the active instance (any mode).
+- `start-ghost1`: Enters `ghost-machine1` (available in `dual` mode).
+- `start-ghost2`: Enters `ghost-machine2` (available in `dual` mode).

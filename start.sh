@@ -27,10 +27,10 @@ if [ -z "$1" ]; then
     echo "------------------------------------------------"
     echo " GHOST MACHINES: DEPLOYMENT SELECTION"
     echo "------------------------------------------------"
-    echo "1) Dual   - 2 instances (1 CPU, 8G RAM each)"
-    echo "2) Single - 1 instance  (1 CPU, 8G RAM)"
-    echo "3) Power  - 1 instance  (2 CPU, 16G RAM)"
-    echo "4) Half   - 1 instance  ($HALF_CORES CPU, ${HALF_MEM_MB}M RAM)"
+    echo "1) Dual   - 2 instances (ghost-machine1, ghost-machine2)"
+    echo "2) Single - 1 instance  (ghost-machine-single)"
+    echo "3) Power  - 1 instance  (ghost-machine-power)"
+    echo "4) Half   - 1 instance  (ghost-machine-half)"
     echo "------------------------------------------------"
     read -p "Select mode [1-4]: " CHOICE
     case $CHOICE in
@@ -46,7 +46,9 @@ fi
 
 case $MODE in
     "dual")
-        echo "[MODE] Dual: 2 instances (1 CPU, 8G RAM each)"
+        echo "[MODE] Dual: 2 instances"
+        export G1_NAME="ghost-machine1"
+        export G2_NAME="ghost-machine2"
         export G1_CPU="1.0"
         export G1_MEM="8G"
         export G2_CPU="1.0"
@@ -54,19 +56,22 @@ case $MODE in
         COMPOSE_ARGS="--profile dual up -d"
         ;;
     "single")
-        echo "[MODE] Single: 1 instance (1 CPU, 8G RAM)"
+        echo "[MODE] Single: ghost-machine-single"
+        export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
         COMPOSE_ARGS="up -d ubuntu-container"
         ;;
     "power")
-        echo "[MODE] Power: 1 instance (2 CPU, 16G RAM)"
+        echo "[MODE] Power: ghost-machine-power"
+        export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
         COMPOSE_ARGS="up -d ubuntu-container"
         ;;
     "half")
-        echo "[MODE] Half-Host: 1 instance ($HALF_CORES CPU, ${HALF_MEM_MB}M RAM)"
+        echo "[MODE] Half-Host: ghost-machine-half"
+        export G1_NAME="ghost-machine-half"
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
         COMPOSE_ARGS="up -d ubuntu-container"

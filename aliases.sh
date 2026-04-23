@@ -1,5 +1,9 @@
 # Ghost Machine Connection Aliases
 # Add these to your ~/.bashrc or ~/.zshrc
 
-alias start-ubuntu='docker start ubuntu-container && docker exec -it ubuntu-container /bin/bash'
-alias start-ubuntu2='docker start ubuntu2 && docker exec -it ubuntu2 /bin/bash'
+# Connect to any active ghost machine (targets the first one found)
+alias start-ghost='docker exec -it $(docker ps --filter "name=ghost-machine" --format "{{.Names}}" | head -n 1) /bin/bash'
+
+# Specifically target dual instances
+alias start-ghost1='docker exec -it ghost-machine1 /bin/bash'
+alias start-ghost2='docker exec -it ghost-machine2 /bin/bash'
