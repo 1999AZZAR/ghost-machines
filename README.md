@@ -41,7 +41,10 @@ Orchestration and master template for Ubuntu-based development environments.
 ### Network and Access
 - **ubuntu1 SSH Port:** 2223
 - **ubuntu2 SSH Port:** 2224
-- **Root Password:** root
+- **Root Password:** root (Default)
+
+> [!CAUTION]
+> For security, it is highly recommended to change the default root password in the `Dockerfile` before deploying in an untrusted network.
 
 ### Persistence
 The containers map host-local directories to the internal user environment:
