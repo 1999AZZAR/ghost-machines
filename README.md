@@ -29,3 +29,15 @@ Master template and orchestration for custom Ubuntu-based dev environments.
 - **SSH:** Access containers via ports `2223` (ubuntu1) and `2224` (ubuntu2).
 - **Credentials:** Default `root:root`.
 - **Mounts:** Local `./mounts/ubuntu1` and `./mounts/ubuntu2` are mapped to `/home/ubuntu` in the respective containers.
+
+## Connection Aliases
+To make it easier to jump into your machines, you can add the aliases from `aliases.sh` to your host machine's shell config (`~/.bashrc` or `~/.zshrc`):
+
+```bash
+cat aliases.sh >> ~/.bashrc
+source ~/.bashrc
+```
+
+Now you can use:
+- `start-ubuntu`: Start and enter the first machine.
+- `start-ubuntu2`: Start and enter the second machine.
