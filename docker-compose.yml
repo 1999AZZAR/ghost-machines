@@ -15,7 +15,7 @@ services:
       - /var/lib/lxcfs/proc/stat:/proc/stat:ro
       - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
       - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
-      - /home/ubuntu/projects/deployments/ghost-machines/mounts/ubuntu1:/home/ubuntu
+      - ./mounts/ubuntu1:/home/ubuntu
     deploy:
       resources:
         limits:
@@ -38,7 +38,7 @@ services:
       - /var/lib/lxcfs/proc/stat:/proc/stat:ro
       - /var/lib/lxcfs/proc/swaps:/proc/swaps:ro
       - /var/lib/lxcfs/proc/uptime:/proc/uptime:ro
-      - /home/ubuntu/projects/deployments/ghost-machines/mounts/ubuntu2:/home/ubuntu
+      - ./mounts/ubuntu2:/home/ubuntu
     deploy:
       resources:
         limits:
