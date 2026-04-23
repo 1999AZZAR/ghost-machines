@@ -1,6 +1,6 @@
 # Ghost Machines
 
-Orchestration and master template for Ubuntu-based development environments. This project provides a standardized, reproducible, and portable environment with automated hardware architecture detection and intelligent resource reporting.
+Orchestration and master template for Ubuntu-based development environments. This project provides a standardized, reproducible, and portable environment with automated hardware architecture detection, intelligent resource reporting, and optional zero-trust remote access.
 
 ## Prerequisites
 
@@ -28,38 +28,41 @@ chmod +x setup-host.sh
 ./setup-host.sh
 ```
 
-3. **Initialize Environments**
+### 3. Initialize Environments
 The `start.sh` script is interactive by default but also supports direct CLI arguments:
-
 ```bash
 chmod +x start.sh
-
-# Interactive Mode
-./start.sh
-
-# Direct Deployment
-./start.sh dual
-./start.sh single
-./start.sh power
-./start.sh half
+./start.sh [dual|single|power|half]
 ```
 
-### 4. Environment Cleanup
+### 4. Zero-Trust Remote Access (Optional)
+To enable secure remote access via Cloudflare Tunnel without opening host ports, export your tunnel token before starting:
+```bash
+export TUNNEL_TOKEN="your_cloudflare_tunnel_token"
+./start.sh
+```
+
+## Maintenance Utilities
+
+### Backup and Restore
+Archive and recover your workspace state across physical machines:
+- **Snapshot:** `./snapshot.sh` (Creates a `.tar.gz` of the `mounts/` directory)
+- **Restore:** `./restore.sh <snapshot_file.tar.gz>`
+
+### Environment Cleanup
 Use the `clean.sh` utility to stop and prune environments:
 ```bash
 chmod +x clean.sh
 ./clean.sh
 ```
-The script provides options for standard stops, volume removal (data wipe), or a full reset (removing the base image).
-
 
 ## Technical Specifications
 
 ### Deployment Modes
-- **Dual:** Orchestrates two separate containers (`ubuntu-container` and `ubuntu2`).
+- **Dual:** Orchestrates two separate containers (`ghost-machine1` and `ghost-machine2`).
 - **Single:** Orchestrates a single container with standard resources.
 - **Power:** Orchestrates a single container with doubled CPU and Memory resources.
-- **Half-Host:** Dynamically calculates host resources and allocates 50% to a single container.
+- **Half-Host:** Allocates 50% of host CPU/RAM to a single container.
 
 ### Included Software Stack
 - **Runtimes:** Node.js, Go 1.24, Python 3, Bun.

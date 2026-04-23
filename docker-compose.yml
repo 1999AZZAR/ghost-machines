@@ -49,6 +49,18 @@ services:
     profiles:
       - dual
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: ghost-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    profiles:
+      - remote
+    networks:
+      - sandbox_net
+
 networks:
   sandbox_net:
     name: ghost_sandbox

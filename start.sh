@@ -45,6 +45,13 @@ else
     shift
 fi
 
+# 4. Profile Management (Remote Access)
+REMOTE_PROFILE=""
+if [ ! -z "$TUNNEL_TOKEN" ]; then
+    echo "[INFO] Cloudflare Tunnel Token detected. Enabling remote access profile."
+    REMOTE_PROFILE="--profile remote"
+fi
+
 case $MODE in
     "dual")
         echo "[MODE] Dual: 2 instances"
@@ -54,28 +61,28 @@ case $MODE in
         export G1_MEM="8G"
         export G2_CPU="1.0"
         export G2_MEM="8G"
-        COMPOSE_ARGS="--profile dual up -d"
+        COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d"
         ;;
     "single")
         echo "[MODE] Single: ghost-machine-single"
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
-        COMPOSE_ARGS="up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     "power")
         echo "[MODE] Power: ghost-machine-power"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
-        COMPOSE_ARGS="up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     "half")
         echo "[MODE] Half-Host: ghost-machine-half"
         export G1_NAME="ghost-machine-half"
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
-        COMPOSE_ARGS="up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     *)
         echo "Usage: ./start.sh [dual|single|power|half] [extra_args]"
@@ -83,5 +90,5 @@ case $MODE in
         ;;
 esac
 
-# 4. Execution
+# 5. Execution
 docker compose $COMPOSE_ARGS "$@"
