@@ -1,8 +1,8 @@
-# Ghost Machines 👻
+# Ghost Machines
 
-Master template and orchestration for custom Ubuntu-based development environments. Designed to be lightweight, portable, and powerful.
+Orchestration and master template for Ubuntu-based development environments.
 
-## 🚀 Quick Start
+## Deployment
 
 1. **Clone the repository:**
    ```bash
@@ -10,52 +10,47 @@ Master template and orchestration for custom Ubuntu-based development environmen
    cd ghost-machines
    ```
 
-2. **Build and Start:**
+2. **Build and initialize:**
    ```bash
-   # This will build the master template and spin up 2 machines
    docker compose up -d --build
    ```
 
-3. **Set up Aliases (Optional but Recommended):**
-   Add the helper aliases to your host machine's shell config:
+3. **Configure shell aliases:**
+   Append connection helpers to the host shell configuration:
    ```bash
    cat aliases.sh >> ~/.bashrc
    source ~/.bashrc
    ```
 
----
+## Included Software
+- **Runtimes:** Node.js, Go 1.24, Python 3, Bun
+- **Editors:** Micro, Helix, Lazygit
+- **Tooling:** Gemini CLI, OpenAI Codex, htop, nmap, fastfetch, oh-my-bash, alias-hub
 
-## 🛠️ Included Tools
-The "Master Template" comes pre-installed with:
-- **Languages:** Node.js (Latest), Go 1.24, Python 3, Bun
-- **IDEs:** Micro, Helix, Lazygit
-- **AI:** Gemini CLI, OpenAI Codex
-- **System:** htop, nmap, fastfetch, oh-my-bash, alias-hub
+## Configuration
 
----
+### Network and Access
+- **ubuntu1 SSH Port:** 2223
+- **ubuntu2 SSH Port:** 2224
+- **Root Password:** root
 
-## ⚙️ Configuration & Portability
+### Persistence
+The containers map host-local directories to the internal user environment:
+- `./mounts/ubuntu1` -> `/home/ubuntu`
+- `./mounts/ubuntu2` -> `/home/ubuntu`
 
-### Container Access
-- **SSH Port (ubuntu1):** `2223`
-- **SSH Port (ubuntu2):** `2224`
-- **Default Credentials:** `root:root`
+### Hardware Architecture
+The Dockerfile detects the host architecture (x86_64 or aarch64) during the build phase to install compatible binaries for Go, Helix, and Lazygit.
 
-### Persistent Storage
-Files inside the containers at `/home/ubuntu` are mapped to the local `./mounts/` directory on your host. This ensures your work persists even if the containers are destroyed.
+### LXCFS Integration
+This configuration assumes the presence of LXCFS on the host for accurate resource reporting within `/proc`. If the host does not have LXCFS installed, comment out the following volume definitions in `docker-compose.yml`:
+- `/var/lib/lxcfs/proc/cpuinfo`
+- `/var/lib/lxcfs/proc/meminfo`
+- `/var/lib/lxcfs/proc/stat`
+- `/var/lib/lxcfs/proc/swaps`
+- `/var/lib/lxcfs/proc/uptime`
 
-### Troubleshooting: LXCFS Mounts
-This project uses **LXCFS** to provide accurate system information (CPU/RAM) inside the containers.
-If you get an error like `bind source path does not exist` for `/var/lib/lxcfs/...`, simply edit `docker-compose.yml` and comment out the following lines under `volumes`:
-```yaml
-# - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
-# - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
-...
-```
-
----
-
-## ⌨️ Connection Aliases
-Once set up, use these commands from your host terminal:
-- `start-ubuntu`: Enters the first machine.
-- `start-ubuntu2`: Enters the second machine.
+## Operation
+Use the following commands from the host terminal to access the environments:
+- `start-ubuntu`: Initialize session in the first instance.
+- `start-ubuntu2`: Initialize session in the second instance.
