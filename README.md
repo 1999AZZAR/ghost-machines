@@ -1,73 +1,90 @@
 # Ghost Machines
 
-Orchestration and master template for Ubuntu-based development environments.
+Orchestration and master template for Ubuntu-based development environments. This project provides a standardized, reproducible, and portable environment with automated hardware architecture detection and intelligent resource reporting.
 
 ## Prerequisites
-- **Operating System:** Linux or macOS. Windows users must use **WSL2**.
-- **Software:** Docker and Docker Compose.
-- **Architecture:** Supports both x86_64 and aarch64 (Apple Silicon/ARM).
+
+### Operating Systems
+- **Linux:** Native support with optional LXCFS integration.
+- **macOS:** Supported via Docker Desktop.
+- **Windows:** Supported via WSL2 (Windows Subsystem for Linux).
+
+### Requirements
+- **Hardware:** x86_64 or aarch64 (ARM64) architecture.
+- **Software:** Docker Engine 20.10+ and Docker Compose v2.0+.
+- **Connectivity:** Port 2223 and 2224 must be available on the host for SSH access.
 
 ## Deployment
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/1999AZZAR/ghost-machines.git
-   cd ghost-machines
-   ```
+### 1. Repository Initialization
+Clone the repository to your host machine:
+```bash
+git clone https://github.com/1999AZZAR/ghost-machines.git
+cd ghost-machines
+```
 
-2. **Configure Host (Optional):**
-   Install LXCFS for accurate hardware reporting:
-   ```bash
-   chmod +x setup-host.sh
-   ./setup-host.sh
-   ```
+### 2. Host Configuration (Optional)
+On Linux hosts, install LXCFS to allow containers to accurately report host CPU and Memory resources via `/proc`:
+```bash
+chmod +x setup-host.sh
+./setup-host.sh
+```
 
-3. **Initialize Environments:**
-   The start script automatically detects LXCFS and launches the containers:
-   ```bash
-   chmod +x start.sh
-   ./start.sh
-   ```
+### 3. Environment Lifecycle
+Use the provided `start.sh` script to initialize the environment. This script automatically detects the presence of LXCFS and configures volume mounts accordingly:
+```bash
+chmod +x start.sh
+./start.sh
+```
 
-4. **Configure shell aliases:**
-   Append connection helpers to the host shell configuration:
-   ```bash
-   cat aliases.sh >> ~/.bashrc
-   source ~/.bashrc
-   ```
+## Technical Specifications
 
-## Included Software
-- **Runtimes:** Node.js, Go 1.24, Python 3, Bun
-- **Editors:** Micro, Helix, Lazygit
-- **Tooling:** Gemini CLI, OpenAI Codex, htop, nmap, fastfetch, oh-my-bash, alias-hub
+### Included Software Stack
+- **Runtimes:** Node.js (Latest), Go 1.24, Python 3, Bun.
+- **Development Tools:** Micro, Helix, Lazygit.
+- **AI Integrations:** Gemini CLI, OpenAI Codex.
+- **System Utilities:** htop, nmap, fastfetch, oh-my-bash, alias-hub.
 
-## Configuration
+### Container Architecture
+The environments are built from a unified `Dockerfile` that performs architecture detection at build-time. This ensures that binaries for Go, Helix, and Lazygit are compatible with the host CPU (x86_64 or aarch64).
 
-### Network and Access
-- **ubuntu1 SSH Port:** 2223
-- **ubuntu2 SSH Port:** 2224
-- **Root Password:** root (Default)
+### Network Configuration
+- **ubuntu-container:** SSH access via host port `2223`.
+- **ubuntu2:** SSH access via host port `2224`.
+- **Network Driver:** Bridge (Internal name: `ghost_sandbox`).
 
-> [!CAUTION]
-> For security, it is highly recommended to change the default root password in the `Dockerfile` before deploying in an untrusted network.
+### Resource Persistence
+User data within the containers is persisted to the host filesystem via volume mapping:
+- `/home/ubuntu` (container) -> `./mounts/ubuntu1/` (host)
+- `/home/ubuntu` (container) -> `./mounts/ubuntu2/` (host)
 
-### Persistence
-The containers map host-local directories to the internal user environment:
-- `./mounts/ubuntu1` -> `/home/ubuntu`
-- `./mounts/ubuntu2` -> `/home/ubuntu`
+## Security and Access
 
-### Hardware Architecture
-The Dockerfile detects the host architecture (x86_64 or aarch64) during the build phase to install compatible binaries for Go, Helix, and Lazygit.
+### Credentials
+- **Default Username:** root
+- **Default Password:** root
 
-### LXCFS Integration
-This configuration assumes the presence of LXCFS on the host for accurate resource reporting within `/proc`. If the host does not have LXCFS installed, comment out the following volume definitions in `docker-compose.yml`:
-- `/var/lib/lxcfs/proc/cpuinfo`
-- `/var/lib/lxcfs/proc/meminfo`
-- `/var/lib/lxcfs/proc/stat`
-- `/var/lib/lxcfs/proc/swaps`
-- `/var/lib/lxcfs/proc/uptime`
+### Hardening
+The default configuration allows root login over SSH for ease of use in sandbox environments. For deployment in production or untrusted networks:
+1. Modify the `root` password in the `Dockerfile`.
+2. Update `sshd_config` to disable password authentication in favor of SSH keys.
 
-## Operation
-Use the following commands from the host terminal to access the environments:
-- `start-ubuntu`: Initialize session in the first instance.
-- `start-ubuntu2`: Initialize session in the second instance.
+## Host Integration
+
+### Connection Aliases
+To streamline access to the environments, source the `aliases.sh` file in your shell configuration (`.bashrc` or `.zshrc`):
+```bash
+cat aliases.sh >> ~/.bashrc
+source ~/.bashrc
+```
+**Available Commands:**
+- `start-ubuntu`: Enters the primary container.
+- `start-ubuntu2`: Enters the secondary container.
+
+## Troubleshooting
+
+### LXCFS Mount Errors
+If the `start.sh` script fails to correctly detect LXCFS or if the host paths for `/var/lib/lxcfs/proc` are restricted, manually disable these mounts in `docker-compose.yml` by commenting out the `/proc/` volume lines.
+
+### Binary Incompatibility
+If a tool fails to execute with an "Exec format error", ensure the `docker-compose.yml` `build` context was used correctly to trigger an architecture-specific build for your current host.
