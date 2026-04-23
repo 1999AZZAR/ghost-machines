@@ -1,0 +1,13 @@
+# Docker
+.git/
+mounts/ubuntu1/*
+!mounts/ubuntu1/.gitkeep
+mounts/ubuntu2/*
+!mounts/ubuntu2/.gitkeep
+
+# Snapshots
+ghost_snapshot_*.tar.gz
+
+# System
+.DS_Store
+*.log
