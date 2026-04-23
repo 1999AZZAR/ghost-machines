@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  ubuntu-container:
+  ghost1:
     build: .
     image: ubuntu-template:latest
     container_name: "${G1_NAME:-ghost-machine1}"
@@ -25,7 +25,7 @@ services:
     networks:
       - sandbox_net
 
-  ubuntu2:
+  ghost2:
     build: .
     image: ubuntu-template:latest
     container_name: "${G2_NAME:-ghost-machine2}"

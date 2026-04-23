@@ -60,21 +60,21 @@ case $MODE in
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
-        COMPOSE_ARGS="up -d ubuntu-container"
+        COMPOSE_ARGS="up -d ghost1"
         ;;
     "power")
         echo "[MODE] Power: ghost-machine-power"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
-        COMPOSE_ARGS="up -d ubuntu-container"
+        COMPOSE_ARGS="up -d ghost1"
         ;;
     "half")
         echo "[MODE] Half-Host: ghost-machine-half"
         export G1_NAME="ghost-machine-half"
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
-        COMPOSE_ARGS="up -d ubuntu-container"
+        COMPOSE_ARGS="up -d ghost1"
         ;;
     *)
         echo "Usage: ./start.sh [dual|single|power|half]"
