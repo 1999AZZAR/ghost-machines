@@ -26,7 +26,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
     && apt-get install -y nodejs
 
 # 4. Go Runtime
-RUN curl -L https://go.dev/dl/go1.24.2.linux-arm64.tar.gz | tar -C /usr/local -xz
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then GO_ARCH="amd64"; elif [ "$ARCH" = "aarch64" ]; then GO_ARCH="arm64"; else GO_ARCH="amd64"; fi && \
+    curl -L "https://go.dev/dl/go1.24.2.linux-${GO_ARCH}.tar.gz" | tar -C /usr/local -xz
 ENV PATH=$PATH:/usr/local/go/bin
 
 # 5. Bun Runtime
@@ -35,11 +37,16 @@ ENV PATH=$PATH:/root/.bun/bin
 
 # 6. Terminal IDEs (Micro, Helix, Lazygit)
 RUN apt-get install -y micro \
-    && curl -L https://github.com/helix-editor/helix/releases/download/25.01.1/helix-25.01.1-aarch64-linux.tar.xz | tar xJ \
-    && mv helix-25.01.1-aarch64-linux/hx /usr/local/bin/ \
-    && mkdir -p /root/.config/helix && mv helix-25.01.1-aarch64-linux/runtime /root/.config/helix/ \
-    && rm -rf helix-25.01.1-aarch64-linux \
-    && curl -L https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_0.48.2_Linux_arm64.tar.gz | tar xz lazygit && install lazygit /usr/local/bin
+    && ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then HELIX_ARCH="x86_64"; LAZY_ARCH="x86_64"; \
+    elif [ "$ARCH" = "aarch64" ]; then HELIX_ARCH="aarch64"; LAZY_ARCH="arm64"; \
+    fi && \
+    curl -L "https://github.com/helix-editor/helix/releases/download/25.01.1/helix-25.01.1-${HELIX_ARCH}-linux.tar.xz" | tar xJ && \
+    mv helix-25.01.1-${HELIX_ARCH}-linux/hx /usr/local/bin/ && \
+    mkdir -p /root/.config/helix && mv helix-25.01.1-${HELIX_ARCH}-linux/runtime /root/.config/helix/ && \
+    rm -rf helix-25.01.1-${HELIX_ARCH}-linux && \
+    curl -L "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_0.48.2_Linux_${LAZY_ARCH}.tar.gz" | tar xz lazygit && \
+    install lazygit /usr/local/bin
 
 # 7. AI CLIs (Gemini, Codex)
 RUN npm install -g @google/gemini-cli @openai/codex

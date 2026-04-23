@@ -1,43 +1,61 @@
-# Ghost Machines
+# Ghost Machines 👻
 
-Master template and orchestration for custom Ubuntu-based dev environments.
+Master template and orchestration for custom Ubuntu-based development environments. Designed to be lightweight, portable, and powerful.
 
-## Quick Start
+## 🚀 Quick Start
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com1999AZZAR/ghost-machines.git
+   git clone https://github.com/1999AZZAR/ghost-machines.git
    cd ghost-machines
    ```
 
-2. **Build the master image:**
+2. **Build and Start:**
    ```bash
-   docker build -t ubuntu-template:latest .
+   # This will build the master template and spin up 2 machines
+   docker compose up -d --build
    ```
 
-3. **Spin up the machines:**
+3. **Set up Aliases (Optional but Recommended):**
+   Add the helper aliases to your host machine's shell config:
    ```bash
-   docker compose up -d
+   cat aliases.sh >> ~/.bashrc
+   source ~/.bashrc
    ```
 
-## Requirements
-- Docker & Docker Compose
-- LXCFS (optional, for accurate resource reporting in `/proc`)
-  - If you don't have LXCFS, you can comment out the volume mounts for `/proc/` in `docker-compose.yml`.
+---
 
-## Configuration
-- **SSH:** Access containers via ports `2223` (ubuntu1) and `2224` (ubuntu2).
-- **Credentials:** Default `root:root`.
-- **Mounts:** Local `./mounts/ubuntu1` and `./mounts/ubuntu2` are mapped to `/home/ubuntu` in the respective containers.
+## 🛠️ Included Tools
+The "Master Template" comes pre-installed with:
+- **Languages:** Node.js (Latest), Go 1.24, Python 3, Bun
+- **IDEs:** Micro, Helix, Lazygit
+- **AI:** Gemini CLI, OpenAI Codex
+- **System:** htop, nmap, fastfetch, oh-my-bash, alias-hub
 
-## Connection Aliases
-To make it easier to jump into your machines, you can add the aliases from `aliases.sh` to your host machine's shell config (`~/.bashrc` or `~/.zshrc`):
+---
 
-```bash
-cat aliases.sh >> ~/.bashrc
-source ~/.bashrc
+## ⚙️ Configuration & Portability
+
+### Container Access
+- **SSH Port (ubuntu1):** `2223`
+- **SSH Port (ubuntu2):** `2224`
+- **Default Credentials:** `root:root`
+
+### Persistent Storage
+Files inside the containers at `/home/ubuntu` are mapped to the local `./mounts/` directory on your host. This ensures your work persists even if the containers are destroyed.
+
+### Troubleshooting: LXCFS Mounts
+This project uses **LXCFS** to provide accurate system information (CPU/RAM) inside the containers.
+If you get an error like `bind source path does not exist` for `/var/lib/lxcfs/...`, simply edit `docker-compose.yml` and comment out the following lines under `volumes`:
+```yaml
+# - /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:ro
+# - /var/lib/lxcfs/proc/meminfo:/proc/meminfo:ro
+...
 ```
 
-Now you can use:
-- `start-ubuntu`: Start and enter the first machine.
-- `start-ubuntu2`: Start and enter the second machine.
+---
+
+## ⌨️ Connection Aliases
+Once set up, use these commands from your host terminal:
+- `start-ubuntu`: Enters the first machine.
+- `start-ubuntu2`: Enters the second machine.
