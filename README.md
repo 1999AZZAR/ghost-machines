@@ -44,6 +44,14 @@ chmod +x start.sh
 ./start.sh half
 ```
 
+### 4. Environment Cleanup
+Use the `clean.sh` utility to stop and prune environments:
+```bash
+chmod +x clean.sh
+./clean.sh
+```
+The script provides options for standard stops, volume removal (data wipe), or a full reset (removing the base image).
+
 
 ## Technical Specifications
 
