@@ -2,6 +2,11 @@
 
 Orchestration and master template for Ubuntu-based development environments.
 
+## Prerequisites
+- **Operating System:** Linux or macOS. Windows users must use **WSL2**.
+- **Software:** Docker and Docker Compose.
+- **Architecture:** Supports both x86_64 and aarch64 (Apple Silicon/ARM).
+
 ## Deployment
 
 1. **Clone the repository:**
