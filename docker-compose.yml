@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   ubuntu-container:
+    build: .
     image: ubuntu-template:latest
     container_name: ubuntu-container
     restart: unless-stopped
@@ -25,6 +26,7 @@ services:
       - sandbox_net
 
   ubuntu2:
+    build: .
     image: ubuntu-template:latest
     container_name: ubuntu2
     restart: unless-stopped
