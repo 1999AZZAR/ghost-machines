@@ -7,63 +7,59 @@ Orchestration and master template for Ubuntu-based development environments. Thi
 ### Operating Systems
 - **Linux:** Native support with optional LXCFS integration.
 - **macOS:** Supported via Docker Desktop.
-- **Windows:** Supported via WSL2 (Windows Subsystem for Linux).
+- **Windows:** Supported via WSL2.
 
 ### Requirements
 - **Hardware:** x86_64 or aarch64 (ARM64) architecture.
 - **Software:** Docker Engine 20.10+ and Docker Compose v2.0+.
-- **Connectivity:** Port 2223 and 2224 must be available on the host for SSH access.
 
 ## Deployment
 
 ### 1. Repository Initialization
-Clone the repository to your host machine:
 ```bash
 git clone https://github.com/1999AZZAR/ghost-machines.git
 cd ghost-machines
 ```
 
 ### 2. Host Configuration (Optional)
-On Linux hosts, install LXCFS to allow containers to accurately report host CPU and Memory resources via `/proc`:
+On Linux hosts, install LXCFS for accurate resource reporting:
 ```bash
 chmod +x setup-host.sh
 ./setup-host.sh
 ```
 
-### 3. Environment Lifecycle
-Use the provided `start.sh` script to initialize the environment. This script automatically detects the presence of LXCFS and configures volume mounts accordingly:
+### 3. Initialize Environments
+The `start.sh` script supports multiple deployment modes:
+
 ```bash
 chmod +x start.sh
-./start.sh
+
+# Deploy 2 instances (1 CPU, 8G RAM each) - Default
+./start.sh dual
+
+# Deploy 1 instance (1 CPU, 8G RAM)
+./start.sh single
+
+# Deploy 1 instance (2 CPU, 16G RAM)
+./start.sh power
+
+# Deploy 1 instance (Half of Host CPU/RAM)
+./start.sh half
 ```
 
 ## Technical Specifications
 
-### Machine Specifications (Per Instance)
-By default, each ghost machine is configured with the following resource limits:
-- **CPU:** 1.0 Core (Dedicated via `cpuset`).
-- **Memory:** 8 GB RAM.
-- **Storage:** Shared host storage via volume mounts.
-- **Operating System:** Ubuntu 24.04 LTS (Latest).
+### Deployment Modes
+- **Dual:** Orchestrates two separate containers (`ubuntu-container` and `ubuntu2`).
+- **Single:** Orchestrates a single container with standard resources.
+- **Power:** Orchestrates a single container with doubled CPU and Memory resources.
+- **Half-Host:** Dynamically calculates host resources and allocates 50% to a single container.
 
 ### Included Software Stack
-- **Runtimes:** Node.js (Latest), Go 1.24, Python 3, Bun.
+- **Runtimes:** Node.js, Go 1.24, Python 3, Bun.
 - **Development Tools:** Micro, Helix, Lazygit.
 - **AI Integrations:** Gemini CLI, OpenAI Codex.
 - **System Utilities:** htop, nmap, fastfetch, oh-my-bash, alias-hub.
-
-### Container Architecture
-The environments are built from a unified `Dockerfile` that performs architecture detection at build-time. This ensures that binaries for Go, Helix, and Lazygit are compatible with the host CPU (x86_64 or aarch64).
-
-### Network Configuration
-- **ubuntu-container:** SSH access via host port `2223`.
-- **ubuntu2:** SSH access via host port `2224`.
-- **Network Driver:** Bridge (Internal name: `ghost_sandbox`).
-
-### Resource Persistence
-User data within the containers is persisted to the host filesystem via volume mapping:
-- `/home/ubuntu` (container) -> `./mounts/ubuntu1/` (host)
-- `/home/ubuntu` (container) -> `./mounts/ubuntu2/` (host)
 
 ## Security and Access
 
@@ -72,26 +68,18 @@ User data within the containers is persisted to the host filesystem via volume m
 - **Default Password:** root
 
 ### Hardening
-The default configuration allows root login over SSH for ease of use in sandbox environments. For deployment in production or untrusted networks:
+The default configuration allows root login over SSH. For non-sandbox environments:
 1. Modify the `root` password in the `Dockerfile`.
-2. Update `sshd_config` to disable password authentication in favor of SSH keys.
+2. Update `sshd_config` to disable password authentication.
 
 ## Host Integration
 
 ### Connection Aliases
-To streamline access to the environments, source the `aliases.sh` file in your shell configuration (`.bashrc` or `.zshrc`):
+Add helper aliases to your shell configuration:
 ```bash
 cat aliases.sh >> ~/.bashrc
 source ~/.bashrc
 ```
-**Available Commands:**
-- `start-ubuntu`: Enters the primary container.
-- `start-ubuntu2`: Enters the secondary container.
-
-## Troubleshooting
-
-### LXCFS Mount Errors
-If the `start.sh` script fails to correctly detect LXCFS or if the host paths for `/var/lib/lxcfs/proc` are restricted, manually disable these mounts in `docker-compose.yml` by commenting out the `/proc/` volume lines.
-
-### Binary Incompatibility
-If a tool fails to execute with an "Exec format error", ensure the `docker-compose.yml` `build` context was used correctly to trigger an architecture-specific build for your current host.
+**Commands:**
+- `start-ubuntu`: Enters the primary instance.
+- `start-ubuntu2`: Enters the secondary instance (available in `dual` mode).
