@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ghost Machines: Intelligent Entry Point
-# Supports multiple deployment modes and automated hardware detection.
+# Supports interactive mode, CLI arguments, and automated hardware detection.
 
 # 1. LXCFS Detection
 export LXCFS_BASE="/var/lib/lxcfs/proc"
@@ -20,11 +20,29 @@ TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 HALF_CORES=$(echo "$TOTAL_CORES / 2" | bc)
 HALF_MEM_MB=$(echo "$TOTAL_MEM_KB / 1024 / 2" | bc)
 
-# Ensure at least 1 core for half-host
 if [ "$HALF_CORES" -lt 1 ]; then HALF_CORES=1; fi
 
 # 3. Mode Selection
-MODE=${1:-"dual"}
+if [ -z "$1" ]; then
+    echo "------------------------------------------------"
+    echo " GHOST MACHINES: DEPLOYMENT SELECTION"
+    echo "------------------------------------------------"
+    echo "1) Dual   - 2 instances (1 CPU, 8G RAM each)"
+    echo "2) Single - 1 instance  (1 CPU, 8G RAM)"
+    echo "3) Power  - 1 instance  (2 CPU, 16G RAM)"
+    echo "4) Half   - 1 instance  ($HALF_CORES CPU, ${HALF_MEM_MB}M RAM)"
+    echo "------------------------------------------------"
+    read -p "Select mode [1-4]: " CHOICE
+    case $CHOICE in
+        1) MODE="dual" ;;
+        2) MODE="single" ;;
+        3) MODE="power" ;;
+        4) MODE="half" ;;
+        *) echo "[ERROR] Invalid selection."; exit 1 ;;
+    esac
+else
+    MODE=$1
+fi
 
 case $MODE in
     "dual")

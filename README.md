@@ -28,24 +28,22 @@ chmod +x setup-host.sh
 ./setup-host.sh
 ```
 
-### 3. Initialize Environments
-The `start.sh` script supports multiple deployment modes:
+3. **Initialize Environments**
+The `start.sh` script is interactive by default but also supports direct CLI arguments:
 
 ```bash
 chmod +x start.sh
 
-# Deploy 2 instances (1 CPU, 8G RAM each) - Default
+# Interactive Mode
+./start.sh
+
+# Direct Deployment
 ./start.sh dual
-
-# Deploy 1 instance (1 CPU, 8G RAM)
 ./start.sh single
-
-# Deploy 1 instance (2 CPU, 16G RAM)
 ./start.sh power
-
-# Deploy 1 instance (Half of Host CPU/RAM)
 ./start.sh half
 ```
+
 
 ## Technical Specifications
 
