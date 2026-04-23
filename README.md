@@ -35,7 +35,14 @@ chmod +x start.sh
 ./start.sh [dual|single|power|half]
 ```
 
-### 4. Zero-Trust Remote Access (Optional)
+### 4. Configuration (Optional)
+The project supports `.env` files for managing environment variables. Copy the example template to get started:
+```bash
+cp .env.example .env
+# Edit .env to add your TUNNEL_TOKEN or customize ports
+```
+
+### 5. Zero-Trust Remote Access (Optional)
 To enable secure remote access via Cloudflare Tunnel without opening host ports, export your tunnel token before starting:
 ```bash
 export TUNNEL_TOKEN="your_cloudflare_tunnel_token"
