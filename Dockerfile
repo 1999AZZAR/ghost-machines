@@ -66,7 +66,7 @@ RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \
     && apt-get update && apt-get install -y fastfetch \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
-    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/neofetch_ascii/master/install.sh)" || true
+    && git clone https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii
 
 # 9. SSH Configuration
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
