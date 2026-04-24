@@ -61,11 +61,12 @@ RUN npm install -g @google/gemini-cli @openai/codex \
     curl -L "https://github.com/rtk-ai/rtk/releases/latest/download/rtk-${RTK_ARCH}.tar.gz" | tar xz && \
     install rtk /usr/local/bin/rtk && rm rtk
 
-# 8. UI/UX STACK (1. Fastfetch, 2. Oh-My-Bash, 3. Alias-Hub)
+# 8. UI/UX STACK (1. Fastfetch, 2. Oh-My-Bash, 3. Alias-Hub, 4. Neofetch-ASCII)
 RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \
     && apt-get update && apt-get install -y fastfetch \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
-    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true
+    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
+    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/neofetch_ascii/master/install.sh)" || true
 
 # 9. SSH Configuration
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
