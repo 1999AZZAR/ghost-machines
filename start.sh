@@ -29,10 +29,12 @@ if [ -z "$1" ] || [[ "$1" == -* ]]; then
     echo "------------------------------------------------"
     echo "1) Ubuntu (Standard)"
     echo "2) Debian (Slim/Lightweight)"
-    read -p "Select Engine [1-2]: " ENG_CHOICE
+    echo "3) Alpine (Ultra-Lightweight)"
+    read -p "Select Engine [1-3]: " ENG_CHOICE
     case $ENG_CHOICE in
         1) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
         2) export GHOST_DOCKERFILE="Dockerfile.debian"; export GHOST_IMAGE="debian-template:latest" ;;
+        3) export GHOST_DOCKERFILE="Dockerfile.alpine"; export GHOST_IMAGE="alpine-template:latest" ;;
         *) echo "[ERROR] Invalid selection."; exit 1 ;;
     esac
 
@@ -52,8 +54,7 @@ if [ -z "$1" ] || [[ "$1" == -* ]]; then
         *) echo "[ERROR] Invalid selection."; exit 1 ;;
     esac
 else
-    # Detect engine from first char if provided as argument (e.g., d-dual or u-single)
-    # Or just default to Ubuntu for simplicity in arguments for now
+    # Default to Ubuntu for CLI arguments
     export GHOST_DOCKERFILE="Dockerfile"
     export GHOST_IMAGE="ubuntu-template:latest"
     MODE=$1

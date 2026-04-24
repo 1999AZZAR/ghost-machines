@@ -1,0 +1,84 @@
+# ==============================================================================
+# ROCI GHOST MACHINE - ALPINE LINUX TEMPLATE
+# ==============================================================================
+
+FROM alpine:latest
+
+# 1. Environment & UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+# 2. Base System & Build Tools
+RUN apk update && apk add --no-cache \
+    bash curl gnupg git wget unzip ca-certificates \
+    build-base gdb make cmake \
+    python3 py3-pip \
+    htop btop net-tools glances sysstat inxi ncdu tree \
+    zip p7zip nmap lsof xclip \
+    nnn fzf ripgrep tmux \
+    bat eza zoxide fd jq \
+    openssh-server \
+    && mkdir -p /var/run/sshd \
+    && ssh-keygen -A
+
+# 3. Node.js (Latest Current)
+RUN apk add --no-cache nodejs npm
+
+# 4. Go Runtime
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then GO_ARCH="amd64"; elif [ "$ARCH" = "aarch64" ]; then GO_ARCH="arm64"; else GO_ARCH="amd64"; fi && \
+    curl -L "https://go.dev/dl/go1.24.2.linux-${GO_ARCH}.tar.gz" | tar -C /usr/local -xz
+ENV PATH=$PATH:/usr/local/go/bin
+
+# 5. Bun Runtime
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH=$PATH:/root/.bun/bin
+
+# 6. Terminal IDEs (Micro, Helix, Lazygit, Fastfetch)
+RUN apk add --no-cache micro \
+    && ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then HELIX_ARCH="x86_64"; LAZY_ARCH="x86_64"; FF_ARCH="linux-amd64"; \
+    elif [ "$ARCH" = "aarch64" ]; then HELIX_ARCH="aarch64"; LAZY_ARCH="arm64"; FF_ARCH="linux-aarch64"; \
+    fi && \
+
+    curl -L "https://github.com/helix-editor/helix/releases/download/25.01.1/helix-25.01.1-${HELIX_ARCH}-linux.tar.xz" | tar xJ && \
+    mv helix-25.01.1-${HELIX_ARCH}-linux/hx /usr/local/bin/ && \
+    mkdir -p /root/.config/helix && mv helix-25.01.1-${HELIX_ARCH}-linux/runtime /root/.config/helix/ && \
+    rm -rf helix-25.01.1-${HELIX_ARCH}-linux && \
+    curl -L "https://github.com/jesseduffield/lazygit/releases/download/v0.61.1/lazygit_0.61.1_Linux_${LAZY_ARCH}.tar.gz" | tar xz lazygit && \
+    install lazygit /usr/local/bin && \
+    curl -L "https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-${FF_ARCH}.tar.gz" | tar xz && \
+    install fastfetch-*/usr/bin/fastfetch /usr/local/bin/fastfetch && rm -rf fastfetch-*
+
+# 7. AI CLIs (Gemini, Codex, RTK)
+RUN npm install -g @google/gemini-cli @openai/codex \
+    && ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
+    elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
+    fi && \
+    curl -L "https://github.com/rtk-ai/rtk/releases/latest/download/rtk-${RTK_ARCH}.tar.gz" | tar xz && \
+    install rtk /usr/local/bin/rtk && rm rtk
+
+# 8. UI/UX STACK (1. Oh-My-Bash, 2. Alias-Hub, 3. Neofetch-ASCII)
+RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
+    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
+    && git clone https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii
+
+# 9. SSH Configuration
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && echo 'root:root' | chpasswd
+
+# 10. MCP Servers
+RUN mkdir -p /root/MCPservers \
+    && git clone https://github.com/1999AZZAR/terminal-mcp-server.git /root/MCPservers/terminal \
+    && cd /root/MCPservers/terminal && npm install && npm run build \
+    && git clone https://github.com/1999AZZAR/filesystem-mcp-server.git /root/MCPservers/filesystem \
+    && cd /root/MCPservers/filesystem && npm install && npm run build \
+    && npm install -g @modelcontextprotocol/server-sequential-thinking \
+    && echo '#!/bin/bash\nnode /root/MCPservers/terminal/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
+    && echo '#!/bin/bash\nnode /root/MCPservers/filesystem/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
+    && chmod +x /usr/local/bin/mcp-terminal /usr/local/bin/mcp-filesystem
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]

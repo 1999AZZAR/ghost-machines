@@ -39,6 +39,7 @@ chmod +x start.sh
 **Engines:**
 - **Ubuntu:** Standard, feature-rich base.
 - **Debian:** Slim, lightweight, and high-stability base.
+- **Alpine:** Ultra-lightweight, minimal security-focused base.
 
 ### 4. Configuration (Optional)
 The project supports `.env` files for managing environment variables. Copy the example template to get started:
@@ -92,6 +93,7 @@ The Ghost Machine framework utilizes a layered, copy-on-write (CoW) filesystem a
 | :--- | :--- | :--- | :--- |
 | **Ubuntu** | `ubuntu:latest` | ~4.69 GB | Feature-rich, broad PPA support, standard dev experience. |
 | **Debian** | `debian:stable-slim` | ~4.68 GB | Lightweight, high stability, minimal background overhead. |
+| **Alpine** | `alpine:latest` | TBD | Ultra-lightweight, minimal security-focused base. |
 
 - **Marginal Disk Cost:** < 1 MB per additional instance. Since all instances share the read-only base layers of their respective engine, new machines only consume space for unique writable data.
 - **Memory Scaling:** While disk space is shared, RAM is allocated per instance. Each machine is restricted to the defined memory limits (default: 8 GB) but only consumes what is actively required by running processes.
