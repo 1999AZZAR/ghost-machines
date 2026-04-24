@@ -1,7 +1,9 @@
 services:
   ghost1:
-    build: .
-    image: ubuntu-template:latest
+    build:
+      context: .
+      dockerfile: "${GHOST_DOCKERFILE:-Dockerfile}"
+    image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G1_NAME:-ghost-machine1}"
     restart: unless-stopped
     command: /usr/sbin/sshd -D
@@ -23,8 +25,10 @@ services:
       - sandbox_net
 
   ghost2:
-    build: .
-    image: ubuntu-template:latest
+    build:
+      context: .
+      dockerfile: "${GHOST_DOCKERFILE:-Dockerfile}"
+    image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G2_NAME:-ghost-machine2}"
     restart: unless-stopped
     command: /usr/sbin/sshd -D

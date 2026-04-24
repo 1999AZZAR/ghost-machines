@@ -29,11 +29,16 @@ chmod +x setup-host.sh
 ```
 
 ### 3. Initialize Environments
-The `start.sh` script is interactive by default but also supports direct CLI arguments:
+The `start.sh` script provides interactive selection for the **Engine** (Ubuntu or Debian) and the **Deployment Mode**:
+
 ```bash
 chmod +x start.sh
-./start.sh [dual|single|power|half]
+./start.sh
 ```
+
+**Engines:**
+- **Ubuntu:** Standard, feature-rich base.
+- **Debian:** Slim, lightweight, and high-stability base.
 
 ### 4. Configuration (Optional)
 The project supports `.env` files for managing environment variables. Copy the example template to get started:
