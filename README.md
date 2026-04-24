@@ -63,6 +63,21 @@ chmod +x clean.sh
 ./clean.sh
 ```
 
+## Key Advantages: Semi-Immutable Architecture
+
+This project implements a **Semi-Immutable Architecture**, following the "Cattle, Not Pets" philosophy for development environments.
+
+### 1. Immutable Core (The Image)
+The entire toolchain, OS configuration, and runtime environment are defined as a read-only Docker image. This ensures environmental consistency across different physical hosts and prevents "configuration drift" over time.
+
+### 2. Decoupled Mutable State (The Mounts)
+User data and project code are isolated in persistent volume mounts. By separating the **Environment** (Immutable) from the **Data** (Mutable), the ghost machines become entirely disposable. 
+
+### 3. Rapid Recovery and Security
+- **Predictability:** Eliminates the "it works on my machine" problem by standardizing the build process.
+- **Resilience:** If an environment becomes unstable, it can be destroyed and redeployed in seconds without data loss.
+- **Security:** Every restart reverts the system writable layer to a verified, known-good state defined in the codebase.
+
 ## Technical Specifications
 
 ### Architecture and Efficiency
