@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     zip p7zip-full nmap lsof xclip \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd-find jq \
+    kitty kitty-terminfo \
     openssh-server \
     && mkdir -p /var/run/sshd \
     && ln -s /usr/bin/batcat /usr/local/bin/bat \

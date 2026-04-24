@@ -17,6 +17,7 @@ RUN apk update && apk add --no-cache \
     zip p7zip nmap lsof xclip \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd jq \
+    kitty kitty-terminfo \
     openssh-server \
     && mkdir -p /var/run/sshd \
     && ssh-keygen -A
