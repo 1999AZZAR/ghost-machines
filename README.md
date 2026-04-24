@@ -87,8 +87,13 @@ User data and project code are isolated in persistent volume mounts. By separati
 
 ### Architecture and Efficiency
 The Ghost Machine framework utilizes a layered, copy-on-write (CoW) filesystem architecture to minimize resource consumption during scaling.
-- **Static Footprint:** Approximately 4.7 GB (Single master image containing all runtimes and tools).
-- **Marginal Disk Cost:** < 1 MB per additional instance. Since all instances share the read-only base layers, new machines only consume space for unique writable data.
+
+| Engine | Base Image | Compressed Size | Characteristics |
+| :--- | :--- | :--- | :--- |
+| **Ubuntu** | `ubuntu:latest` | ~4.69 GB | Feature-rich, broad PPA support, standard dev experience. |
+| **Debian** | `debian:stable-slim` | ~4.68 GB | Lightweight, high stability, minimal background overhead. |
+
+- **Marginal Disk Cost:** < 1 MB per additional instance. Since all instances share the read-only base layers of their respective engine, new machines only consume space for unique writable data.
 - **Memory Scaling:** While disk space is shared, RAM is allocated per instance. Each machine is restricted to the defined memory limits (default: 8 GB) but only consumes what is actively required by running processes.
 
 ### Deployment Modes
