@@ -62,6 +62,13 @@ setup_user_harnesses_and_conductor() {
     fi
 }
 
+if [ -f /usr/local/bin/agy ]; then
+    ln -sf /usr/local/bin/agy /usr/local/bin/antigravity 2>/dev/null || true
+fi
+if [ -f /root/.bun/bin/bun ]; then
+    ln -sf /root/.bun/bin/bun /usr/local/bin/bun 2>/dev/null || true
+fi
+
 setup_user_ssh "/root" "root"
 setup_user_harnesses_and_conductor "/root" "root"
 

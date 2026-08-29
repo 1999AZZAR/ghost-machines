@@ -30,6 +30,7 @@ services:
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
+      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy:ro
     deploy:
       resources:
         limits:
@@ -69,6 +70,7 @@ services:
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
+      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy:ro
     deploy:
       resources:
         limits:

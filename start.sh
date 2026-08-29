@@ -34,6 +34,19 @@ if [ -z "$SSH_AUTH_KEY_PATH" ]; then
     export SSH_AUTH_KEY_PATH="/dev/null"
 fi
 
+# 1.3 Host Antigravity CLI Binary Detection
+if [ -z "$HOST_AGY_BIN" ]; then
+    for AGY_CANDIDATE in "$HOME/.local/bin/agy" "/usr/local/bin/agy" "/usr/bin/agy"; do
+        if [ -f "$AGY_CANDIDATE" ]; then
+            export HOST_AGY_BIN="$AGY_CANDIDATE"
+            break
+        fi
+    done
+fi
+if [ -z "$HOST_AGY_BIN" ]; then
+    export HOST_AGY_BIN="/dev/null"
+fi
+
 # 2. LXCFS Detection
 SKIP_LXCFS=false
 export LXCFS_BASE="/var/lib/lxcfs/proc"
