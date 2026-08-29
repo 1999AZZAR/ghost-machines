@@ -9,7 +9,7 @@ echo "=================================================="
 
 # Check 1: Bash Syntax Validation for all shell scripts
 echo -n "[LINT 1] Bash syntax check (bash -n) on all .sh scripts... "
-SHELL_SCRIPTS=(start.sh clean.sh snapshot.sh restore.sh setup-host.sh aliases.sh entrypoint.sh tests/*.sh)
+SHELL_SCRIPTS=(start.sh clean.sh snapshot.sh restore.sh setup-host.sh aliases.sh entrypoint.sh tenant.sh tests/*.sh)
 for SCRIPT in "${SHELL_SCRIPTS[@]}"; do
     if [ -f "$SCRIPT" ]; then
         bash -n "$SCRIPT" || { echo "FAILED: Syntax error in $SCRIPT"; exit 1; }
@@ -20,7 +20,7 @@ echo "PASSED (${#SHELL_SCRIPTS[@]} scripts checked)"
 # Check 2: ShellCheck (if installed)
 echo -n "[LINT 2] ShellCheck static analysis... "
 if command -v shellcheck &> /dev/null; then
-    for SCRIPT in start.sh clean.sh snapshot.sh restore.sh entrypoint.sh; do
+    for SCRIPT in start.sh clean.sh snapshot.sh restore.sh entrypoint.sh tenant.sh; do
         if [ -f "$SCRIPT" ]; then
             shellcheck -e SC1091 -e SC2034 "$SCRIPT" || { echo "FAILED: ShellCheck warning in $SCRIPT"; exit 1; }
         fi
