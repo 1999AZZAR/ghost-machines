@@ -26,6 +26,7 @@ services:
       - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
       - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
       - ./mounts/ubuntu1:/home/${GHOST_USER:-developer}
+      - ./entrypoint.sh:/entrypoint.sh:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
@@ -64,6 +65,7 @@ services:
       - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
       - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
       - ./mounts/ubuntu2:/home/${GHOST_USER:-developer}
+      - ./entrypoint.sh:/entrypoint.sh:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
