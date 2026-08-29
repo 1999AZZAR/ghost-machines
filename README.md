@@ -1,145 +1,223 @@
 # Ghost Machines
 
-Orchestration and master template for Ubuntu-based development environments. This project provides a standardized, reproducible, and portable environment with automated hardware architecture detection, intelligent resource reporting, and optional zero-trust remote access.
+[![Ghost Machines CI](https://github.com/1999AZZAR/ghost-machines/actions/workflows/ci.yml/badge.svg)](https://github.com/1999AZZAR/ghost-machines/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Architecture: Multi-Arch](https://img.shields.io/badge/Architecture-x86__64%20%7C%20aarch64-brightgreen.svg)](#prerequisites)
+[![MCP: HeLa Ecosystem](https://img.shields.io/badge/MCP-HeLa%20Headless%20Server-purple.svg)](#mcp-servers-hela-ecosystem)
 
-## Prerequisites
+High-performance, reproducible development sandboxes and autonomous agent workstations. Powered by Docker Compose, automated host UID/GID synchronization, zero-trust Cloudflare tunnels, LXCFS hardware emulation, the **HeLa MCP Ecosystem** (`headless-server` profile), and isolated AI harnesses.
 
-### Operating Systems
-- **Linux:** Native support with optional LXCFS integration.
-- **macOS:** Supported via Docker Desktop.
-- **Windows:** Supported via WSL2.
+---
 
-### Requirements
-- **Hardware:** x86_64 or aarch64 (ARM64) architecture.
+## ⚡ Key Highlights
+
+- **Multi-Engine Parity:** First-class support for **Ubuntu**, **Debian**, **Alpine Linux**, and **Arch Linux**.
+- **Host UID/GID Sync & Non-Root Security:** Automatically syncs container user permissions with your host user (`HOST_UID`/`HOST_GID`) to eliminate file permission collisions on workspace mounts.
+- **Dedicated AI Harness Suite:** Pre-installed with **`antigravity-cli`** (`agy`), **`opencode-cli`** (`opencode`), and **`kilo-cli`** (`kilo`), coupled with **`rtk`** (Rust Token Killer) for high-efficiency terminal execution.
+- **HeLa MCP Ecosystem:** Built-in 7-server headless stack (`mcp-mitosis`, `mcp-genome`, `mcp-membrane`, `mcp-nucleus`, `mcp-ribosome`, `mcp-enzyme`, `mcp-phenotype`) with host mount and pre-generated client configurations.
+- **Modern Toolchain:** Python Astral `uv` + `pipx` (PEP 668 compliant), Rust `rustup` minimal profile, Go 1.24, Bun, and Node.js.
+- **Smart Snapshots & Atomic Restore:** Bandwidth-efficient backup with cache exclusions, SHA-256 integrity manifests, and fail-safe rollback protection.
+- **Unified Task Runner:** Complete `Makefile` workflow runner and automated test suite (`make test`).
+
+---
+
+## 🛠️ Prerequisites
+
+- **Host OS:** Linux (native with optional LXCFS), macOS (Docker Desktop / OrbStack), or Windows (WSL2).
+- **Architecture:** `x86_64` (AMD64) or `aarch64` (ARM64).
 - **Software:** Docker Engine 20.10+ and Docker Compose v2.0+.
 
-## Deployment
+---
 
-### 1. Repository Initialization
+## 🚀 Quick Start
+
+### 1. Clone & Configure
 ```bash
 git clone https://github.com/1999AZZAR/ghost-machines.git
 cd ghost-machines
-```
 
-### 2. Host Configuration (Optional)
-On Linux hosts, install LXCFS for accurate resource reporting:
-```bash
-chmod +x setup-host.sh
-./setup-host.sh
-```
-
-### 3. Initialize Environments
-The `start.sh` script provides interactive selection for the **Engine** (Ubuntu or Debian) and the **Deployment Mode**:
-
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-**Engines:**
-- **Ubuntu:** Standard, feature-rich base.
-- **Debian:** Slim, lightweight, and high-stability base.
-- **Alpine:** Ultra-lightweight, minimal security-focused base.
-
-### 4. Configuration (Optional)
-The project supports `.env` files for managing environment variables. Copy the example template to get started:
-```bash
+# Configure environment variables (optional)
 cp .env.example .env
-# Edit .env to add your TUNNEL_TOKEN or customize ports
 ```
 
-### 5. Zero-Trust Remote Access (Optional)
-To enable secure remote access via Cloudflare Tunnel without opening host ports, export your tunnel token before starting:
+### 2. Host Optimization (Linux Hosts)
+Install LXCFS for accurate container `/proc` resource reporting:
 ```bash
-export TUNNEL_TOKEN="your_cloudflare_tunnel_token"
-./start.sh
+make setup-host
+# or: ./setup-host.sh
 ```
 
-## Maintenance Utilities
-
-### Backup and Restore
-Archive and recover your workspace state across physical machines:
-- **Snapshot:** `./snapshot.sh` (Creates a `.tar.gz` of the `mounts/` directory)
-- **Restore:** `./restore.sh <snapshot_file.tar.gz>`
-
-### Environment Cleanup
-Use the `clean.sh` utility to stop and prune environments:
+### 3. Launch Environment
+Launch interactively or pass explicit CLI flags:
 ```bash
-chmod +x clean.sh
-./clean.sh
+# Interactive menu:
+make start
+
+# Headless / Scripted launch (e.g. Ubuntu engine in Dual mode):
+./start.sh -e ubuntu -m dual
+
+# Launch Alpine engine on custom SSH port 2225 with forced build:
+./start.sh --engine alpine --mode single --port 2225 --build
 ```
 
-## Key Advantages: Semi-Immutable Architecture
+---
 
-This project implements a **Semi-Immutable Architecture**, following the "Cattle, Not Pets" philosophy for development environments.
+## 🎯 OS Engines & Deployment Modes
 
-### 1. Immutable Core (The Image)
-The entire toolchain, OS configuration, and runtime environment are defined as a read-only Docker image. This ensures environmental consistency across different physical hosts and prevents "configuration drift" over time.
-
-### 2. Decoupled Mutable State (The Mounts)
-User data and project code are isolated in persistent volume mounts. By separating the **Environment** (Immutable) from the **Data** (Mutable), the ghost machines become entirely disposable. 
-
-### 3. Rapid Recovery and Security
-- **Predictability:** Eliminates the "it works on my machine" problem by standardizing the build process.
-- **Resilience:** If an environment becomes unstable, it can be destroyed and redeployed in seconds without data loss.
-- **Security:** Every restart reverts the system writable layer to a verified, known-good state defined in the codebase.
-
-## Technical Specifications
-
-### Architecture and Efficiency
-The Ghost Machine framework utilizes a layered, copy-on-write (CoW) filesystem architecture to minimize resource consumption during scaling.
-
-| Engine | Base Image | Compressed Size | Characteristics |
+### Supported Engines
+| Engine | Base Image | Package Manager | Focus |
 | :--- | :--- | :--- | :--- |
-| **Ubuntu** | `ubuntu:latest` | ~4.69 GB | Feature-rich, broad PPA support, standard dev experience. |
-| **Debian** | `debian:stable-slim` | ~4.68 GB | Lightweight, high stability, minimal background overhead. |
-| **Alpine** | `alpine:latest` | ~3.04 GB | Ultra-lightweight, minimal security-focused base. |
-
-- **Marginal Disk Cost:** < 1 MB per additional instance. Since all instances share the read-only base layers of their respective engine, new machines only consume space for unique writable data.
-- **Memory Scaling:** While disk space is shared, RAM is allocated per instance. Each machine is restricted to the defined memory limits (default: 8 GB) but only consumes what is actively required by running processes.
+| **Ubuntu** | `ubuntu:latest` | `apt-get` | Feature-rich, broad PPA support, standard workstation. |
+| **Debian** | `debian:stable-slim` | `apt-get` | High stability, minimal background overhead. |
+| **Alpine** | `alpine:latest` | `apk` | Ultra-lightweight, musl-libc security sandbox. |
+| **Arch Linux** | `archlinux:latest` | `pacman` | Bleeding-edge rolling release. |
 
 ### Deployment Modes
-| Mode | Instances | CPU Limit | RAM Limit | Use Case |
-| :--- | :--- | :--- | :--- | :--- |
-| **Dual** | 2 | 1.0 (each) | 8G (each) | Standard distributed development. |
-| **Single** | 1 | 1.0 | 8G | Minimal resource footprint. |
-| **Power** | 1 | 2.0 | 16G | High-performance computing tasks. |
-| **Half-Host** | 1 | 50% Host | 50% Host | Dynamic scaling based on host power. |
+| Mode | Instances | CPU Limit | RAM Limit | Ideal Workload |
+| :--- | :---: | :---: | :---: | :--- |
+| **Dual** | 2 | 1.0 (each) | 8G (each) | Distributed pairing, client-server testing. |
+| **Single** | 1 | 1.0 | 8G | Focused standalone development. |
+| **Power** | 1 | 2.0 | 16G | Intensive compilation, machine learning. |
+| **Half-Host** | 1 | 50% Host | 50% Host | Dynamic allocation scaled to host capacity. |
 
-### Naming Conventions
-Containers are named dynamically based on the active mode:
-- **Dual:** `ghost-machine1`, `ghost-machine2`
-- **Single/Power/Half:** `ghost-machine-single`, `ghost-machine-power`, `ghost-machine-half`
+---
 
-### Included Software Stack
-- **Runtimes:** Node.js, Go 1.24, Python 3, Bun.
-- **Editors:** Micro, Helix, Lazygit.
-- **Utilities:** nnn (File Manager), fzf (Fuzzy Finder), ripgrep (Search), tmux (Multiplexer).
-- **Modern CLI:** bat (cat with syntax), eza (better ls), zoxide (smarter cd), fd (faster find), jq (json processor), kitty (terminfo & utils).
-- **AI Integrations:** Gemini CLI, OpenAI Codex, RTK (Rust Token Killer).
-- **MCP Servers:** Terminal, Filesystem, and Sequential Thinking (pre-installed in `/root/MCPservers`).
-- **Monitoring:** btop, htop, nmap, fastfetch, oh-my-bash, alias-hub.
+## 🧬 HeLa MCP Ecosystem & AI Harnesses
 
-## Security and Access
+### 1. Isolated AI Harness Suite
+Ghost Machines comes pre-configured with strictly isolated AI coding harnesses:
+- **Antigravity CLI** (`agy` / `antigravity`): Deep agentic coding and workflow engine.
+- **OpenCode CLI** (`opencode`): Autonomous multi-file reasoning harness.
+- **Kilo CLI** (`kilo` / `kilocode`): Fast terminal pair programmer.
+- **RTK** (`rtk`): Token-optimized bash execution wrapper.
 
-### Credentials
-- **Default Username:** root
-- **Default Password:** root
+### 2. HeLa MCP Cellular Stack (`headless-server` Profile)
+The 7 core headless MCP servers are pre-built, configured, and accessible via `/usr/local/bin/mcp-*`:
 
-### Hardening
-The default configuration allows root login over SSH. For non-sandbox environments:
-1. Modify the `root` password in the `Dockerfile`.
-2. Update `sshd_config` to disable password authentication.
+| Command | Server ID | Role | Description |
+| :--- | :--- | :--- | :--- |
+| `mcp-mitosis` | `hela-mitosis` | Orchestration | Dynamic tool routing & sequential thinking reasoning. |
+| `mcp-genome` | `hela-genome` | State & Memory | Living SQLite knowledge graph (`memory.db`) & task tracking. |
+| `mcp-membrane` | `hela-membrane` | Workspace | Sandboxed file system operations, patch & search. |
+| `mcp-nucleus` | `hela-nucleus` | Execution | System interaction, timeouts & RTK token efficiency. |
+| `mcp-ribosome` | `hela-ribosome` | PTY Harness | Pseudo-terminal multiplexer & regex event hooks. |
+| `mcp-enzyme` | `hela-enzyme` | Research | Unified Google Search & cached Wikipedia fact-checking. |
+| `mcp-phenotype` | `hela-phenotype` | UI / Design | Design tokens, OKLCH color palettes & Tailwind synthesis. |
 
-## Host Integration
+> **Host Development Mount:** To mount your local HeLa MCP repository during development, set `MCP_ECOSYSTEM_LOCAL_PATH=/path/to/mcp-ecosystem` in `.env`.
 
-### Connection Aliases
-Add helper aliases to your shell configuration:
+---
+
+## 📦 Modern Toolchains & Pre-Installed Stack
+
+- **Languages & Runtimes:**
+  - **Python:** Astral `uv` / `uvx` (sub-millisecond resolution) + `pipx` (PEP 668 isolated CLIs) + `python3-venv`.
+  - **Rust:** `rustup` minimal profile (`cargo`, `rustc`).
+  - **Go:** Go 1.24 (`/usr/local/go/bin`).
+  - **JavaScript / TypeScript:** Node.js 22 LTS, Bun runtime.
+- **Terminal IDEs & Tools:**
+  - `helix` (modern modal editor), `micro`, `lazygit`, `tmux`.
+  - `bat` (syntax highlighting), `eza` (modern ls), `zoxide` (smart cd), `fd` (fast search), `ripgrep`, `jq`, `fzf`, `nnn`.
+- **UI / UX Stack:**
+  - `fastfetch`, `oh-my-bash`, `alias-hub`, `neofetch_ascii`.
+
+---
+
+## 🔒 Security & SSH Key Injection
+
+1. **Dynamic Host UID/GID Sync:**
+   - Non-root user `developer` (UID/GID matching your host user) is automatically created with passwordless `sudo` privileges.
+2. **Automated SSH Key Injection:**
+   - Detects your host public key (`~/.ssh/*.pub`) and mounts it to `authorized_keys` with strict `0700`/`0600` permissions.
+   - Toggle password authentication off by setting `SSH_PASSWORD_AUTH=false` in `.env`.
+3. **Cloudflare Zero-Trust Tunnel:**
+   - Connect remotely without opening inbound ports by setting `TUNNEL_TOKEN=<token>` in `.env`.
+
+---
+
+## 💾 Smart State Snapshots & Atomic Restore
+
+### Create Smart Snapshot
+Excludes transient build caches (`node_modules/.cache`, `.npm/_cacache`, `.bun/install/cache`, `target/`, `__pycache__`, `.pytest_cache`) to reduce archive sizes by 70–90%:
 ```bash
-cat aliases.sh >> ~/.bashrc
-source ~/.bashrc
+make snapshot
+# or specify output:
+./snapshot.sh -o my_backup.tar.gz
+
+# Include all files without exclusions:
+./snapshot.sh --all
 ```
-**Commands:**
-- `start-ghost`: Enters the active instance (any mode).
-- `start-ghost1`: Enters `ghost-machine1` (available in `dual` mode).
-- `start-ghost2`: Enters `ghost-machine2` (available in `dual` mode).
+*Generates companion `my_backup.tar.gz.sha256` and `my_backup.tar.gz.meta.json`.*
+
+### Atomic Restore with Rollback Protection
+Verifies SHA-256 integrity, creates a safety backup of existing mounts, and rolls back automatically if extraction fails:
+```bash
+make restore
+# or non-interactive (for CI):
+./restore.sh --force my_backup.tar.gz
+```
+
+---
+
+## 🧹 Environment Cleanup
+
+```bash
+make clean
+# Headless flags:
+./clean.sh -s          # Stop containers (Level 1)
+./clean.sh -v          # Stop containers and remove volumes (Level 2)
+./clean.sh -a -y       # Full reset (containers, volumes, and local images)
+```
+
+---
+
+## 🧰 Developer Task Runner (`Makefile`)
+
+| Command | Action |
+| :--- | :--- |
+| `make help` | Display available targets and descriptions. |
+| `make test` | Run master automated test suite (7 milestone test suites). |
+| `make lint` | Run ShellCheck, bash syntax, and Docker compose validation. |
+| `make build-all` | Build all 4 OS engine images (`ubuntu`, `debian`, `alpine`, `arch`). |
+| `make start` | Launch environment interactively. |
+| `make clean` | Prune and clean environment. |
+| `make snapshot` | Create smart state snapshot. |
+| `make restore` | Restore workspace state. |
+| `make setup-host` | Install host dependencies (LXCFS, Docker). |
+
+---
+
+## 🔗 Shell Aliases
+
+Add helper aliases to your shell:
+```bash
+cat aliases.sh >> ~/.bashrc && source ~/.bashrc
+```
+- `ghost-status` — Show container status, ports, and resource limits.
+- `ghost-exec [container] [cmd]` — Execute command inside active container.
+- `ghost-logs [container]` — Stream logs from container.
+- `ghost-ssh [1|2|single|power|half]` — Direct SSH connection to instance.
+- `start-ghost` — Interactive launcher.
+
+---
+
+## 🧪 Testing & CI/CD
+
+Run the automated test runner locally:
+```bash
+make test
+```
+The test suite validates:
+1. `test_lint.sh`: ShellCheck compliance & Dockerfile structure.
+2. `test_m1_security.sh`: Host UID/GID sync & SSH permissions.
+3. `test_m2_engine_optimization.sh`: Layer cleanup & multi-engine parity.
+4. `test_m3_cli_orchestration.sh`: CLI flags & non-interactive UX.
+5. `test_m4_snapshot_restore.sh`: Cache exclusions & atomic rollback.
+6. `test_m5_hela_mcp.sh`: HeLa MCP suite & AI harness isolation.
+7. `test_m5_toolchain.sh`: Python `uv`/`pipx` & Rust toolchain.
+
+---
+
+## 📄 License
+
+MIT © [AZZAR](https://github.com/1999AZZAR)
