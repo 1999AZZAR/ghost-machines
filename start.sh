@@ -2,7 +2,7 @@
 
 # Ghost Machines: Intelligent Entry Point
 # Supports interactive mode, CLI arguments, dynamic UID/GID synchronization,
-# automated hardware detection, and security hardening.
+# automated hardware detection, multi-engine routing, and security hardening.
 
 set -e
 
@@ -53,8 +53,48 @@ HALF_MEM_MB=$((TOTAL_MEM_KB / 1024 / 2))
 
 if [ "$HALF_CORES" -lt 1 ]; then HALF_CORES=1; fi
 
-# 4. Engine & Mode Selection
-if [ -z "$1" ] || [[ "$1" == -* ]]; then
+# 4. CLI Argument Parsing
+ENGINE_ARG=""
+MODE_ARG=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -e|--engine)
+            ENGINE_ARG="$2"
+            shift 2
+            ;;
+        -m|--mode)
+            MODE_ARG="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: ./start.sh [options] [docker compose args...]"
+            echo "Options:"
+            echo "  -e, --engine <ubuntu|debian|alpine|arch>  Select OS engine"
+            echo "  -m, --mode <dual|single|power|half>       Select deployment mode"
+            echo "  -h, --help                               Show this help message"
+            exit 0
+            ;;
+        dual|single|power|half)
+            MODE_ARG="$1"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# 4.1 Handle Engine Selection
+if [ -n "$ENGINE_ARG" ]; then
+    case "${ENGINE_ARG,,}" in
+        ubuntu) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
+        debian) export GHOST_DOCKERFILE="Dockerfile.debian"; export GHOST_IMAGE="debian-template:latest" ;;
+        alpine) export GHOST_DOCKERFILE="Dockerfile.alpine"; export GHOST_IMAGE="alpine-template:latest" ;;
+        arch)   export GHOST_DOCKERFILE="Dockerfile.arch"; export GHOST_IMAGE="arch-template:latest" ;;
+        *) echo "[ERROR] Unknown engine: $ENGINE_ARG (supported: ubuntu, debian, alpine, arch)"; exit 1 ;;
+    esac
+elif [ -z "$MODE_ARG" ]; then
     echo "------------------------------------------------"
     echo " GHOST MACHINES: ENGINE SELECTION"
     echo "------------------------------------------------"
@@ -70,7 +110,16 @@ if [ -z "$1" ] || [[ "$1" == -* ]]; then
         4) export GHOST_DOCKERFILE="Dockerfile.arch"; export GHOST_IMAGE="arch-template:latest" ;;
         *) echo "[ERROR] Invalid selection."; exit 1 ;;
     esac
+else
+    # Default to Ubuntu when mode is given positionally without engine
+    export GHOST_DOCKERFILE="Dockerfile"
+    export GHOST_IMAGE="ubuntu-template:latest"
+fi
 
+# 4.2 Handle Mode Selection
+if [ -n "$MODE_ARG" ]; then
+    MODE="${MODE_ARG,,}"
+else
     echo "------------------------------------------------"
     echo " GHOST MACHINES: DEPLOYMENT SELECTION"
     echo "------------------------------------------------"
@@ -86,12 +135,6 @@ if [ -z "$1" ] || [[ "$1" == -* ]]; then
         4) MODE="half" ;;
         *) echo "[ERROR] Invalid selection."; exit 1 ;;
     esac
-else
-    # Default to Ubuntu for CLI arguments
-    export GHOST_DOCKERFILE="Dockerfile"
-    export GHOST_IMAGE="ubuntu-template:latest"
-    MODE=$1
-    shift
 fi
 
 # 5. Profile Management & Pre-Flight Validation
@@ -107,7 +150,7 @@ fi
 
 case $MODE in
     "dual")
-        echo "[MODE] Dual Deployment (UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Dual Deployment (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine1"
         export G2_NAME="ghost-machine2"
         export G1_CPU="1.0"
@@ -117,14 +160,14 @@ case $MODE in
         COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d"
         ;;
     "single")
-        echo "[MODE] Single Instance (UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Single Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
         COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     "power")
-        echo "[MODE] Power Instance (UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Power Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
@@ -138,7 +181,7 @@ case $MODE in
         COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     *)
-        echo "[ERROR] Unknown mode: $MODE"
+        echo "[ERROR] Unknown mode: $MODE (supported: dual, single, power, half)"
         exit 1
         ;;
 esac
