@@ -25,7 +25,7 @@ RUN pacman -Sy --noconfirm && pacman -S --noconfirm \
     zip p7zip nmap lsof xclip \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd jq \
-    openssh figlet \
+    openssh figlet fortune-mod \
     && ssh-keygen -A \
     && mkdir -p /var/run/sshd \
     && pacman -Scc --noconfirm

@@ -19,6 +19,9 @@ services:
       - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
     ports:
       - "${G1_PORT:-2223}:22"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     volumes:
       - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
       - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro
@@ -58,6 +61,9 @@ services:
       - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
     ports:
       - "${G2_PORT:-2224}:22"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     volumes:
       - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
       - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro

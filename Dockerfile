@@ -29,10 +29,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd-find jq \
     kitty kitty-terminfo \
-    openssh-server figlet \
+    openssh-server figlet fortune-mod fortunes fortunes-min \
     && mkdir -p /var/run/sshd \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
+    && ln -sf /usr/games/fortune /usr/local/bin/fortune \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 3. Node.js (Latest Current)

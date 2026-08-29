@@ -26,7 +26,7 @@ RUN apk update && apk add --no-cache \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd jq \
     kitty kitty-terminfo \
-    openssh-server figlet \
+    openssh-server figlet fortune \
     && mkdir -p /var/run/sshd \
     && ssh-keygen -A \
     && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
