@@ -68,8 +68,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends micro \
     install fastfetch-*/usr/bin/fastfetch /usr/local/bin/fastfetch && rm -rf fastfetch-* \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# 7. AI CLIs & Harnesses (Gemini, Codex, RTK, Kilo CLI, OpenCode, Antigravity CLI)
-RUN npm install -g @google/gemini-cli @openai/codex @kilocode/cli opencode-ai \
+# 7. AI Harness CLIs (Antigravity CLI, OpenCode, Kilo CLI, RTK)
+RUN npm install -g @kilocode/cli opencode-ai \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
     elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \

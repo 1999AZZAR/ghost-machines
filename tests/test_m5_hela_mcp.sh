@@ -42,8 +42,8 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
 done
 echo "PASSED"
 
-# Test 3: Verify AI harnesses (Kilo, OpenCode, Antigravity) across Dockerfiles
-echo -n "[TEST 3] Dockerfile AI harness packages (@kilocode/cli, opencode-ai, agy)... "
+# Test 3: Verify AI harnesses (Kilo, OpenCode, Antigravity) and absence of codex/gemini
+echo -n "[TEST 3] Dockerfile AI harness packages (@kilocode/cli, opencode-ai, agy - no codex/gemini)... "
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
     if ! grep -q "@kilocode/cli" "$DOCKERFILE"; then
         echo "FAILED: $DOCKERFILE missing @kilocode/cli"
@@ -55,6 +55,14 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
     fi
     if ! grep -q "agy" "$DOCKERFILE"; then
         echo "FAILED: $DOCKERFILE missing agy CLI setup"
+        exit 1
+    fi
+    if grep -q "@google/gemini-cli" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE still contains @google/gemini-cli"
+        exit 1
+    fi
+    if grep -q "@openai/codex" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE still contains @openai/codex"
         exit 1
     fi
 done
