@@ -95,6 +95,7 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # 10. HeLa MCP Ecosystem (Profile: headless-server)
 RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt/mcp-ecosystem \
     && cd /opt/mcp-ecosystem \
+    && sed -i 's|1999AZZAR/research-mcp-server|1999AZZAR/research-assistant-mcp-server|g' config/inventory.json \
     && ./setup.sh --profile headless-server --client antigravity --non-interactive \
     && mkdir -p /root/.mcp \
     && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
