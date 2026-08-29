@@ -66,9 +66,12 @@ setup_user_harnesses_and_conductor() {
             cp -r /root/.local/share/neofetch_ascii "$USER_DIR/.local/share/neofetch_ascii"
         fi
         if [ -d "$USER_DIR/.local/share/neofetch_ascii" ]; then
-            mkdir -p "$USER_DIR/Pictures" "$USER_DIR/.config/neofetch"
+            mkdir -p "$USER_DIR/Pictures" "$USER_DIR/.config/neofetch" "$USER_DIR/.config/fastfetch"
             ln -sfn "$USER_DIR/.local/share/neofetch_ascii/ascii" "$USER_DIR/Pictures/ascii"
             [ -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" ] && cp -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" "$USER_DIR/.config/neofetch/config.conf"
+            if [ -f /root/.config/fastfetch/config.jsonc ] && [ ! -f "$USER_DIR/.config/fastfetch/config.jsonc" ]; then
+                cp /root/.config/fastfetch/config.jsonc "$USER_DIR/.config/fastfetch/config.jsonc"
+            fi
             chmod +x "$USER_DIR/.local/share/neofetch_ascii/ascii/loopers.sh" 2>/dev/null || true
         fi
 
@@ -79,6 +82,7 @@ shopt -s expand_aliases 2>/dev/null || true
 # Global Ghost Aliases
 alias cls='clear'
 alias fetch='fastfetch'
+alias neofetch='fastfetch'
 
 # Custom ASCII Caller Function (neofetch_ascii)
 ascii() {
@@ -86,6 +90,17 @@ ascii() {
     cd "$HOME/Pictures/ascii" 2>/dev/null || { echo "Error: $HOME/Pictures/ascii directory not found."; return 1; }
     ./loopers.sh "$@"
     cd "$original_dir" 2>/dev/null || return 1
+}
+
+# Fastfetch with random ASCII art
+rfetch() {
+    local ascii_file
+    ascii_file=$(find "$HOME/Pictures/ascii" -maxdepth 1 -name "*.txt" 2>/dev/null | shuf -n 1)
+    if [ -n "$ascii_file" ]; then
+        fastfetch --logo "$ascii_file" "$@"
+    else
+        fastfetch "$@"
+    fi
 }
 
 # Alias-Hub Loader
