@@ -56,7 +56,7 @@ if [ -z "$LEVEL" ]; then
     echo "3) Reset Template - All of the above, plus remove the base image"
     echo "4) Cancel"
     echo "------------------------------------------------"
-    read -p "Select cleanup level [1-4]: " LEVEL
+    read -r -p "Select cleanup level [1-4]: " LEVEL
 fi
 
 case $LEVEL in
@@ -66,7 +66,7 @@ case $LEVEL in
         ;;
     2)
         if [ "$FORCE" = false ]; then
-            read -p "[WARNING] This will remove container volumes. Continue? (y/n): " CONFIRM
+            read -r -p "[WARNING] This will remove container volumes. Continue? (y/n): " CONFIRM
             if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
         fi
         echo "[INFO] Performing deep clean (removing volumes)..."
@@ -74,7 +74,7 @@ case $LEVEL in
         ;;
     3)
         if [ "$FORCE" = false ]; then
-            read -p "[WARNING] This will remove containers, volumes, AND local images. Continue? (y/n): " CONFIRM
+            read -r -p "[WARNING] This will remove containers, volumes, AND local images. Continue? (y/n): " CONFIRM
             if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
         fi
         echo "[INFO] Performing full reset (removing volumes and image)..."

@@ -148,7 +148,7 @@ elif [ -z "$MODE_ARG" ]; then
     echo "2) Debian (Slim/Lightweight)"
     echo "3) Alpine (Ultra-Lightweight)"
     echo "4) Arch   (Rolling Release)"
-    read -p "Select Engine [1-4]: " ENG_CHOICE
+    read -r -p "Select Engine [1-4]: " ENG_CHOICE
     case $ENG_CHOICE in
         1) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
         2) export GHOST_DOCKERFILE="Dockerfile.debian"; export GHOST_IMAGE="debian-template:latest" ;;
@@ -173,7 +173,7 @@ else
     echo "2) Single - 1 instance"
     echo "3) Power  - 1 instance (High Resource)"
     echo "4) Half   - 1 instance (50% Host)"
-    read -p "Select mode [1-4]: " CHOICE
+    read -r -p "Select mode [1-4]: " CHOICE
     case $CHOICE in
         1) MODE="dual" ;;
         2) MODE="single" ;;
@@ -184,14 +184,19 @@ else
 fi
 
 # 5. Profile Management & Pre-Flight Validation
-REMOTE_PROFILE=""
+REMOTE_PROFILE_ARGS=()
 if [ -n "$TUNNEL_TOKEN" ]; then
     if [ "$TUNNEL_TOKEN" = "your_cloudflare_tunnel_token" ] || [ ${#TUNNEL_TOKEN} -lt 10 ]; then
         echo "[WARNING] TUNNEL_TOKEN appears to be a placeholder or invalid. Skipping Cloudflare remote tunnel."
     else
         echo "[INFO] Valid Cloudflare Tunnel Token detected. Enabling remote access profile."
-        REMOTE_PROFILE="--profile remote"
+        REMOTE_PROFILE_ARGS=(--profile remote)
     fi
+fi
+
+BUILD_OPTS=()
+if [ -n "$BUILD_FLAG" ]; then
+    BUILD_OPTS=("$BUILD_FLAG")
 fi
 
 case $MODE in
@@ -203,28 +208,28 @@ case $MODE in
         export G1_MEM="8G"
         export G2_CPU="1.0"
         export G2_MEM="8G"
-        COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d $BUILD_FLAG"
+        COMPOSE_FINAL_ARGS=("${REMOTE_PROFILE_ARGS[@]}" --profile dual up -d "${BUILD_OPTS[@]}")
         ;;
     "single")
         echo "[MODE] Single Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID, Port: ${G1_PORT:-2223})"
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
+        COMPOSE_FINAL_ARGS=("${REMOTE_PROFILE_ARGS[@]}" up -d "${BUILD_OPTS[@]}" ghost1)
         ;;
     "power")
         echo "[MODE] Power Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID, Port: ${G1_PORT:-2223})"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
+        COMPOSE_FINAL_ARGS=("${REMOTE_PROFILE_ARGS[@]}" up -d "${BUILD_OPTS[@]}" ghost1)
         ;;
     "half")
         echo "[MODE] Half-Host Instance ($HALF_CORES CPU, ${HALF_MEM_MB}M RAM)"
         export G1_NAME="ghost-machine-half"
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
+        COMPOSE_FINAL_ARGS=("${REMOTE_PROFILE_ARGS[@]}" up -d "${BUILD_OPTS[@]}" ghost1)
         ;;
     *)
         echo "[ERROR] Unknown mode: $MODE (supported: dual, single, power, half)"
@@ -232,4 +237,4 @@ case $MODE in
         ;;
 esac
 
-docker compose $COMPOSE_ARGS "${EXTRA_COMPOSE_ARGS[@]}"
+docker compose "${COMPOSE_FINAL_ARGS[@]}" "${EXTRA_COMPOSE_ARGS[@]}"

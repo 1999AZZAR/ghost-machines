@@ -80,7 +80,7 @@ elif command -v shasum &> /dev/null; then
 fi
 
 ARCHIVE_HASH=$(awk '{print $1}' "${BACKUP_NAME}.sha256" 2>/dev/null || echo "unknown")
-ARCHIVE_SIZE=$(ls -lh "$BACKUP_NAME" | awk '{print $5}')
+ARCHIVE_SIZE=$(du -h "$BACKUP_NAME" | cut -f1)
 TOTAL_FILES=$(find mounts/ -type f | wc -l)
 
 # Generate Metadata Manifest

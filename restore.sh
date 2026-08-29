@@ -76,7 +76,7 @@ fi
 
 # 2. Confirmation Check
 if [ "$FORCE" = false ]; then
-    read -p "[WARNING] This will overwrite your current mounts/ directory. Continue? (y/n): " CONFIRM
+    read -r -p "[WARNING] This will overwrite your current mounts/ directory. Continue? (y/n): " CONFIRM
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
         echo "Restore cancelled."
         exit 0
