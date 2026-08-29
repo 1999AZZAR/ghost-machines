@@ -59,28 +59,29 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 3: CLI Orchestration & Automation UX
 > **Goal:** Support fully automated, non-interactive scripting workflows, unified flag parsing, and cross-distro host setup.
 
-- [ ] **3.1 Unified CLI Argument Parsing in `start.sh`**
-  - [ ] Implement long/short flag parser:
+- [x] **3.1 Unified CLI Argument Parsing in `start.sh`**
+  - [x] Implement long/short flag parser:
     - `-e, --engine <ubuntu|debian|alpine|arch>`
     - `-m, --mode <dual|single|power|half>`
     - `-p, --port <base_port>` (default 2223)
     - `-t, --tunnel <token>`
     - `-d, --detach`
-    - `-n, --no-build`
+    - `-b, --build`
     - `-h, --help`
-  - [ ] Retain interactive TUI fallback when executed without arguments.
-- [ ] **3.2 Headless & Non-Interactive `clean.sh`**
-  - [ ] Add CLI arguments: `./clean.sh --stop`, `./clean.sh --volumes`, `./clean.sh --all`, `./clean.sh -y`.
-  - [ ] Include container status check before attempting shutdown to avoid redundant errors.
-- [ ] **3.3 Cross-Distribution `setup-host.sh`**
-  - [ ] Support package managers beyond `apt`:
+  - [x] Retain interactive TUI fallback when executed without arguments.
+- [x] **3.2 Headless & Non-Interactive `clean.sh`**
+  - [x] Add CLI arguments: `./clean.sh --stop`, `./clean.sh --volumes`, `./clean.sh --all`, `./clean.sh -y`.
+  - [x] Include container status check before attempting shutdown to avoid redundant errors.
+- [x] **3.3 Cross-Distribution `setup-host.sh`**
+  - [x] Support package managers beyond `apt`:
     - Debian/Ubuntu (`apt-get`)
     - Arch Linux / Manjaro (`pacman`)
     - Fedora / RHEL (`dnf`)
     - Alpine (`apk`)
-  - [ ] Fallback gracefully on macOS and non-systemd Linux hosts with informative guidance.
-- [ ] **3.4 Ergonomic Shell Aliases & Helper Functions**
-  - [ ] Update `aliases.sh` with subcommands:
+    - openSUSE (`zypper`)
+  - [x] Fallback gracefully on macOS and non-systemd Linux hosts with informative guidance.
+- [x] **3.4 Ergonomic Shell Aliases & Helper Functions**
+  - [x] Update `aliases.sh` with subcommands:
     - `ghost-exec [container] [cmd]`
     - `ghost-ssh [1|2|single|power|half]`
     - `ghost-status`
