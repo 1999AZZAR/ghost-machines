@@ -13,3 +13,5 @@
   *Link: [./tracks/m5_hela_mcp_ecosystem_20260830/index.md](./tracks/m5_hela_mcp_ecosystem_20260830/index.md)*
 - [x] **Track: Milestone 5 Part 2: Modern Python (uv/pipx) & Rust Toolchains**
   *Link: [./tracks/m5_modern_toolchain_uv_rust_20260830/index.md](./tracks/m5_modern_toolchain_uv_rust_20260830/index.md)*
+- [~] **Track: Milestone 6: Quality Assurance, CI/CD & Automated Testing**
+  *Link: [./tracks/m6_qa_cicd_automation_20260830/index.md](./tracks/m6_qa_cicd_automation_20260830/index.md)*
