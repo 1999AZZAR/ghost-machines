@@ -7,13 +7,19 @@ echo "=================================================="
 echo "RUNNING M5 HELA MCP ECOSYSTEM & HARNESS TESTS"
 echo "=================================================="
 
-# Test 1: Verify local MCP ecosystem repository and headless-server profile
-echo -n "[TEST 1] Local HeLa MCP repository & headless-server profile... "
-ECOSYSTEM_DIR="/home/azzar/project/MCPservers/mcp-ecosystem"
+# Test 1: Verify MCP ecosystem repository and headless-server profile
+echo -n "[TEST 1] HeLa MCP repository & headless-server profile... "
+ECOSYSTEM_DIR="${MCP_ECOSYSTEM_LOCAL_PATH:-/home/azzar/project/MCPservers/mcp-ecosystem}"
+CLEANUP_TEMP=false
+
 if [ ! -d "$ECOSYSTEM_DIR" ]; then
-    echo "FAILED: Local directory $ECOSYSTEM_DIR not found"
-    exit 1
+    ECOSYSTEM_DIR="/tmp/mcp-ecosystem"
+    if [ ! -d "$ECOSYSTEM_DIR" ]; then
+        git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git "$ECOSYSTEM_DIR" > /dev/null 2>&1
+        CLEANUP_TEMP=true
+    fi
 fi
+
 if [ ! -f "$ECOSYSTEM_DIR/config/profiles.json" ]; then
     echo "FAILED: profiles.json missing in $ECOSYSTEM_DIR"
     exit 1
@@ -70,7 +76,7 @@ echo "PASSED"
 
 # Test 4: Verify docker compose config validation with MCP_ECOSYSTEM_LOCAL_PATH
 echo -n "[TEST 4] docker compose config validation with MCP ecosystem mount... "
-export MCP_ECOSYSTEM_LOCAL_PATH="/home/azzar/project/MCPservers/mcp-ecosystem"
+export MCP_ECOSYSTEM_LOCAL_PATH="$ECOSYSTEM_DIR"
 docker compose config --quiet
 echo "PASSED"
 
@@ -81,6 +87,11 @@ echo -n "[TEST 5] Test generate-config.mjs with headless-server profile... "
     node scripts/generate-config.mjs headless-server --backend antigravity --stdout > /dev/null
 )
 echo "PASSED"
+
+# Cleanup temporary clone if created for CI
+if [ "$CLEANUP_TEMP" = true ]; then
+    rm -rf /tmp/mcp-ecosystem
+fi
 
 echo "=================================================="
 echo "ALL M5 TESTS PASSED SUCCESSFULLY!"
