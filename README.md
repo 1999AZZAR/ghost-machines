@@ -20,6 +20,7 @@ Ghost Machines provides reproducible container environments with dynamic host us
   - [HeLa Cellular MCP Stack](#hela-cellular-mcp-stack)
 - [Toolchain & Included Packages](#toolchain--included-packages)
 - [Security & Access Control](#security--access-control)
+- [UI/UX & Shell Stack](#uiux--shell-stack)
 - [State Snapshots & Recovery](#state-snapshots--recovery)
 - [Cleanup](#cleanup)
 - [Task Runner (Makefile) & Shell Shortcuts](#task-runner-makefile--shell-shortcuts)
@@ -86,7 +87,24 @@ Or pass flags directly for non-interactive startup:
 
 # Launch Alpine engine on custom SSH port 2225 with image rebuild:
 ./start.sh --engine alpine --mode single --port 2225 --build
+
+# Launch Debian engine in single instance mode:
+./start.sh -e debian -m single
 ```
+
+### 4. Connect via SSH
+
+Once the container starts, connect immediately using standard SSH:
+
+```bash
+ssh -p 2223 developer@localhost
+```
+
+- **Default Username:** `developer`
+- **Default Password:** `ghost` (for both SSH login and `sudo`)
+- **Root Login:** `ssh -p 2223 root@localhost` (password: `ghost`)
+- **Key Authentication:** If `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub` is present on your host, it is automatically mounted and authorized for passwordless access.
+
 
 ---
 
