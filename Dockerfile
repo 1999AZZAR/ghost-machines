@@ -87,6 +87,7 @@ RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
     && git clone --depth=1 https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii \
+    && [ -f /root/.config/fastfetch/config.jsonc ] && sed -i 's/"format": "{1}"/"format": "{all}"/g' /root/.config/fastfetch/config.jsonc || true \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 9. SSH Configuration

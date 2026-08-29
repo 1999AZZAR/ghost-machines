@@ -80,7 +80,8 @@ RUN npm install -g @kilocode/cli opencode-ai \
 # 8. UI/UX STACK (1. Oh-My-Bash, 2. Alias-Hub, 3. Neofetch-ASCII)
 RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
-    && git clone --depth=1 https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii
+    && git clone --depth=1 https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii \
+    && [ -f /root/.config/fastfetch/config.jsonc ] && sed -i 's/"format": "{1}"/"format": "{all}"/g' /root/.config/fastfetch/config.jsonc || true
 
 # 9. SSH Configuration
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \

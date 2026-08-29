@@ -77,6 +77,9 @@ setup_user_harnesses_and_conductor() {
             if [ -f /root/.config/fastfetch/config.jsonc ] && [ ! -f "$USER_DIR/.config/fastfetch/config.jsonc" ]; then
                 cp /root/.config/fastfetch/config.jsonc "$USER_DIR/.config/fastfetch/config.jsonc"
             fi
+            if [ -f "$USER_DIR/.config/fastfetch/config.jsonc" ]; then
+                sed -i 's/"format": "{1}"/"format": "{all}"/g' "$USER_DIR/.config/fastfetch/config.jsonc"
+            fi
             chmod +x "$USER_DIR/.local/share/neofetch_ascii/ascii/loopers.sh" 2>/dev/null || true
         fi
 
