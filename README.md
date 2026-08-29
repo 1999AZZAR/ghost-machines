@@ -141,13 +141,32 @@ All images build the **HeLa MCP Ecosystem** using the `headless-server` profile 
 | `mcp-enzyme` | `hela-enzyme` | Research assistant combining Google Search and cached Wikipedia lookups. |
 | `mcp-phenotype` | `hela-phenotype` | UI/UX token generator, OKLCH palettes, and Tailwind utility synthesis. |
 
-Legacy aliases `mcp-terminal` and `mcp-filesystem` are preserved. Client configuration files are generated at `/root/.mcp/config.json` and `/home/developer/.mcp/config.json`.
+Legacy aliases `mcp-terminal` and `mcp-filesystem` are preserved. Client configuration files are automatically generated and pre-configured for all three harnesses:
+- **Antigravity CLI:** `~/.mcp/config.json`
+- **OpenCode CLI:** `~/.config/opencode/config.json`
+- **Kilo CLI:** `~/.config/kilo/config.json`
 
 To mount a local clone of the ecosystem during container development, set `MCP_ECOSYSTEM_LOCAL_PATH` in `.env`:
 
 ```bash
 MCP_ECOSYSTEM_LOCAL_PATH=/path/to/mcp-ecosystem
 ```
+
+### Google Conductor Plugin Integration
+
+Google Conductor is built into `/opt/conductor` and linked across all agent harnesses:
+
+- **Git-Tracked Source:** `~/.agents/plugins/conductor/` (linked to `/opt/conductor`)
+- **Global Agent Skills:** `~/.agents/skills/conductor-*`
+  - `conductor-setup`
+  - `conductor-new-track`
+  - `conductor-implement`
+  - `conductor-status`
+  - `conductor-revert`
+  - `conductor-review`
+- **Antigravity Plugin Adapter:** `~/.gemini/config/plugins/conductor`
+
+All three harnesses (`antigravity`, `opencode`, `kilo`) discover Conductor skills automatically on startup.
 
 ---
 

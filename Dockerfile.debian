@@ -89,13 +89,15 @@ RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/m
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
-# 10. HeLa MCP Ecosystem (Profile: headless-server)
+# 10. HeLa MCP Ecosystem (Profile: headless-server) & Google Conductor Plugin
 RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt/mcp-ecosystem \
     && cd /opt/mcp-ecosystem \
     && sed -i 's|1999AZZAR/research-mcp-server|1999AZZAR/research-assistant-mcp-server|g' config/inventory.json \
     && ./setup.sh --profile headless-server --client antigravity --non-interactive \
-    && mkdir -p /root/.mcp \
+    && mkdir -p /root/.mcp /root/.config/opencode /root/.config/kilo \
     && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
+    && node scripts/generate-config.mjs headless-server --backend opencode --root /opt/mcp-ecosystem --out /root/.config/opencode/config.json \
+    && node scripts/generate-config.mjs headless-server --backend kilo --root /opt/mcp-ecosystem --out /root/.config/kilo/config.json \
     && ln -sf /opt/mcp-ecosystem /root/MCPservers \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/chaining-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-mitosis \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/Project-Guardian-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-genome \
@@ -107,6 +109,13 @@ RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/terminal-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/filesystem-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
     && chmod +x /usr/local/bin/mcp-* \
+    && git clone --depth=1 https://github.com/gemini-cli-extensions/conductor.git /opt/conductor \
+    && mkdir -p /root/.agents/plugins /root/.agents/skills /root/.gemini/config/plugins \
+    && ln -sf /opt/conductor /root/.agents/plugins/conductor \
+    && ln -sf /opt/conductor /root/.gemini/config/plugins/conductor \
+    && for skill in conductor-setup conductor-new-track conductor-implement conductor-status conductor-revert conductor-review; do \
+           ln -sf /opt/conductor/skills/$skill /root/.agents/skills/$skill; \
+       done \
     && npm cache clean --force
 
 # 11. Non-Root User & Sudoers Setup
@@ -126,8 +135,15 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     echo "${GHOST_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${GHOST_USER} && \
     chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
     echo "${GHOST_USER}:${GHOST_USER}" | chpasswd && \
-    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
+    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.config/opencode /home/${GHOST_USER}/.config/kilo /home/${GHOST_USER}/.agents/plugins /home/${GHOST_USER}/.agents/skills /home/${GHOST_USER}/.gemini/config/plugins /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
     cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
+    cp /root/.config/opencode/config.json /home/${GHOST_USER}/.config/opencode/config.json 2>/dev/null || true && \
+    cp /root/.config/kilo/config.json /home/${GHOST_USER}/.config/kilo/config.json 2>/dev/null || true && \
+    ln -sf /opt/conductor /home/${GHOST_USER}/.agents/plugins/conductor && \
+    ln -sf /opt/conductor /home/${GHOST_USER}/.gemini/config/plugins/conductor && \
+    for skill in conductor-setup conductor-new-track conductor-implement conductor-status conductor-revert conductor-review; do \
+        ln -sf /opt/conductor/skills/$skill /home/${GHOST_USER}/.agents/skills/$skill; \
+    done && \
     chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER}
 
 COPY entrypoint.sh /entrypoint.sh

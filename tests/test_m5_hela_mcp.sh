@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test Suite for M5: HeLa MCP Ecosystem Integration (Headless-Server Profile) & Harness CLIs
+# Test Suite for M5: HeLa MCP Ecosystem Integration (Headless-Server Profile), Harness CLIs & Conductor
 
 set -e
 
@@ -80,12 +80,32 @@ export MCP_ECOSYSTEM_LOCAL_PATH="$ECOSYSTEM_DIR"
 docker compose config --quiet
 echo "PASSED"
 
-# Test 5: Verify test client generation via local ecosystem generator
-echo -n "[TEST 5] Test generate-config.mjs with headless-server profile... "
+# Test 5: Verify test client generation for all 3 harnesses (antigravity, opencode, kilo)
+echo -n "[TEST 5] Test generate-config.mjs for Antigravity, OpenCode, and Kilo... "
 (
     cd "$ECOSYSTEM_DIR"
     node scripts/generate-config.mjs headless-server --backend antigravity --stdout > /dev/null
+    node scripts/generate-config.mjs headless-server --backend opencode --stdout > /dev/null
+    node scripts/generate-config.mjs headless-server --backend kilo --stdout > /dev/null
 )
+echo "PASSED"
+
+# Test 6: Verify Google Conductor repository setup across Dockerfiles & entrypoint
+echo -n "[TEST 6] Google Conductor plugin and skills integration... "
+for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
+    if ! grep -q "conductor.git" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing conductor.git clone"
+        exit 1
+    fi
+    if ! grep -q "conductor-setup" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing conductor-setup skill link"
+        exit 1
+    fi
+done
+if ! grep -q "setup_user_harnesses_and_conductor" entrypoint.sh; then
+    echo "FAILED: entrypoint.sh missing setup_user_harnesses_and_conductor"
+    exit 1
+fi
 echo "PASSED"
 
 # Cleanup temporary clone if created for CI
