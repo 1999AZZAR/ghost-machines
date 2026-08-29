@@ -264,6 +264,14 @@ fi
 if [ -f /root/.bun/bin/bun ]; then
     ln -sf /root/.bun/bin/bun /usr/local/bin/bun 2>/dev/null || true
 fi
+if [ -f /usr/local/go/bin/go ]; then
+    ln -sf /usr/local/go/bin/go /usr/local/bin/go 2>/dev/null || true
+    ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt 2>/dev/null || true
+fi
+if [ -f /usr/local/cargo/bin/cargo ]; then
+    ln -sf /usr/local/cargo/bin/cargo /usr/local/bin/cargo 2>/dev/null || true
+    ln -sf /usr/local/cargo/bin/rustc /usr/local/bin/rustc 2>/dev/null || true
+fi
 
 TARGET_USER="${GHOST_USER:-developer}"
 if [ -n "$HOST_UID" ] && [ -n "$HOST_GID" ] && [ "$TARGET_USER" != "root" ] && id "$TARGET_USER" >/dev/null 2>&1; then
