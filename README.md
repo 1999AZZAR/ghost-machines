@@ -145,6 +145,18 @@ Container names:
 - **Dual Mode:** `ghost-machine1`, `ghost-machine2`
 - **Single / Power / Half Modes:** `ghost-machine-single`, `ghost-machine-power`, `ghost-machine-half`
 
+### Real-World Resource Benchmarks
+
+Ghost Machines is engineered for near-zero idle overhead with high performance under load:
+
+| Operational State | Workload / Active Processes | CPU Usage | Memory Usage | Memory % (8 GB Sandbox) | Active PIDs |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Idle / Stale** | Container standby (`sshd` waiting for connections) | `0.00%` | `~73.5 MiB` | `0.90%` | `1` |
+| **Active AI Agent** | `opencode` active session + all 7 HeLa MCP server daemons | `~1.99%` | `~1,002 MiB` | `12.23%` | `65` |
+
+> [!TIP]
+> Under full autonomous load with all 7 background MCP daemons actively communicating, the workstation consumes only **~1 GB**, leaving **~88% of memory headroom (~7 GB)** dedicated to heavy compilers (Rust, Go, Node, C++), test suites, and project builds.
+
 ---
 
 ## AI Harnesses & HeLa MCP Ecosystem
