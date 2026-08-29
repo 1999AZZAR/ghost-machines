@@ -70,24 +70,60 @@ setup_user_harnesses_and_conductor() {
             ln -sfn "$USER_DIR/.local/share/neofetch_ascii/ascii" "$USER_DIR/Pictures/ascii"
             [ -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" ] && cp -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" "$USER_DIR/.config/neofetch/config.conf"
             chmod +x "$USER_DIR/.local/share/neofetch_ascii/ascii/loopers.sh" 2>/dev/null || true
-            if ! grep -q "ascii()" "$USER_DIR/.bashrc" 2>/dev/null; then
-                cat <<'EOF' >> "$USER_DIR/.bashrc"
+        fi
+
+        # Bash Aliases & Helper Functions setup
+        cat <<'EOF' > "$USER_DIR/.bash_aliases"
+shopt -s expand_aliases 2>/dev/null || true
+
+# Global Ghost Aliases
+alias cls='clear'
+alias fetch='fastfetch'
 
 # Custom ASCII Caller Function (neofetch_ascii)
 ascii() {
     local original_dir=$(pwd)
-    cd "$HOME/Pictures/ascii" || { echo "Error: $HOME/Pictures/ascii directory not found."; return 1; }
+    cd "$HOME/Pictures/ascii" 2>/dev/null || { echo "Error: $HOME/Pictures/ascii directory not found."; return 1; }
     ./loopers.sh "$@"
-    cd "$original_dir" || return 1
+    cd "$original_dir" 2>/dev/null || return 1
 }
-alias cls='clear'
-alias fetch='fastfetch'
+
+# Alias-Hub Loader
+export ALIASES_DIR="$HOME/alias-hub"
+if [ -d "$ALIASES_DIR" ]; then
+    [ -f "$ALIASES_DIR/script/helpers.sh" ] && source "$ALIASES_DIR/script/helpers.sh" 2>/dev/null || true
+    for file in "$ALIASES_DIR"/*.alias; do
+        [ -f "$file" ] && source "$file" 2>/dev/null || true
+    done
+fi
 EOF
-            fi
+
+        # Ensure .bashrc sources .bash_aliases
+        if [ -f "$USER_DIR/.bashrc" ] && ! grep -q ".bash_aliases" "$USER_DIR/.bashrc" 2>/dev/null; then
+            cat <<'EOF' >> "$USER_DIR/.bashrc"
+
+if [ -f "$HOME/.bash_aliases" ]; then
+    . "$HOME/.bash_aliases"
+fi
+EOF
         fi
 
-        if [ -f /root/.bash_aliases ] && [ ! -f "$USER_DIR/.bash_aliases" ]; then
-            cp /root/.bash_aliases "$USER_DIR/.bash_aliases"
+        # Login shell profile setup
+        if [ ! -f "$USER_DIR/.profile" ] || ! grep -q ".bash_aliases" "$USER_DIR/.profile" 2>/dev/null; then
+            cat <<'EOF' > "$USER_DIR/.profile"
+# ~/.profile: executed by Bourne-compatible login shells.
+if [ -n "$BASH_VERSION" ]; then
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
+fi
+if [ -f "$HOME/.bash_aliases" ]; then
+    . "$HOME/.bash_aliases"
+fi
+if [ -d "$HOME/.local/bin" ]; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+EOF
         fi
 
         # Sync MCP configs if missing

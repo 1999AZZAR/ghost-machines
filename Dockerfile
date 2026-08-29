@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nnn fzf ripgrep tmux \
     bat eza zoxide fd-find jq \
     kitty kitty-terminfo \
-    openssh-server \
+    openssh-server figlet \
     && mkdir -p /var/run/sshd \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat \
     && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
