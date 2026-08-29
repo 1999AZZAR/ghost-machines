@@ -80,16 +80,23 @@ RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/m
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && echo 'root:root' | chpasswd
 
-# 10. MCP Servers
-RUN mkdir -p /root/MCPservers \
-    && git clone --depth=1 https://github.com/1999AZZAR/terminal-mcp-server.git /root/MCPservers/terminal \
-    && cd /root/MCPservers/terminal && npm install && npm run build \
-    && git clone --depth=1 https://github.com/1999AZZAR/filesystem-mcp-server.git /root/MCPservers/filesystem \
-    && cd /root/MCPservers/filesystem && npm install && npm run build \
-    && npm install -g @modelcontextprotocol/server-sequential-thinking \
-    && echo '#!/bin/bash\nnode /root/MCPservers/terminal/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
-    && echo '#!/bin/bash\nnode /root/MCPservers/filesystem/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
-    && chmod +x /usr/local/bin/mcp-terminal /usr/local/bin/mcp-filesystem \
+# 10. HeLa MCP Ecosystem (Profile: headless-server)
+RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt/mcp-ecosystem \
+    && cd /opt/mcp-ecosystem \
+    && ./setup.sh --profile headless-server --client antigravity --non-interactive \
+    && mkdir -p /root/.mcp \
+    && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
+    && ln -sf /opt/mcp-ecosystem /root/MCPservers \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/chaining-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-mitosis \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/Project-Guardian-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-genome \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/filesystem-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-membrane \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/terminal-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-nucleus \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/menager-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-ribosome \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/research-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-enzyme \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/the-designer/dist/index.js "$@"' > /usr/local/bin/mcp-phenotype \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/terminal-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
+    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/filesystem-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
+    && chmod +x /usr/local/bin/mcp-* \
     && npm cache clean --force
 
 # 11. Non-Root User & Sudoers Setup
@@ -109,7 +116,8 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     echo "${GHOST_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${GHOST_USER} && \
     chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
     echo "${GHOST_USER}:${GHOST_USER}" | chpasswd && \
-    mkdir -p /home/${GHOST_USER}/.ssh && \
+    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp && \
+    cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
     chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER}
 
 COPY entrypoint.sh /entrypoint.sh
