@@ -162,7 +162,7 @@ Ghost Machines is engineered for near-zero idle overhead with high performance u
 
 ## Multi-Tenant Workspace-as-a-Service (WaaS)
 
-Ghost Machines includes a dynamic multi-tenant orchestration CLI (`tenant.sh`), enabling teams, educators, and VPS hosts to provision, scale, monitor, and sell isolated developer and AI agent workstations on a single machine:
+Ghost Machines implements a multi-tenant **[Workspace as a Service (WaaS)](https://en.wikipedia.org/wiki/Workspace_as_a_service)** and **[Cloud Development Environment (CDE)](https://learn.microsoft.com/en-us/azure/dev-box/overview-what-is-microsoft-dev-box)** architecture via `tenant.sh`. It enables engineering teams, educators, organizations, and VPS hosts to dynamically provision, scale, monitor, and vend isolated developer and autonomous AI agent workstations on a single high-performance machine:
 
 ### Quick Tenant Management Commands
 
