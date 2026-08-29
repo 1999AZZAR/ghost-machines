@@ -4,6 +4,8 @@ Disposable, multi-engine Linux sandboxes and autonomous agent workstations orche
 
 Ghost Machines provides reproducible container environments with dynamic host user permissions, non-root execution, accurate resource virtualization through LXCFS, zero-trust remote access, and integration with the HeLa MCP Ecosystem.
 
+![Ghost Machines Architecture](assets/ghost-machines-architecture.png)
+
 ---
 
 ## Table of Contents
