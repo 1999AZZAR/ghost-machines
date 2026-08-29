@@ -72,7 +72,9 @@ desktop.ini
 *.sublime-project
 *.sublime-workspace
 
-# Agent & Workspace Cache
+# Agent, Conductor & Workspace Cache
+conductor/
+.conductor/
 .agents/
 .gemini/
 .antigravity/
