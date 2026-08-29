@@ -40,19 +40,19 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 2: Multi-Engine Parity & Image Optimization
 > **Goal:** Achieve full feature parity across all 4 OS engines, slim down image layers by 30-50%, and fix engine discovery gaps.
 
-- [ ] **2.1 Arch Linux Engine Integration**
-  - [ ] Add Arch Linux as Option 4 in `start.sh` interactive engine selection menu.
-  - [ ] Add CLI flag support for Arch (`--engine arch`).
-  - [ ] Add `GHOST_IMAGE="arch-template:latest"` and `Dockerfile.arch` mapping in `start.sh`.
-- [ ] **2.2 Dockerfile Layer & Cache Cleanup**
-  - [ ] **Ubuntu (`Dockerfile`)**: Append `apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*` in single layer.
-  - [ ] **Debian (`Dockerfile.debian`)**: Consolidate `apt-get update` & `install`, clean lists.
-  - [ ] **Alpine (`Dockerfile.alpine`)**: Remove temporary build deps (`build-base`, temporary archive downloads).
-  - [ ] **Arch (`Dockerfile.arch`)**: Clean pacman cache with `pacman -Scc --noconfirm` and remove build artifacts.
-- [ ] **2.3 Multi-Stage & Multi-Arch Build Reliability**
-  - [ ] Standardize binary download architecture logic (`uname -m` vs Docker `TARGETARCH` / `TARGETOS`).
-  - [ ] Add checksum verification for external downloads (Helix, Lazygit, Fastfetch, Go binaries).
-  - [ ] Pin software release versions via build arguments (`GO_VERSION`, `HELIX_VERSION`, `LAZYGIT_VERSION`).
+- [x] **2.1 Arch Linux Engine Integration**
+  - [x] Add Arch Linux as Option 4 in `start.sh` interactive engine selection menu.
+  - [x] Add CLI flag support for Arch (`--engine arch`).
+  - [x] Add `GHOST_IMAGE="arch-template:latest"` and `Dockerfile.arch` mapping in `start.sh`.
+- [x] **2.2 Dockerfile Layer & Cache Cleanup**
+  - [x] **Ubuntu (`Dockerfile`)**: Append `apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*` in single layer.
+  - [x] **Debian (`Dockerfile.debian`)**: Consolidate `apt-get update` & `install`, clean lists.
+  - [x] **Alpine (`Dockerfile.alpine`)**: Remove temporary build deps (`build-base`, temporary archive downloads).
+  - [x] **Arch (`Dockerfile.arch`)**: Clean pacman cache with `pacman -Scc --noconfirm` and remove build artifacts.
+- [x] **2.3 Multi-Stage & Multi-Arch Build Reliability**
+  - [x] Standardize binary download architecture logic (`uname -m` vs Docker `TARGETARCH` / `TARGETOS`).
+  - [x] Add checksum verification for external downloads (Helix, Lazygit, Fastfetch, Go binaries).
+  - [x] Pin software release versions via build arguments (`GO_VERSION`, `HELIX_VERSION`, `LAZYGIT_VERSION`).
 
 ---
 
