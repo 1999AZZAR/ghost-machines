@@ -92,7 +92,8 @@ fi
 
 # 4. Safe Decompression with Atomic Rollback Protection
 echo "[INFO] Extracting $SNAPSHOT..."
-rm -rf mounts/
+# Preserve directory inode so active container VFS mounts are not invalidated
+find mounts -mindepth 1 -delete 2>/dev/null || true
 
 if tar -xzf "$SNAPSHOT"; then
     echo "[SUCCESS] Workspace state restored successfully."
@@ -102,9 +103,10 @@ if tar -xzf "$SNAPSHOT"; then
     echo "[NOTE] Run './start.sh' to launch environments with restored data."
 else
     echo "[ERROR] Snapshot extraction failed. Performing atomic rollback to previous state..."
-    rm -rf mounts/
+    find mounts -mindepth 1 -delete 2>/dev/null || true
     if [ -d "$BACKUP_DIR" ]; then
-        mv "$BACKUP_DIR" mounts/
+        cp -r "$BACKUP_DIR"/* mounts/ 2>/dev/null || true
+        rm -rf "$BACKUP_DIR"
         echo "[ROLLBACK] Previous workspace mounts successfully restored."
     fi
     exit 1
