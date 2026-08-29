@@ -141,7 +141,7 @@ All images build the **HeLa MCP Ecosystem** using the `headless-server` profile 
 | `mcp-enzyme` | `hela-enzyme` | Research assistant combining Google Search and cached Wikipedia lookups. |
 | `mcp-phenotype` | `hela-phenotype` | UI/UX token generator, OKLCH palettes, and Tailwind utility synthesis. |
 
-Legacy aliases `mcp-terminal` and `mcp-filesystem` are preserved. Client configuration files are automatically generated and pre-configured for all three harnesses:
+Client configuration files are automatically generated and pre-configured for all three AI harnesses:
 - **Antigravity CLI:** `~/.mcp/config.json`
 - **OpenCode CLI:** `~/.config/opencode/config.json`
 - **Kilo CLI:** `~/.config/kilo/config.json`

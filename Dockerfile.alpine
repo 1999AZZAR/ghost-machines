@@ -103,8 +103,6 @@ RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/menager-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-ribosome \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/research-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-enzyme \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/the-designer/dist/index.js "$@"' > /usr/local/bin/mcp-phenotype \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/terminal-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-terminal \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/filesystem-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
     && chmod +x /usr/local/bin/mcp-* \
     && git clone --depth=1 https://github.com/gemini-cli-extensions/conductor.git /opt/conductor \
     && mkdir -p /root/.agents/plugins /root/.agents/skills /root/.gemini/config/plugins \
