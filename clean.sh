@@ -78,7 +78,8 @@ case $LEVEL in
             if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
         fi
         echo "[INFO] Performing full reset (removing volumes and image)..."
-        docker compose --profile dual --profile remote down -v --rmi local
+        docker compose --profile dual --profile remote down -v --rmi local 2>/dev/null || true
+        docker rmi -f debian-template:latest ubuntu-template:latest alpine-template:latest arch-template:latest 2>/dev/null || true
         ;;
     *)
         echo "Cleanup cancelled."
