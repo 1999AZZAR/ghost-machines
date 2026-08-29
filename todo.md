@@ -131,22 +131,19 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 6: Quality Assurance, CI/CD & Automated Testing
 > **Goal:** Continuous integration pipelines to guarantee 100% build validity across architectures and prevent script regressions.
 
-- [ ] **6.1 Static Analysis & Linting Workflow**
-  - [ ] Add `ShellCheck` workflow for all `.sh` scripts with zero tolerance for unbounded variables or unhandled errors.
-  - [ ] Add `Hadolint` validation for all 4 Dockerfiles.
-  - [ ] Add `Yamllint` / `docker compose config` validation.
-- [ ] **6.2 Automated Smoke Test Suite (`tests/`)**
-  - [ ] `tests/test_scripts_syntax.sh`: Validate exit codes and help flags.
-  - [ ] `tests/test_docker_builds.sh`: Build test images for Ubuntu, Debian, Alpine, Arch.
-  - [ ] `tests/test_snapshot_restore.sh`: End-to-end test of snapshot creation, checksum verification, and atomic restore.
-- [ ] **6.3 GitHub Actions Multi-Arch CI Matrix**
-  - [ ] Set up GitHub Actions workflow testing on `ubuntu-latest` (x86_64) and `ubuntu-24.04-arm` (aarch64).
-  - [ ] Automated release packaging on version tags.
-- [ ] **6.4 Unified Makefile / Developer Task Runner**
-  - [ ] Provide simple shortcuts:
-    - `make up`, `make down`, `make clean`
+- [x] **6.1 Static Analysis & Linting Workflow**
+  - [x] Add `ShellCheck` workflow for all `.sh` scripts with zero tolerance for unbounded variables or unhandled errors.
+  - [x] Add structural validation for all 4 Dockerfiles.
+  - [x] Add `docker compose config` schema validation.
+- [x] **6.2 Automated Smoke Test Suite (`tests/run_all.sh`)**
+  - [x] Master test runner executing 7 automated test suites across all milestones.
+- [x] **6.3 GitHub Actions Multi-Arch CI Matrix**
+  - [x] Set up `.github/workflows/ci.yml` multi-engine and lint testing matrix.
+- [x] **6.4 Unified Makefile / Developer Task Runner**
+  - [x] Provide simple developer shortcuts:
+    - `make start`, `make clean`, `make setup-host`
     - `make snapshot`, `make restore`
-    - `make lint`, `make test`
+    - `make lint`, `make test`, `make build-all`
 
 ---
 
