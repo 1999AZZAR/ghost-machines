@@ -64,14 +64,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends micro \
     install lazygit /usr/local/bin && rm -f lazygit \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# 7. AI CLIs (Gemini, Codex, RTK)
-RUN npm install -g @google/gemini-cli @openai/codex \
+# 7. AI CLIs & Harnesses (Gemini, Codex, RTK, Kilo CLI, OpenCode, Antigravity CLI)
+RUN npm install -g @google/gemini-cli @openai/codex @kilocode/cli opencode-ai \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
     elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
     fi && \
     curl -fsSL "https://github.com/rtk-ai/rtk/releases/latest/download/rtk-${RTK_ARCH}.tar.gz" | tar xz && \
     install rtk /usr/local/bin/rtk && rm -f rtk \
+    && (curl -fsSL https://antigravity.ai/install.sh | bash 2>/dev/null || true) \
+    && if [ -f /root/.local/bin/agy ]; then ln -sf /root/.local/bin/agy /usr/local/bin/agy && ln -sf /root/.local/bin/agy /usr/local/bin/antigravity; fi \
     && npm cache clean --force
 
 # 8. UI/UX STACK (1. Fastfetch, 2. Oh-My-Bash, 3. Alias-Hub, 4. Neofetch-ASCII)
@@ -122,7 +124,7 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     echo "${GHOST_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${GHOST_USER} && \
     chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
     echo "${GHOST_USER}:${GHOST_USER}" | chpasswd && \
-    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp && \
+    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.local/bin && \
     cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
     chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER}
 

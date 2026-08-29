@@ -1,10 +1,10 @@
 #!/bin/bash
-# Test Suite for M5: HeLa MCP Ecosystem Integration (Headless-Server Profile)
+# Test Suite for M5: HeLa MCP Ecosystem Integration (Headless-Server Profile) & Harness CLIs
 
 set -e
 
 echo "=================================================="
-echo "RUNNING M5 HELA MCP ECOSYSTEM INTEGRATION TESTS"
+echo "RUNNING M5 HELA MCP ECOSYSTEM & HARNESS TESTS"
 echo "=================================================="
 
 # Test 1: Verify local MCP ecosystem repository and headless-server profile
@@ -42,14 +42,32 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
 done
 echo "PASSED"
 
-# Test 3: Verify docker compose config validation with MCP_ECOSYSTEM_LOCAL_PATH
-echo -n "[TEST 3] docker compose config validation with MCP ecosystem mount... "
+# Test 3: Verify AI harnesses (Kilo, OpenCode, Antigravity) across Dockerfiles
+echo -n "[TEST 3] Dockerfile AI harness packages (@kilocode/cli, opencode-ai, agy)... "
+for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
+    if ! grep -q "@kilocode/cli" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing @kilocode/cli"
+        exit 1
+    fi
+    if ! grep -q "opencode-ai" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing opencode-ai"
+        exit 1
+    fi
+    if ! grep -q "agy" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing agy CLI setup"
+        exit 1
+    fi
+done
+echo "PASSED"
+
+# Test 4: Verify docker compose config validation with MCP_ECOSYSTEM_LOCAL_PATH
+echo -n "[TEST 4] docker compose config validation with MCP ecosystem mount... "
 export MCP_ECOSYSTEM_LOCAL_PATH="/home/azzar/project/MCPservers/mcp-ecosystem"
 docker compose config --quiet
 echo "PASSED"
 
-# Test 4: Verify test client generation via local ecosystem generator
-echo -n "[TEST 4] Test generate-config.mjs with headless-server profile... "
+# Test 5: Verify test client generation via local ecosystem generator
+echo -n "[TEST 5] Test generate-config.mjs with headless-server profile... "
 (
     cd "$ECOSYSTEM_DIR"
     node scripts/generate-config.mjs headless-server --backend antigravity --stdout > /dev/null
