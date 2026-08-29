@@ -11,5 +11,5 @@
   *Link: [./tracks/m4_snapshot_resilience_20260830/index.md](./tracks/m4_snapshot_resilience_20260830/index.md)*
 - [x] **Track: Milestone 5: HeLa MCP Ecosystem Integration (Headless-Server Profile)**
   *Link: [./tracks/m5_hela_mcp_ecosystem_20260830/index.md](./tracks/m5_hela_mcp_ecosystem_20260830/index.md)*
-- [~] **Track: Milestone 5 Part 2: Modern Python (uv/pipx) & Rust Toolchains**
+- [x] **Track: Milestone 5 Part 2: Modern Python (uv/pipx) & Rust Toolchains**
   *Link: [./tracks/m5_modern_toolchain_uv_rust_20260830/index.md](./tracks/m5_modern_toolchain_uv_rust_20260830/index.md)*

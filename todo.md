@@ -120,11 +120,11 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
   - [x] Integrate `hela-mcp-ecosystem` (7 Core Headless servers: Mitosis, Genome, Membrane, Nucleus, Ribosome, Enzyme, Phenotype).
   - [x] Support host directory mount (`/home/azzar/project/MCPservers/mcp-ecosystem` -> `/opt/mcp-ecosystem-local`).
   - [x] Expose global binary wrappers (`mcp-mitosis`, `mcp-genome`, `mcp-membrane`, `mcp-nucleus`, `mcp-ribosome`, `mcp-enzyme`, `mcp-phenotype`).
-- [ ] **5.2 Modern Python Toolchain (`uv` + `pipx`)**
-  - [ ] Install `uv` (Astral) for sub-millisecond Python package installs and virtualenv management.
-  - [ ] Install `pipx` to manage global CLI applications without `--break-system-packages` violations.
-- [ ] **5.3 Rust Toolchain Support (Optional / Lightweight)**
-  - [ ] Add `rustup` minimal profile or `cargo-binstall` to allow instant Rust tooling installation inside environments.
+- [x] **5.2 Modern Python Toolchain (`uv` + `pipx`)**
+  - [x] Install `uv` (Astral) for sub-millisecond Python package installs and virtualenv management.
+  - [x] Install `pipx` to manage global CLI applications without `--break-system-packages` violations.
+- [x] **5.3 Rust Toolchain Support (Optional / Lightweight)**
+  - [x] Add `rustup` minimal profile or `cargo-binstall` to allow instant Rust tooling installation inside environments.
 
 ---
 
