@@ -44,15 +44,48 @@ setup_user_harnesses_and_conductor() {
         if [ ! -s "$USER_DIR/.bashrc" ] && [ -f /root/.bashrc ]; then
             cp /root/.bashrc "$USER_DIR/.bashrc"
         fi
+        if [ -f "$USER_DIR/.bashrc" ]; then
+            sed -i "s|/root/|$USER_DIR/|g" "$USER_DIR/.bashrc"
+        fi
+
+        # Oh-My-Bash setup
         if [ ! -d "$USER_DIR/.oh-my-bash" ] && [ -d /root/.oh-my-bash ]; then
             cp -r /root/.oh-my-bash "$USER_DIR/.oh-my-bash"
         fi
+
+        # Alias-Hub setup
+        if [ ! -d "$USER_DIR/alias-hub" ] && [ -d /root/alias-hub ]; then
+            cp -r /root/alias-hub "$USER_DIR/alias-hub"
+        fi
+        if [ ! -d "$USER_DIR/.alias-hub" ] && [ -d /root/alias-hub ]; then
+            cp -r /root/alias-hub "$USER_DIR/.alias-hub"
+        fi
+
+        # Neofetch ASCII setup
         if [ ! -d "$USER_DIR/.local/share/neofetch_ascii" ] && [ -d /root/.local/share/neofetch_ascii ]; then
             cp -r /root/.local/share/neofetch_ascii "$USER_DIR/.local/share/neofetch_ascii"
         fi
-        if [ ! -d "$USER_DIR/.alias-hub" ] && [ -d /root/.alias-hub ]; then
-            cp -r /root/.alias-hub "$USER_DIR/.alias-hub"
+        if [ -d "$USER_DIR/.local/share/neofetch_ascii" ]; then
+            mkdir -p "$USER_DIR/Pictures" "$USER_DIR/.config/neofetch"
+            ln -sfn "$USER_DIR/.local/share/neofetch_ascii/ascii" "$USER_DIR/Pictures/ascii"
+            [ -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" ] && cp -f "$USER_DIR/.local/share/neofetch_ascii/config.conf" "$USER_DIR/.config/neofetch/config.conf"
+            chmod +x "$USER_DIR/.local/share/neofetch_ascii/ascii/loopers.sh" 2>/dev/null || true
+            if ! grep -q "ascii()" "$USER_DIR/.bashrc" 2>/dev/null; then
+                cat <<'EOF' >> "$USER_DIR/.bashrc"
+
+# Custom ASCII Caller Function (neofetch_ascii)
+ascii() {
+    local original_dir=$(pwd)
+    cd "$HOME/Pictures/ascii" || { echo "Error: $HOME/Pictures/ascii directory not found."; return 1; }
+    ./loopers.sh "$@"
+    cd "$original_dir" || return 1
+}
+alias cls='clear'
+alias fetch='fastfetch'
+EOF
+            fi
         fi
+
         if [ -f /root/.bash_aliases ] && [ ! -f "$USER_DIR/.bash_aliases" ]; then
             cp /root/.bash_aliases "$USER_DIR/.bash_aliases"
         fi
