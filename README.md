@@ -16,6 +16,7 @@ Ghost Machines provides reproducible container environments with dynamic host us
 - [Quick Start](#quick-start)
 - [Operating System Engines](#operating-system-engines)
 - [Deployment Modes & Resource Limits](#deployment-modes--resource-limits)
+- [Multi-Tenant Workspace-as-a-Service (WaaS)](#multi-tenant-workspace-as-a-service-waas)
 - [AI Harnesses & HeLa MCP Ecosystem](#ai-harnesses--hela-mcp-ecosystem)
   - [AI Harness Suite](#ai-harness-suite)
   - [HeLa Cellular MCP Stack](#hela-cellular-mcp-stack)
@@ -156,6 +157,42 @@ Ghost Machines is engineered for near-zero idle overhead with high performance u
 
 > [!TIP]
 > Under full autonomous load with all 7 background MCP daemons actively communicating, the workstation consumes only **~1 GB**, leaving **~88% of memory headroom (~7 GB)** dedicated to heavy compilers (Rust, Go, Node, C++), test suites, and project builds.
+
+---
+
+## Multi-Tenant Workspace-as-a-Service (WaaS)
+
+Ghost Machines implements a multi-tenant **[Workspace as a Service (WaaS)](https://en.wikipedia.org/wiki/Workspace_as_a_service)** and **[Cloud Development Environment (CDE)](https://learn.microsoft.com/en-us/azure/dev-box/overview-what-is-microsoft-dev-box)** architecture via `tenant.sh`. It enables engineering teams, educators, organizations, and VPS hosts to dynamically provision, scale, monitor, and vend isolated developer and autonomous AI agent workstations on a single high-performance machine:
+
+### Quick Tenant Management Commands
+
+```bash
+# Provision a new isolated tenant:
+./tenant.sh add alice --engine debian --cpu 2.0 --mem 4G --port 2225
+
+# Provision an Arch workspace with custom CPU and RAM quotas:
+./tenant.sh add bob --engine arch --cpu 4.0 --mem 8G
+
+# List all active tenants, engines, allocated ports, and storage size:
+./tenant.sh list
+
+# Real-time resource metrics across all tenant containers:
+./tenant.sh stats
+
+# Snapshot or restore an individual tenant's workspace:
+./tenant.sh snapshot alice
+./tenant.sh restore alice snapshots/snapshot_alice_20260830.tar.gz
+
+# Delete a tenant with safe container teardown:
+./tenant.sh delete bob -y
+```
+
+### Multi-Tenant Architecture & Isolation Guarantees
+
+1. **Storage Isolation**: Each tenant's persistent workspace resides strictly in `./mounts/tenants/<tenant_id>/`. Non-overlapping volume mounts prevent cross-tenant data leakage.
+2. **Resource Quotas**: Hard cgroup memory limits (e.g. `4G`), CPU quotas (e.g. `2.0`), and PID limits prevent noisy-neighbor performance degradation.
+3. **Dedicated Endpoints**: Each workspace runs on its own SSH port or Cloudflare Tunnel endpoint with independent credentials and keys.
+4. **Independent Lifecycle & Disaster Recovery**: Start, stop, restart, backup, and restore individual tenant workstations without disrupting other active users.
 
 ---
 

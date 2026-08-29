@@ -1,0 +1,47 @@
+services:
+  tenant:
+    build:
+      context: "${GHOST_BASE_DIR:-.}"
+      dockerfile: "${TENANT_DOCKERFILE:-Dockerfile.debian}"
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+        GHOST_USER: "${TENANT_USER:-developer}"
+    image: "${TENANT_IMAGE:-debian-template:latest}"
+    container_name: "${TENANT_CONTAINER_NAME:-ghost-tenant-default}"
+    restart: unless-stopped
+    entrypoint: ["/entrypoint.sh"]
+    command: ["/usr/sbin/sshd", "-D"]
+    environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
+      - GHOST_USER=${TENANT_USER:-developer}
+      - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
+    ports:
+      - "${TENANT_PORT:-2225}:22"
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    volumes:
+      - ${LXCFS_CPUINFO:-/dev/null}:/proc/cpuinfo:ro
+      - ${LXCFS_MEMINFO:-/dev/null}:/proc/meminfo:ro
+      - ${LXCFS_STAT:-/dev/null}:/proc/stat:ro
+      - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
+      - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
+      - ${TENANT_MOUNT_PATH}:/home/${TENANT_USER:-developer}
+      - ${GHOST_BASE_DIR:-.}/entrypoint.sh:/entrypoint.sh:ro
+      - ${TENANT_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
+      - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
+      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "${TENANT_CPU:-1.0}"
+          memory: "${TENANT_MEM:-4G}"
+    networks:
+      - sandbox_net
+
+networks:
+  sandbox_net:
+    name: ghost_sandbox
+    external: true

@@ -47,3 +47,10 @@ restore: ## Restore workspace snapshot with integrity check & atomic rollback
 
 setup-host: ## Install host system dependencies (LXCFS, Docker)
 	@./setup-host.sh
+
+tenant-list: ## List all configured multi-tenant workspaces
+	@./tenant.sh list
+
+tenant-stats: ## Live CPU/RAM metrics for active tenant workspaces
+	@./tenant.sh stats
+
