@@ -1,9 +1,40 @@
 #!/bin/bash
 
 # Ghost Machines: Intelligent Entry Point
-# Supports interactive mode, CLI arguments, and automated hardware detection.
+# Supports interactive mode, CLI arguments, dynamic UID/GID synchronization,
+# automated hardware detection, and security hardening.
 
-# 1. LXCFS Detection
+set -e
+
+# 1. Host Identity & Security Sync
+export HOST_UID="${HOST_UID:-$(id -u)}"
+export HOST_GID="${HOST_GID:-$(id -g)}"
+export GHOST_USER="${GHOST_USER:-developer}"
+
+# 1.1 Secure .env Permissions
+if [ -f ".env" ]; then
+    ENV_PERM=$(stat -c "%a" .env 2>/dev/null || stat -f "%Lp" .env 2>/dev/null || echo "")
+    if [ -n "$ENV_PERM" ] && [ "$ENV_PERM" != "600" ]; then
+        chmod 600 .env 2>/dev/null || true
+        echo "[SECURITY] Hardened .env permissions to 600."
+    fi
+fi
+
+# 1.2 SSH Public Key Detection
+if [ -z "$SSH_AUTH_KEY_PATH" ]; then
+    for KEY_FILE in "$HOME/.ssh/id_ed25519.pub" "$HOME/.ssh/id_rsa.pub" "$HOME/.ssh/authorized_keys"; do
+        if [ -f "$KEY_FILE" ]; then
+            export SSH_AUTH_KEY_PATH="$KEY_FILE"
+            echo "[SECURITY] Detected host SSH public key: $KEY_FILE"
+            break
+        fi
+    done
+fi
+if [ -z "$SSH_AUTH_KEY_PATH" ]; then
+    export SSH_AUTH_KEY_PATH="/dev/null"
+fi
+
+# 2. LXCFS Detection
 export LXCFS_BASE="/var/lib/lxcfs/proc"
 if [ -d "$LXCFS_BASE" ]; then
     echo "[INFO] LXCFS detected. Enabling hardware reporting mounts."
@@ -14,15 +45,15 @@ if [ -d "$LXCFS_BASE" ]; then
     export LXCFS_UPTIME="$LXCFS_BASE/uptime"
 fi
 
-# 2. Host Resource Calculation
+# 3. Host Resource Calculation
 TOTAL_CORES=$(nproc)
-TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "16777216")
 HALF_CORES=$((TOTAL_CORES / 2))
 HALF_MEM_MB=$((TOTAL_MEM_KB / 1024 / 2))
 
 if [ "$HALF_CORES" -lt 1 ]; then HALF_CORES=1; fi
 
-# 3. Engine & Mode Selection
+# 4. Engine & Mode Selection
 if [ -z "$1" ] || [[ "$1" == -* ]]; then
     echo "------------------------------------------------"
     echo " GHOST MACHINES: ENGINE SELECTION"
@@ -30,11 +61,13 @@ if [ -z "$1" ] || [[ "$1" == -* ]]; then
     echo "1) Ubuntu (Standard)"
     echo "2) Debian (Slim/Lightweight)"
     echo "3) Alpine (Ultra-Lightweight)"
-    read -p "Select Engine [1-3]: " ENG_CHOICE
+    echo "4) Arch   (Rolling Release)"
+    read -p "Select Engine [1-4]: " ENG_CHOICE
     case $ENG_CHOICE in
         1) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
         2) export GHOST_DOCKERFILE="Dockerfile.debian"; export GHOST_IMAGE="debian-template:latest" ;;
         3) export GHOST_DOCKERFILE="Dockerfile.alpine"; export GHOST_IMAGE="alpine-template:latest" ;;
+        4) export GHOST_DOCKERFILE="Dockerfile.arch"; export GHOST_IMAGE="arch-template:latest" ;;
         *) echo "[ERROR] Invalid selection."; exit 1 ;;
     esac
 
@@ -61,16 +94,20 @@ else
     shift
 fi
 
-# 4. Profile Management
+# 5. Profile Management & Pre-Flight Validation
 REMOTE_PROFILE=""
-if [ ! -z "$TUNNEL_TOKEN" ]; then
-    echo "[INFO] Cloudflare Tunnel Token detected. Enabling remote access profile."
-    REMOTE_PROFILE="--profile remote"
+if [ -n "$TUNNEL_TOKEN" ]; then
+    if [ "$TUNNEL_TOKEN" = "your_cloudflare_tunnel_token" ] || [ ${#TUNNEL_TOKEN} -lt 10 ]; then
+        echo "[WARNING] TUNNEL_TOKEN appears to be a placeholder or invalid. Skipping Cloudflare remote tunnel."
+    else
+        echo "[INFO] Valid Cloudflare Tunnel Token detected. Enabling remote access profile."
+        REMOTE_PROFILE="--profile remote"
+    fi
 fi
 
 case $MODE in
     "dual")
-        echo "[MODE] Dual Deployment"
+        echo "[MODE] Dual Deployment (UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine1"
         export G2_NAME="ghost-machine2"
         export G1_CPU="1.0"
@@ -80,14 +117,14 @@ case $MODE in
         COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d"
         ;;
     "single")
-        echo "[MODE] Single Instance"
+        echo "[MODE] Single Instance (UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
         COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
         ;;
     "power")
-        echo "[MODE] Power Instance"
+        echo "[MODE] Power Instance (UID: $HOST_UID, GID: $HOST_GID)"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
@@ -99,6 +136,10 @@ case $MODE in
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
         COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
+        ;;
+    *)
+        echo "[ERROR] Unknown mode: $MODE"
+        exit 1
         ;;
 esac
 

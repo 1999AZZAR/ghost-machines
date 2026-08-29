@@ -3,10 +3,20 @@ services:
     build:
       context: .
       dockerfile: "${GHOST_DOCKERFILE:-Dockerfile}"
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+        GHOST_USER: "${GHOST_USER:-developer}"
     image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G1_NAME:-ghost-machine1}"
     restart: unless-stopped
-    command: /usr/sbin/sshd -D
+    entrypoint: ["/entrypoint.sh"]
+    command: ["/usr/sbin/sshd", "-D"]
+    environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
+      - GHOST_USER=${GHOST_USER:-developer}
+      - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
     ports:
       - "${G1_PORT:-2223}:22"
     volumes:
@@ -15,7 +25,9 @@ services:
       - ${LXCFS_STAT:-/dev/null}:/proc/stat:ro
       - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
       - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
-      - ./mounts/ubuntu1:/home/ubuntu
+      - ./mounts/ubuntu1:/home/${GHOST_USER:-developer}
+      - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
+      - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
     deploy:
       resources:
         limits:
@@ -28,10 +40,20 @@ services:
     build:
       context: .
       dockerfile: "${GHOST_DOCKERFILE:-Dockerfile}"
+      args:
+        HOST_UID: "${HOST_UID:-1000}"
+        HOST_GID: "${HOST_GID:-1000}"
+        GHOST_USER: "${GHOST_USER:-developer}"
     image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G2_NAME:-ghost-machine2}"
     restart: unless-stopped
-    command: /usr/sbin/sshd -D
+    entrypoint: ["/entrypoint.sh"]
+    command: ["/usr/sbin/sshd", "-D"]
+    environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
+      - GHOST_USER=${GHOST_USER:-developer}
+      - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
     ports:
       - "${G2_PORT:-2224}:22"
     volumes:
@@ -40,7 +62,9 @@ services:
       - ${LXCFS_STAT:-/dev/null}:/proc/stat:ro
       - ${LXCFS_SWAPS:-/dev/null}:/proc/swaps:ro
       - ${LXCFS_UPTIME:-/dev/null}:/proc/uptime:ro
-      - ./mounts/ubuntu2:/home/ubuntu
+      - ./mounts/ubuntu2:/home/${GHOST_USER:-developer}
+      - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
+      - ${SSH_AUTH_KEY_PATH:-/dev/null}:/home/${GHOST_USER:-developer}/.ssh/authorized_keys:ro
     deploy:
       resources:
         limits:

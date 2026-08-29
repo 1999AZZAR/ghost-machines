@@ -1,10 +1,15 @@
 # ==============================================================================
-# ROCI GHOST MACHINE - MASTER TEMPLATE
+# ROCI GHOST MACHINE - MASTER TEMPLATE (UBUNTU)
 # ==============================================================================
 # Build: docker build -t ubuntu-template:latest .
 # ==============================================================================
 
 FROM ubuntu:latest
+
+# Build Arguments
+ARG GHOST_USER=developer
+ARG HOST_UID=1000
+ARG HOST_GID=1000
 
 # 1. Environment & UTF-8
 ENV LANG=C.UTF-8
@@ -13,7 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # 2. Base System & Build Tools
 RUN apt-get update && apt-get install -y \
-    curl gnupg git wget unzip software-properties-common \
+    curl gnupg git wget unzip software-properties-common sudo \
     build-essential gdb make cmake \
     python3 python-is-python3 python3-pip python3-venv \
     htop btop net-tools glances sysstat inxi ncdu tree \
@@ -84,6 +89,30 @@ RUN mkdir -p /root/MCPservers \
     && echo '#!/bin/bash\nnode /root/MCPservers/filesystem/dist/index.js "$@"' > /usr/local/bin/mcp-filesystem \
     && chmod +x /usr/local/bin/mcp-terminal /usr/local/bin/mcp-filesystem
 
+# 11. Non-Root User & Sudoers Setup
+RUN if getent group ${HOST_GID} >/dev/null; then \
+        EXISTING_GRP=$(getent group ${HOST_GID} | cut -d: -f1); \
+    else \
+        groupadd -g ${HOST_GID} ${GHOST_USER}; \
+        EXISTING_GRP=${GHOST_USER}; \
+    fi && \
+    if id -u ${HOST_UID} >/dev/null 2>&1; then \
+        EXISTING_USR=$(id -un ${HOST_UID}); \
+        usermod -l ${GHOST_USER} -d /home/${GHOST_USER} -m -g ${EXISTING_GRP} ${EXISTING_USR} 2>/dev/null || true; \
+    else \
+        useradd -u ${HOST_UID} -g ${EXISTING_GRP} -m -s /bin/bash ${GHOST_USER}; \
+    fi && \
+    mkdir -p /etc/sudoers.d && \
+    echo "${GHOST_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${GHOST_USER} && \
+    chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
+    echo "${GHOST_USER}:${GHOST_USER}" | chpasswd && \
+    mkdir -p /home/${GHOST_USER}/.ssh && \
+    chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER}
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 22
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/sbin/sshd", "-D"]
