@@ -116,15 +116,15 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 5: Modern Toolchain & MCP Integrations
 > **Goal:** Provide modern language utilities, Python PEP 668 compliance, and structured MCP configuration.
 
-- [ ] **5.1 Modern Python Toolchain (`uv` + `pipx`)**
+- [x] **5.1 HeLa MCP Ecosystem Integration (`headless-server` profile)**
+  - [x] Integrate `hela-mcp-ecosystem` (7 Core Headless servers: Mitosis, Genome, Membrane, Nucleus, Ribosome, Enzyme, Phenotype).
+  - [x] Support host directory mount (`/home/azzar/project/MCPservers/mcp-ecosystem` -> `/opt/mcp-ecosystem-local`).
+  - [x] Expose global binary wrappers (`mcp-mitosis`, `mcp-genome`, `mcp-membrane`, `mcp-nucleus`, `mcp-ribosome`, `mcp-enzyme`, `mcp-phenotype`).
+- [ ] **5.2 Modern Python Toolchain (`uv` + `pipx`)**
   - [ ] Install `uv` (Astral) for sub-millisecond Python package installs and virtualenv management.
   - [ ] Install `pipx` to manage global CLI applications without `--break-system-packages` violations.
-- [ ] **5.2 Rust Toolchain Support (Optional / Lightweight)**
+- [ ] **5.3 Rust Toolchain Support (Optional / Lightweight)**
   - [ ] Add `rustup` minimal profile or `cargo-binstall` to allow instant Rust tooling installation inside environments.
-- [ ] **5.3 MCP Server Standardization & Config Manager**
-  - [ ] Pin GitHub commit SHAs for `terminal-mcp-server` and `filesystem-mcp-server`.
-  - [ ] Generate container-level `/root/.mcp/config.json` and `/home/developer/.mcp/config.json` pre-configured with all available servers.
-  - [ ] Add test command `mcp-healthcheck` to verify server stdio connectivity.
 
 ---
 
