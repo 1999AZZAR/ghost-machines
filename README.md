@@ -154,19 +154,51 @@ MCP_ECOSYSTEM_LOCAL_PATH=/path/to/mcp-ecosystem
 
 ### Google Conductor Plugin Integration
 
-Google Conductor is built into `/opt/conductor` and linked across all agent harnesses:
+Google Conductor is built into `/opt/conductor` and globally available across all agent harnesses:
 
-- **Git-Tracked Source:** `~/.agents/plugins/conductor/` (linked to `/opt/conductor`)
-- **Global Agent Skills:** `~/.agents/skills/conductor-*`
-  - `conductor-setup`
-  - `conductor-new-track`
-  - `conductor-implement`
-  - `conductor-status`
-  - `conductor-revert`
-  - `conductor-review`
-- **Antigravity Plugin Adapter:** `~/.gemini/config/plugins/conductor`
+#### Installation Structure
 
-All three harnesses (`antigravity`, `opencode`, `kilo`) discover Conductor skills automatically on startup.
+```text
+~/.agents/plugins/conductor/           # Permanent Git repository (linked to /opt/conductor)
+├── plugin.json
+├── rules/
+│   └── conductor_antigravity.md       # Native UX & modal dialog rules
+└── skills/                            # Live skill definitions, assets & scripts
+    ├── conductor-setup
+    ├── conductor-new-track
+    ├── conductor-implement
+    ├── conductor-status
+    ├── conductor-revert
+    └── conductor-review
+
+~/.agents/skills/                      # Standard Agent SDK Global Skills
+├── conductor-setup          -> ~/.agents/plugins/conductor/skills/conductor-setup
+├── conductor-new-track      -> ~/.agents/plugins/conductor/skills/conductor-new-track
+├── conductor-implement      -> ~/.agents/plugins/conductor/skills/conductor-implement
+├── conductor-status         -> ~/.agents/plugins/conductor/skills/conductor-status
+├── conductor-revert         -> ~/.agents/plugins/conductor/skills/conductor-revert
+└── conductor-review         -> ~/.agents/plugins/conductor/skills/conductor-review
+
+~/.gemini/config/plugins/
+└── conductor                -> ~/.agents/plugins/conductor
+```
+
+#### Cross-Harness Compatibility
+
+- **Antigravity / Jetski:** Loaded via `~/.gemini/config/plugins/conductor` + `ask_question` GUI modal UX adapter.
+- **kilo-cli / OpenCode / Agent SDK:** Discovered automatically from global `~/.agents/skills/`.
+- **Live Updates:** Run `git -C ~/.agents/plugins/conductor pull` inside any instance to pull upstream updates immediately.
+
+#### Available Commands
+
+| Command / Trigger | Description |
+| :--- | :--- |
+| `/conductor:conductor-setup` | Scaffolds project context (`product.md`, `tech-stack.md`, `workflow.md`, styleguides). |
+| `/conductor:conductor-new-track` | Initializes a new feature or bug track (`spec.md` + `plan.md`). |
+| `/conductor:conductor-implement` | Executes the active track's plan sequentially with TDD validation. |
+| `/conductor:conductor-status` | Displays project progress and active tracks. |
+| `/conductor:conductor-review` | Code quality review against plan and guidelines. |
+| `/conductor:conductor-revert` | Git-aware rollback for logical tracks, phases, or tasks. |
 
 ---
 
