@@ -92,8 +92,8 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 4: Resilient State & Smart Snapshot Management
 > **Goal:** Make state backup and restore blazing fast, bandwidth-efficient, and fail-safe.
 
-- [ ] **4.1 Cache & Transient Data Exclusion in `snapshot.sh`**
-  - [ ] Exclude transient cache directories from tar archives:
+- [x] **4.1 Cache & Transient Data Exclusion in `snapshot.sh`**
+  - [x] Exclude transient cache directories from tar archives:
     - `node_modules/.cache`
     - `.npm/_cacache`
     - `.bun/install/cache`
@@ -101,15 +101,15 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
     - `.cache/`
     - `__pycache__`
     - `.pytest_cache`
-  - [ ] Reduce snapshot archive sizes by up to 90%.
-- [ ] **4.2 Snapshot Checksum & Metadata**
-  - [ ] Generate companion `.sha256` integrity files for every snapshot.
-  - [ ] Embed metadata header (engine, mode, timestamp, host architecture) inside snapshots.
-- [ ] **4.3 Atomic & Safe Restore in `restore.sh`**
-  - [ ] Implement automatic backup of current `mounts/` to a temporary directory before destructive restore.
-  - [ ] Auto-verify SHA256 integrity before unpacking.
-  - [ ] Rollback automatically if archive decompression fails.
-  - [ ] Support `--force` / `-y` flag for automated CI/CD restores.
+  - [x] Reduce snapshot archive sizes by up to 90%.
+- [x] **4.2 Snapshot Checksum & Metadata**
+  - [x] Generate companion `.sha256` integrity files for every snapshot.
+  - [x] Embed metadata manifest (`.meta.json`) with engine, mode, timestamp, and host architecture.
+- [x] **4.3 Atomic & Safe Restore in `restore.sh`**
+  - [x] Implement automatic backup of current `mounts/` to a temporary directory before destructive restore.
+  - [x] Auto-verify SHA256 integrity before unpacking.
+  - [x] Rollback automatically if archive decompression fails.
+  - [x] Support `--force` / `-y` flag for automated CI/CD restores.
 
 ---
 
