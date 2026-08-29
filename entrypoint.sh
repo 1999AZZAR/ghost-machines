@@ -30,6 +30,11 @@ setup_user_ssh() {
         fi
         chown -R "$USER_NAME:$USER_NAME" "$USER_DIR/.ssh" 2>/dev/null || true
         echo "$USER_NAME:ghost" | chpasswd 2>/dev/null || true
+        if [ "$USER_NAME" != "root" ]; then
+            mkdir -p /etc/sudoers.d
+            echo "$USER_NAME ALL=(ALL) ALL" > "/etc/sudoers.d/$USER_NAME"
+            chmod 0440 "/etc/sudoers.d/$USER_NAME"
+        fi
     fi
 }
 

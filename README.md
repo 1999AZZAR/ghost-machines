@@ -221,20 +221,36 @@ Google Conductor is built into `/opt/conductor` and globally available across al
 
 ## Security & Access Control
 
-1. **Host UID/GID Synchronization:**
-   On startup, `start.sh` extracts your host UID and GID and passes them as build arguments. The `developer` account inside the container matches these IDs and receives passwordless `sudo` rights.
+1. **Default Credentials & Architecture as Code:**
+   - Default User: `developer` (UID/GID auto-synced with host).
+   - Default Password: `ghost` (for both `developer` and `root`).
+   - Sudo Privileges: Standard sudo enabled for `developer` (enter `ghost` when prompted).
 
-2. **SSH Public Key Injection:**
-   If a host public key (`~/.ssh/id_rsa.pub`, `~/.ssh/id_ed25519.pub`, etc.) is present, `start.sh` mounts it read-only. On container startup, `entrypoint.sh` installs the key into `.ssh/authorized_keys` with `0700`/`0600` permissions.
+2. **Host UID/GID Synchronization:**
+   On startup, `start.sh` extracts your host UID and GID and passes them as build/runtime parameters. The `developer` account inside the container matches these IDs, eliminating permission collisions on shared volume mounts.
 
-3. **Password Authentication:**
-   Password authentication defaults to enabled (`root:root`, `developer:developer`). To enforce key-only authentication, set:
+3. **SSH Public Key Injection:**
+   If a host public key (`~/.ssh/id_ed25519.pub`, `~/.ssh/id_rsa.pub`, etc.) is present, `start.sh` mounts it read-only. On container startup, `entrypoint.sh` installs the key into `.ssh/authorized_keys` with strict `0700`/`0600` permissions.
+
+4. **Password Authentication:**
+   Password authentication defaults to enabled (`developer:ghost`). To enforce key-only authentication, set in `.env`:
    ```bash
    SSH_PASSWORD_AUTH=false
    ```
 
-4. **Cloudflare Zero-Trust Tunnel:**
+5. **Cloudflare Zero-Trust Tunnel:**
    To expose the SSH port securely over a Cloudflare Tunnel without opening router ports, configure `TUNNEL_TOKEN` in `.env`.
+
+---
+
+## UI/UX & Shell Stack
+
+Every Ghost Machine container automatically initializes a full developer shell environment out-of-the-box:
+
+- **Oh-My-Bash:** Pre-configured with themes, Git prompt, and directory helpers.
+- **Alias-Hub:** Categorized command aliases auto-loaded from `~/alias-hub` (including `cls` for clear, navigation, git, system tools).
+- **Fastfetch + ASCII Art:** Custom fastfetch configuration (`~/.config/fastfetch/config.jsonc`) with `fetch`, `rfetch` (random ASCII banner), and `ascii` (slideshow/banner via `figlet`).
+
 
 ---
 

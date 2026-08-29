@@ -84,7 +84,7 @@ RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/m
 
 # 9. SSH Configuration
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
-    && echo 'root:root' | chpasswd
+    && echo 'root:ghost' | chpasswd
 
 # 10. HeLa MCP Ecosystem (Profile: headless-server) & Google Conductor Plugin
 RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt/mcp-ecosystem \
@@ -126,9 +126,9 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
         adduser -u ${HOST_UID} -G ${EXISTING_GRP} -D -s /bin/bash ${GHOST_USER}; \
     fi && \
     mkdir -p /etc/sudoers.d && \
-    echo "${GHOST_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${GHOST_USER} && \
+    echo "${GHOST_USER} ALL=(ALL) ALL" > /etc/sudoers.d/${GHOST_USER} && \
     chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
-    echo "${GHOST_USER}:${GHOST_USER}" | chpasswd && \
+    echo "${GHOST_USER}:ghost" | chpasswd && \
     mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.config/opencode /home/${GHOST_USER}/.config/kilo /home/${GHOST_USER}/.agents/plugins /home/${GHOST_USER}/.agents/skills /home/${GHOST_USER}/.gemini/config/plugins /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
     cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
     cp /root/.config/opencode/config.json /home/${GHOST_USER}/.config/opencode/config.json 2>/dev/null || true && \
