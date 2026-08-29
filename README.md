@@ -11,6 +11,7 @@ Ghost Machines provides reproducible container environments with dynamic host us
 ## Table of Contents
 
 - [Overview](#overview)
+- [Infrastructure as Code (IaC) Architecture](#infrastructure-as-code-iac-architecture)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Operating System Engines](#operating-system-engines)
@@ -31,11 +32,21 @@ Ghost Machines provides reproducible container environments with dynamic host us
 
 ## Overview
 
-Ghost Machines operates on a semi-immutable architecture:
+Ghost Machines provides disposable, multi-engine Linux sandboxes and autonomous agent workstations orchestrated via Docker Compose.
 
-1. **Immutable Core (Images):** System packages, compilers, developer tools, runtimes, and MCP daemons are built into versioned base images.
-2. **Decoupled Mutable State (Mounts):** User home directories and project source code live on host volume mounts under `mounts/`.
-3. **Permission Synchronization:** Container processes run under a dedicated `developer` account whose UID and GID mirror your host system, preventing file permission mismatches on shared volumes.
+---
+
+## Infrastructure as Code (IaC) Architecture
+
+Ghost Machines is a practical implementation of **[Infrastructure as Code (IaC)](https://learn.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code)** for development workstations and autonomous AI agent execution environments:
+
+1. **Declarative Definitions:** Entire environments (OS kernels, runtimes, modern compilers, MCP daemons, user security, and network topology) are defined strictly in version-controlled code (`docker-compose.yml`, multi-engine Dockerfiles, and orchestration scripts).
+2. **Idempotent & Automated Provisioning:** Any developer or CI pipeline can provision an identical, production-ready workstation with a single command (`./start.sh` or `make start`), eliminating configuration drift and "works on my machine" inconsistencies.
+3. **Semi-Immutable Separation of Concerns:**
+   - **Immutable Core (Images):** System packages, compilers, developer tools, runtimes, and MCP daemons are compiled into versioned, reproducible base images.
+   - **Decoupled Mutable State (Mounts):** User home directories, project source code, and working files reside on host volume mounts under `mounts/`.
+4. **Dynamic Permission Synchronization:** Container processes run under a dedicated `developer` account whose UID and GID dynamically match the host system, ensuring seamless read/write access to shared volumes without permission collisions.
+5. **State Traceability & Disaster Recovery:** Smart snapshot management (`snapshot.sh` / `restore.sh`) with companion SHA-256 verification and atomic rollbacks allows instantaneous point-in-time recovery.
 
 ---
 
