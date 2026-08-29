@@ -23,17 +23,17 @@ Transform **Ghost Machines** into an enterprise-grade, semi-immutable developmen
 ### Phase 1: Security Hardening & Host-Container Permission Isolation
 > **Goal:** Eliminate `root:root` file ownership conflicts on host mounts and replace default plaintext passwords with secure credential models.
 
-- [ ] **1.1 Host UID/GID Synchronization**
-  - [ ] Add `HOST_UID` and `HOST_GID` dynamic detection in `start.sh` (e.g. `id -u`, `id -g`).
-  - [ ] Pass `UID`/`GID` as build args or entrypoint user configuration to ensure files created in `mounts/` match host user permissions.
-  - [ ] Configure non-root user `developer` / `ubuntu` with passwordless `sudo` rights.
-- [ ] **1.2 SSH Authentication & Hardening**
-  - [ ] Replace hardcoded `root:root` credentials with dynamic random password generation or SSH public key injection.
-  - [ ] Support mounting `~/.ssh/authorized_keys` or `~/.ssh/id_rsa.pub` into container `/home/developer/.ssh/authorized_keys`.
-  - [ ] Make `PermitRootLogin` and `PasswordAuthentication` configurable via environment variables (`SSH_PASSWORD_AUTH=false`).
-- [ ] **1.3 Secret & Tunnel Hardening**
-  - [ ] Ensure `.env` is checked for file permissions (`chmod 600 .env`).
-  - [ ] Add pre-flight validation for `TUNNEL_TOKEN` format to avoid launching broken Cloudflare tunnel instances.
+- [x] **1.1 Host UID/GID Synchronization**
+  - [x] Add `HOST_UID` and `HOST_GID` dynamic detection in `start.sh` (e.g. `id -u`, `id -g`).
+  - [x] Pass `UID`/`GID` as build args or entrypoint user configuration to ensure files created in `mounts/` match host user permissions.
+  - [x] Configure non-root user `developer` / `ubuntu` with passwordless `sudo` rights.
+- [x] **1.2 SSH Authentication & Hardening**
+  - [x] Replace hardcoded `root:root` credentials with dynamic random password generation or SSH public key injection.
+  - [x] Support mounting `~/.ssh/authorized_keys` or `~/.ssh/id_rsa.pub` into container `/home/developer/.ssh/authorized_keys`.
+  - [x] Make `PermitRootLogin` and `PasswordAuthentication` configurable via environment variables (`SSH_PASSWORD_AUTH=false`).
+- [x] **1.3 Secret & Tunnel Hardening**
+  - [x] Ensure `.env` is checked for file permissions (`chmod 600 .env`).
+  - [x] Add pre-flight validation for `TUNNEL_TOKEN` format to avoid launching broken Cloudflare tunnel instances.
 
 ---
 
