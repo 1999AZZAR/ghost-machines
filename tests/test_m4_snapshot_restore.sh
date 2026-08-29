@@ -7,25 +7,27 @@ echo "=================================================="
 echo "RUNNING M4 SMART SNAPSHOT & RESTORE TESTS"
 echo "=================================================="
 
-# Backup existing mounts if present
-ORIGINAL_MOUNTS_BACKUP=".test_m4_orig_mounts_$(date +%s)"
-if [ -d "mounts" ]; then
-    cp -r mounts "$ORIGINAL_MOUNTS_BACKUP"
-fi
-
 # Test 1: Help flags
 echo -n "[TEST 1] snapshot.sh and restore.sh --help flags... "
 ./snapshot.sh --help > /dev/null
 ./restore.sh --help > /dev/null
 echo "PASSED"
 
-# Test 2: Smart Cache Exclusion
-echo -n "[TEST 2] Snapshot creation with smart cache exclusion... "
-TEST_SNAPSHOT="test_snap_$(date +%s).tar.gz"
+# Create isolated sandbox test workspace
+SANDBOX_DIR=$(mktemp -d)
+trap 'rm -rf "$SANDBOX_DIR"' EXIT
+
+cp snapshot.sh restore.sh "$SANDBOX_DIR/"
+ORIG_PWD=$(pwd)
+cd "$SANDBOX_DIR"
 mkdir -p mounts/ubuntu1/node_modules/.cache
 mkdir -p mounts/ubuntu1/src
 echo "console.log('test');" > mounts/ubuntu1/src/index.js
 echo "cache_data" > mounts/ubuntu1/node_modules/.cache/cache.json
+
+# Test 2: Smart Cache Exclusion
+echo -n "[TEST 2] Snapshot creation with smart cache exclusion... "
+TEST_SNAPSHOT="test_snap_$(date +%s).tar.gz"
 
 ./snapshot.sh -o "$TEST_SNAPSHOT" > /dev/null
 
@@ -103,18 +105,7 @@ if [ ! -f "mounts/ubuntu1/src/keep_me.txt" ]; then
 fi
 echo "PASSED"
 
-# Cleanup test snapshot files
-rm -f "$TEST_SNAPSHOT" "${TEST_SNAPSHOT}.sha256" "${TEST_SNAPSHOT}.meta.json" "$CORRUPT_SNAP"
-rm -f mounts/ubuntu1/src/keep_me.txt mounts/ubuntu1/src/index.js
-rmdir mounts/ubuntu1/src 2>/dev/null || true
-rm -rf mounts/ubuntu1/node_modules 2>/dev/null || true
-
-# Restore original mounts state if backup exists
-if [ -d "$ORIGINAL_MOUNTS_BACKUP" ]; then
-    find mounts -mindepth 1 -delete 2>/dev/null || true
-    cp -r "$ORIGINAL_MOUNTS_BACKUP"/* "$ORIGINAL_MOUNTS_BACKUP"/.* mounts/ 2>/dev/null || cp -r "$ORIGINAL_MOUNTS_BACKUP"/* mounts/ 2>/dev/null || true
-    rm -rf "$ORIGINAL_MOUNTS_BACKUP"
-fi
+cd "$ORIG_PWD"
 
 echo "=================================================="
 echo "ALL M4 TESTS PASSED SUCCESSFULLY!"
