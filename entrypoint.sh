@@ -22,6 +22,9 @@ setup_user_ssh() {
         chmod 755 "$USER_DIR" 2>/dev/null || true
         mkdir -p "$USER_DIR/.ssh" 2>/dev/null || true
         chmod 700 "$USER_DIR/.ssh" 2>/dev/null || true
+        if [ "$USER_DIR" != "/root" ] && [ -f /root/.ssh/authorized_keys ]; then
+            cp -f /root/.ssh/authorized_keys "$USER_DIR/.ssh/authorized_keys" 2>/dev/null || true
+        fi
         if [ -f "$USER_DIR/.ssh/authorized_keys" ]; then
             chmod 600 "$USER_DIR/.ssh/authorized_keys" 2>/dev/null || true
         fi
