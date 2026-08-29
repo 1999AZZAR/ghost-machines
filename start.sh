@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ghost Machines: Intelligent Entry Point
-# Supports interactive mode, CLI arguments, dynamic UID/GID synchronization,
+# Supports interactive mode, CLI flags, dynamic UID/GID synchronization,
 # automated hardware detection, multi-engine routing, and security hardening.
 
 set -e
@@ -35,8 +35,9 @@ if [ -z "$SSH_AUTH_KEY_PATH" ]; then
 fi
 
 # 2. LXCFS Detection
+SKIP_LXCFS=false
 export LXCFS_BASE="/var/lib/lxcfs/proc"
-if [ -d "$LXCFS_BASE" ]; then
+if [ "$SKIP_LXCFS" = false ] && [ -d "$LXCFS_BASE" ]; then
     echo "[INFO] LXCFS detected. Enabling hardware reporting mounts."
     export LXCFS_CPUINFO="$LXCFS_BASE/cpuinfo"
     export LXCFS_MEMINFO="$LXCFS_BASE/meminfo"
@@ -56,6 +57,10 @@ if [ "$HALF_CORES" -lt 1 ]; then HALF_CORES=1; fi
 # 4. CLI Argument Parsing
 ENGINE_ARG=""
 MODE_ARG=""
+PORT_ARG=""
+TUNNEL_ARG=""
+BUILD_FLAG=""
+EXTRA_COMPOSE_ARGS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -67,12 +72,41 @@ while [[ $# -gt 0 ]]; do
             MODE_ARG="$2"
             shift 2
             ;;
+        -p|--port)
+            PORT_ARG="$2"
+            shift 2
+            ;;
+        -t|--tunnel)
+            TUNNEL_ARG="$2"
+            shift 2
+            ;;
+        -b|--build)
+            BUILD_FLAG="--build"
+            shift
+            ;;
+        --no-lxcfs)
+            SKIP_LXCFS=true
+            unset LXCFS_CPUINFO LXCFS_MEMINFO LXCFS_STAT LXCFS_SWAPS LXCFS_UPTIME
+            shift
+            ;;
         -h|--help)
-            echo "Usage: ./start.sh [options] [docker compose args...]"
+            echo "Ghost Machines — Development Environment Orchestrator"
+            echo ""
+            echo "Usage: ./start.sh [options] [-- docker compose args...]"
+            echo ""
             echo "Options:"
-            echo "  -e, --engine <ubuntu|debian|alpine|arch>  Select OS engine"
-            echo "  -m, --mode <dual|single|power|half>       Select deployment mode"
-            echo "  -h, --help                               Show this help message"
+            echo "  -e, --engine <ubuntu|debian|alpine|arch>  Select OS base engine"
+            echo "  -m, --mode <dual|single|power|half>       Select deployment resource mode"
+            echo "  -p, --port <port>                         Set base SSH port (default: 2223)"
+            echo "  -t, --tunnel <token>                      Set Cloudflare Tunnel token"
+            echo "  -b, --build                               Force rebuild images before starting"
+            echo "      --no-lxcfs                            Disable LXCFS volume mounts"
+            echo "  -h, --help                                Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  ./start.sh -e debian -m single"
+            echo "  ./start.sh --engine arch --mode power -p 3333"
+            echo "  ./start.sh dual"
             exit 0
             ;;
         dual|single|power|half)
@@ -80,12 +114,24 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            break
+            EXTRA_COMPOSE_ARGS+=("$1")
+            shift
             ;;
     esac
 done
 
-# 4.1 Handle Engine Selection
+# 4.1 Handle Port Overrides
+if [ -n "$PORT_ARG" ]; then
+    export G1_PORT="$PORT_ARG"
+    export G2_PORT="$((PORT_ARG + 1))"
+fi
+
+# 4.2 Handle Tunnel Token Overrides
+if [ -n "$TUNNEL_ARG" ]; then
+    export TUNNEL_TOKEN="$TUNNEL_ARG"
+fi
+
+# 4.3 Handle Engine Selection
 if [ -n "$ENGINE_ARG" ]; then
     case "${ENGINE_ARG,,}" in
         ubuntu) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
@@ -116,7 +162,7 @@ else
     export GHOST_IMAGE="ubuntu-template:latest"
 fi
 
-# 4.2 Handle Mode Selection
+# 4.4 Handle Mode Selection
 if [ -n "$MODE_ARG" ]; then
     MODE="${MODE_ARG,,}"
 else
@@ -150,35 +196,35 @@ fi
 
 case $MODE in
     "dual")
-        echo "[MODE] Dual Deployment (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Dual Deployment (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID, Port: ${G1_PORT:-2223})"
         export G1_NAME="ghost-machine1"
         export G2_NAME="ghost-machine2"
         export G1_CPU="1.0"
         export G1_MEM="8G"
         export G2_CPU="1.0"
         export G2_MEM="8G"
-        COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d"
+        COMPOSE_ARGS="$REMOTE_PROFILE --profile dual up -d $BUILD_FLAG"
         ;;
     "single")
-        echo "[MODE] Single Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Single Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID, Port: ${G1_PORT:-2223})"
         export G1_NAME="ghost-machine-single"
         export G1_CPU="1.0"
         export G1_MEM="8G"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
         ;;
     "power")
-        echo "[MODE] Power Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID)"
+        echo "[MODE] Power Instance (Engine: ${GHOST_IMAGE%%:*}, UID: $HOST_UID, GID: $HOST_GID, Port: ${G1_PORT:-2223})"
         export G1_NAME="ghost-machine-power"
         export G1_CPU="2.0"
         export G1_MEM="16G"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
         ;;
     "half")
         echo "[MODE] Half-Host Instance ($HALF_CORES CPU, ${HALF_MEM_MB}M RAM)"
         export G1_NAME="ghost-machine-half"
         export G1_CPU="$HALF_CORES.0"
         export G1_MEM="${HALF_MEM_MB}M"
-        COMPOSE_ARGS="$REMOTE_PROFILE up -d ghost1"
+        COMPOSE_ARGS="$REMOTE_PROFILE up -d $BUILD_FLAG ghost1"
         ;;
     *)
         echo "[ERROR] Unknown mode: $MODE (supported: dual, single, power, half)"
@@ -186,4 +232,4 @@ case $MODE in
         ;;
 esac
 
-docker compose $COMPOSE_ARGS "$@"
+docker compose $COMPOSE_ARGS "${EXTRA_COMPOSE_ARGS[@]}"
