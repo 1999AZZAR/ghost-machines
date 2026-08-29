@@ -108,6 +108,12 @@ if ! grep -q "setup_user_harnesses_and_conductor" entrypoint.sh; then
 fi
 echo "PASSED"
 
+# Test 7: RTK Universal Auto-Rewrite Hook Verification
+echo -n "[TEST 7] RTK Universal Auto-Rewrite Hook verification... "
+grep -q "rtk-rewrite.sh" entrypoint.sh
+grep -q "PreToolUse" entrypoint.sh
+echo "PASSED"
+
 # Cleanup temporary clone if created for CI
 if [ "$CLEANUP_TEMP" = true ]; then
     rm -rf /tmp/mcp-ecosystem

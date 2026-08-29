@@ -161,14 +161,19 @@ Ghost Machines is engineered for near-zero idle overhead with high performance u
 
 ## AI Harnesses & HeLa MCP Ecosystem
 
-### AI Harness Suite
+### AI Harness Suite & RTK Token Optimization
 
-Each Ghost Machine environment includes three dedicated CLI harnesses alongside the RTK command wrapper:
+Each Ghost Machine environment includes three dedicated CLI harnesses alongside the RTK token optimization runner:
 
 - **[Antigravity CLI](https://github.com/google/antigravity)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
 - **[OpenCode CLI](https://github.com/opencode-ai/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
 - **[Kilo CLI](https://github.com/kilocode/kilo)** (`kilo` / `kilocode`): Interactive terminal coding assistant.
 - **[RTK](https://github.com/rtk-ai/rtk)** (`rtk`): Token-optimized terminal execution runner.
+
+#### RTK Universal Auto-Rewrite Hook
+
+Every sandbox environment comes pre-configured with a universal `PreToolUse` hook (`~/.config/rtk/rtk-rewrite.sh`, `~/.gemini/config/hooks.json`, `~/.claude/settings.json`). Whenever an AI harness executes a terminal command (e.g. `git status`, `cargo test`, `pytest`), the hook automatically intercepts the raw command and proxies it through RTK, reducing LLM token consumption by **60%–90%** with zero manual configuration required.
+
 
 ### HeLa Cellular MCP Stack
 

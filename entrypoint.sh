@@ -160,6 +160,90 @@ EOF
             cp /root/.config/kilo/config.json "$USER_DIR/.config/kilo/config.json"
         fi
 
+        # RTK Universal Rewrite Hook setup for all AI Harnesses
+        mkdir -p "$USER_DIR/.config/rtk" "$USER_DIR/.gemini/config/hooks" "$USER_DIR/.claude/hooks"
+        cat <<'EOF' > "$USER_DIR/.config/rtk/rtk-rewrite.sh"
+#!/usr/bin/env bash
+# Universal RTK Rewrite Hook for AI Harnesses (Antigravity, OpenCode, Kilo, Claude)
+if ! command -v jq &>/dev/null || ! command -v rtk &>/dev/null; then
+  exit 0
+fi
+
+INPUT=$(cat)
+CMD=$(echo "$INPUT" | jq -r '.tool_input.command // .tool_input.CommandLine // .arguments.command // .arguments.CommandLine // .command // empty' 2>/dev/null)
+
+if [ -z "$CMD" ]; then
+  exit 0
+fi
+
+REWRITTEN=$(rtk rewrite "$CMD" 2>/dev/null || true)
+
+if [ -z "$REWRITTEN" ] || [ "$CMD" = "$REWRITTEN" ]; then
+  exit 0
+fi
+
+ORIGINAL_INPUT=$(echo "$INPUT" | jq -c '.tool_input // .arguments // .')
+UPDATED_INPUT=$(echo "$ORIGINAL_INPUT" | jq --arg cmd "$REWRITTEN" '
+  if has("CommandLine") then .CommandLine = $cmd
+  elif has("command") then .command = $cmd
+  else .command = $cmd end
+')
+
+jq -n \
+  --argjson updated "$UPDATED_INPUT" \
+  '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "allow",
+      "permissionDecisionReason": "RTK auto-rewrite",
+      "updatedInput": $updated
+    }
+  }'
+EOF
+        chmod +x "$USER_DIR/.config/rtk/rtk-rewrite.sh"
+        cp -f "$USER_DIR/.config/rtk/rtk-rewrite.sh" "$USER_DIR/.gemini/config/hooks/rtk-rewrite.sh"
+        cp -f "$USER_DIR/.config/rtk/rtk-rewrite.sh" "$USER_DIR/.claude/hooks/rtk-rewrite.sh"
+        chmod +x "$USER_DIR/.gemini/config/hooks/rtk-rewrite.sh" "$USER_DIR/.claude/hooks/rtk-rewrite.sh" 2>/dev/null || true
+
+        # Antigravity Hooks config
+        if [ ! -f "$USER_DIR/.gemini/config/hooks.json" ]; then
+            cat <<'EOF' > "$USER_DIR/.gemini/config/hooks.json"
+{
+  "rtk-rewrite": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "type": "command",
+        "command": "~/.gemini/config/hooks/rtk-rewrite.sh"
+      }
+    ]
+  }
+}
+EOF
+        fi
+
+        # Claude / OpenCode settings.json hook integration
+        if [ ! -f "$USER_DIR/.claude/settings.json" ]; then
+            cat <<'EOF' > "$USER_DIR/.claude/settings.json"
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/rtk-rewrite.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+        fi
+
         # Link Google Conductor repository & global skills
         if [ -d /opt/conductor ]; then
             ln -sfn /opt/conductor "$USER_DIR/.agents/plugins/conductor"
