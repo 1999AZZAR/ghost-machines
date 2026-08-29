@@ -153,14 +153,14 @@ Container names:
 
 Each Ghost Machine environment includes three dedicated CLI harnesses alongside the RTK command wrapper:
 
-- **Antigravity CLI** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
-- **OpenCode CLI** (`opencode`): Codebase analysis and autonomous file patching.
-- **Kilo CLI** (`kilo` / `kilocode`): Interactive terminal coding assistant.
-- **RTK** (`rtk`): Token-optimized terminal execution runner.
+- **[Antigravity CLI](https://github.com/google/antigravity)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
+- **[OpenCode CLI](https://github.com/opencode-ai/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
+- **[Kilo CLI](https://github.com/kilocode/kilo)** (`kilo` / `kilocode`): Interactive terminal coding assistant.
+- **[RTK](https://github.com/rtk-ai/rtk)** (`rtk`): Token-optimized terminal execution runner.
 
 ### HeLa Cellular MCP Stack
 
-All images build the **HeLa MCP Ecosystem** using the `headless-server` profile (7 core headless servers). System wrapper scripts are linked into `/usr/local/bin`:
+All images build the **[HeLa MCP Ecosystem](https://github.com/1999AZZAR/hela-mcp-ecosystem)** using the `headless-server` profile (7 core headless servers). System wrapper scripts are linked into `/usr/local/bin`:
 
 | Binary | Server ID | Description |
 | :--- | :--- | :--- |
@@ -185,7 +185,7 @@ MCP_ECOSYSTEM_LOCAL_PATH=/path/to/mcp-ecosystem
 
 ### Google Conductor Plugin Integration
 
-Google Conductor is built into `/opt/conductor` and globally available across all agent harnesses:
+**[Google Conductor](https://github.com/gemini-cli-extensions/conductor)** is built into `/opt/conductor` and globally available across all agent harnesses:
 
 #### Installation Structure
 
@@ -236,15 +236,15 @@ Google Conductor is built into `/opt/conductor` and globally available across al
 ## Toolchain & Included Packages
 
 - **Runtimes & Compilers:**
-  - **Python:** Astral `uv` / `uvx` for package management, `pipx` for isolated CLI tools, and `python3-venv`.
-  - **Rust:** `rustup` minimal profile (`cargo`, `rustc`).
+  - **Python:** Astral [`uv`](https://github.com/astral-sh/uv) / `uvx` for package management, `pipx` for isolated CLI tools, and `python3-venv`.
+  - **Rust:** [`rustup`](https://github.com/rust-lang/rustup) minimal profile (`cargo`, `rustc`).
   - **Go:** Go 1.24 toolchain (`/usr/local/go/bin`).
-  - **JavaScript:** Node.js 22 LTS, Bun runtime.
+  - **JavaScript:** Node.js 22 LTS, [Bun](https://github.com/oven-sh/bun) runtime.
   - **C/C++:** `build-essential` / `base-devel`, `cmake`, `make`, `gdb`.
 - **Editors & Git:**
-  - `helix` (configured with runtime assets), `micro`, `lazygit`, `tmux`.
+  - [`helix`](https://github.com/helix-editor/helix) (configured with runtime assets), `micro`, [`lazygit`](https://github.com/jesseduffield/lazygit), `tmux`.
 - **CLI Utilities:**
-  - `bat`, `eza`, `zoxide`, `fd-find` (`fd`), `ripgrep` (`rg`), `jq`, `fzf`, `nnn`, `htop`, `btop`, `fastfetch`.
+  - `bat`, `eza`, `zoxide`, `fd-find` (`fd`), `ripgrep` (`rg`), `jq`, `fzf`, `nnn`, `htop`, `btop`, [`fastfetch`](https://github.com/fastfetch-cli/fastfetch), `figlet`.
 
 ---
 
@@ -276,9 +276,10 @@ Google Conductor is built into `/opt/conductor` and globally available across al
 
 Every Ghost Machine container automatically initializes a full developer shell environment out-of-the-box:
 
-- **Oh-My-Bash:** Pre-configured with themes, Git prompt, and directory helpers.
-- **Alias-Hub:** Categorized command aliases auto-loaded from `~/alias-hub` (including `cls` for clear, navigation, git, system tools).
-- **Fastfetch + ASCII Art:** Custom fastfetch configuration (`~/.config/fastfetch/config.jsonc`) with `fetch`, `rfetch` (random ASCII banner), and `ascii` (slideshow/banner via `figlet`).
+- **[Oh-My-Bash](https://github.com/ohmybash/oh-my-bash):** Pre-configured with themes, Git prompt, and directory helpers.
+- **[Alias-Hub](https://github.com/1999AZZAR/alias-hub):** Categorized command aliases auto-loaded from `~/alias-hub` (including `cls` for clear, navigation, git, system tools).
+- **[Fastfetch](https://github.com/fastfetch-cli/fastfetch) + [Neofetch-ASCII](https://github.com/1999AZZAR/neofetch_ascii):** Custom fastfetch configuration (`~/.config/fastfetch/config.jsonc`) with `fetch`, `rfetch` (random ASCII banner), and `ascii` (slideshow/banner via `figlet`).
+
 
 
 ---
