@@ -48,10 +48,9 @@ jobs:
         with:
           images: ${{ matrix.image }}
           tags: |
-            type=raw,value=${{ matrix.suffix }}
-            type=raw,value=${{ matrix.suffix }}-latest
+            type=raw,value=latest
             type=ref,event=tag
-            type=sha,prefix=${{ matrix.suffix }}-
+            type=sha,prefix=latest-
 
       - uses: docker/build-push-action@v6
         with:
@@ -65,5 +64,5 @@ jobs:
             GHOST_USER=developer
             HOST_UID=1000
             HOST_GID=1000
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.engine }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.engine }}

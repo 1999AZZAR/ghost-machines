@@ -29,6 +29,9 @@ Ghost Machines provides reproducible container environments with dynamic host us
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [License](#license)
 
+> **New to containers?** See [docs/scripts.md](docs/scripts.md) — plain-English guide to each `*.sh`.
+> Also: [docs/comparison-vs-vm.md](docs/comparison-vs-vm.md) (Ghost vs VM).
+
 ---
 
 ## Overview
@@ -140,7 +143,7 @@ Ghost Machines provides four base engines. Each image is configured with identic
 > > docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
 > > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single
 > >
-> > # Arch (rolling release)
+> > # Arch (rolling release) — ~1.63 GB both arches
 > > docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
 > > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single
 > > ```
@@ -187,13 +190,34 @@ Ghost Machines implements a multi-tenant **[Workspace as a Service (WaaS)](https
 
 ### Quick Tenant Management Commands
 
+**A. Using prebuilt images (fast, no build):**
+
 ```bash
-# Provision a new isolated tenant:
+# Pull the engine you need first (only once):
+docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
 ./tenant.sh add alice --engine debian --cpu 2.0 --mem 4G --port 2225
 
-# Provision an Arch workspace with custom CPU and RAM quotas:
-./tenant.sh add bob --engine arch --cpu 4.0 --mem 8G
+docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
+./tenant.sh add bob --engine ubuntu --cpu 4.0 --mem 8G
 
+docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
+./tenant.sh add carol --engine alpine --port 2227
+
+docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
+./tenant.sh add dave --engine arch --port 2228
+```
+
+**B. Building locally (from Dockerfile):**
+
+```bash
+# Force a fresh local build instead of using GHCR:
+./tenant.sh add alice --engine debian --build --cpu 2.0 --mem 4G --port 2225
+./tenant.sh add bob --engine arch --build --cpu 4.0 --mem 8G
+```
+
+**Common operations:**
+
+```bash
 # List all active tenants, engines, allocated ports, and storage size:
 ./tenant.sh list
 
