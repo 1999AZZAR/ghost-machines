@@ -35,6 +35,8 @@ Ghost Machines provides reproducible container environments with dynamic host us
 
 Ghost Machines provides disposable, multi-engine Linux sandboxes and autonomous agent workstations orchestrated via Docker Compose.
 
+> **Ghost vs regular VM?** See [docs/comparison-vs-vm.md](docs/comparison-vs-vm.md) — pros/cons, overhead, and decision matrix.
+
 ---
 
 ## Infrastructure as Code (IaC) Architecture
