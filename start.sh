@@ -144,13 +144,13 @@ if [ -n "$TUNNEL_ARG" ]; then
     export TUNNEL_TOKEN="$TUNNEL_ARG"
 fi
 
-# 4.3 Handle Engine Selection
+# 4.3 Handle Engine Selection (respect prebuilt GHOST_IMAGE if set externally)
 if [ -n "$ENGINE_ARG" ]; then
     case "${ENGINE_ARG,,}" in
-        ubuntu) export GHOST_DOCKERFILE="Dockerfile"; export GHOST_IMAGE="ubuntu-template:latest" ;;
-        debian) export GHOST_DOCKERFILE="Dockerfile.debian"; export GHOST_IMAGE="debian-template:latest" ;;
-        alpine) export GHOST_DOCKERFILE="Dockerfile.alpine"; export GHOST_IMAGE="alpine-template:latest" ;;
-        arch)   export GHOST_DOCKERFILE="Dockerfile.arch"; export GHOST_IMAGE="arch-template:latest" ;;
+        ubuntu) export GHOST_DOCKERFILE="Dockerfile"; [ -n "${GHOST_IMAGE:-}" ] || export GHOST_IMAGE="ubuntu-template:latest" ;;
+        debian) export GHOST_DOCKERFILE="Dockerfile.debian"; [ -n "${GHOST_IMAGE:-}" ] || export GHOST_IMAGE="debian-template:latest" ;;
+        alpine) export GHOST_DOCKERFILE="Dockerfile.alpine"; [ -n "${GHOST_IMAGE:-}" ] || export GHOST_IMAGE="alpine-template:latest" ;;
+        arch)   export GHOST_DOCKERFILE="Dockerfile.arch"; [ -n "${GHOST_IMAGE:-}" ] || export GHOST_IMAGE="arch-template:latest" ;;
         *) echo "[ERROR] Unknown engine: $ENGINE_ARG (supported: ubuntu, debian, alpine, arch)"; exit 1 ;;
     esac
 elif [ -z "$MODE_ARG" ]; then

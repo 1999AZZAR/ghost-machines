@@ -187,31 +187,26 @@ cmd_add() {
         esac
     done
 
-    # Select Dockerfile and Image tag based on engine
+    # Select Dockerfile and Image tag based on engine (respect TENANT_IMAGE/GHOST_IMAGE if set externally for GHCR prebuilt)
     local DOCKERFILE="Dockerfile.debian"
-    local IMAGE_TAG="debian-template:latest"
-    case "$ENGINE" in
-        debian)
-            DOCKERFILE="Dockerfile.debian"
-            IMAGE_TAG="debian-template:latest"
-            ;;
-        ubuntu)
-            DOCKERFILE="Dockerfile"
-            IMAGE_TAG="ubuntu-template:latest"
-            ;;
-        alpine)
-            DOCKERFILE="Dockerfile.alpine"
-            IMAGE_TAG="alpine-template:latest"
-            ;;
-        arch)
-            DOCKERFILE="Dockerfile.arch"
-            IMAGE_TAG="arch-template:latest"
-            ;;
-        *)
-            echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."
-            exit 1
-            ;;
-    esac
+    local IMAGE_TAG="${TENANT_IMAGE:-${GHOST_IMAGE:-}}"
+    if [ -z "$IMAGE_TAG" ]; then
+        case "$ENGINE" in
+            debian) DOCKERFILE="Dockerfile.debian"; IMAGE_TAG="debian-template:latest" ;;
+            ubuntu) DOCKERFILE="Dockerfile"; IMAGE_TAG="ubuntu-template:latest" ;;
+            alpine) DOCKERFILE="Dockerfile.alpine"; IMAGE_TAG="alpine-template:latest" ;;
+            arch) DOCKERFILE="Dockerfile.arch"; IMAGE_TAG="arch-template:latest" ;;
+            *) echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."; exit 1 ;;
+        esac
+    else
+        case "$ENGINE" in
+            debian) DOCKERFILE="Dockerfile.debian" ;;
+            ubuntu) DOCKERFILE="Dockerfile" ;;
+            alpine) DOCKERFILE="Dockerfile.alpine" ;;
+            arch) DOCKERFILE="Dockerfile.arch" ;;
+            *) echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."; exit 1 ;;
+        esac
+    fi
 
     # Auto-allocate port if not provided
     if [ -z "$PORT" ]; then
