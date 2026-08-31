@@ -126,6 +126,15 @@ ssh -p 2223 developer@localhost
 
 Ghost Machines provides four base engines. Each image is configured with identical toolchains, editor setups, and MCP server configurations.
 
+> **Prebuilt images:** `ubuntu` and `debian` are published to GHCR on release tags (`v*`) via `.github/workflows/publish.yml:1`. Pull instead of building:
+> ```bash
+> docker pull ghcr.io/1999azzar/ghost-machines:ubuntu
+> docker pull ghcr.io/1999azzar/ghost-machines:debian
+> # then
+> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machines:ubuntu ./start.sh -e ubuntu -m single
+> ```
+> `alpine` / `arch` remain build-on-demand (`make build-alpine` / `make build-arch`).
+
 | Engine | Base Image | Package Manager | Intended Use |
 | :--- | :--- | :--- | :--- |
 | **Ubuntu** | `ubuntu:latest` | `apt-get` | Default development workstation with PPA support. |
