@@ -126,14 +126,24 @@ ssh -p 2223 developer@localhost
 
 Ghost Machines provides four base engines. Each image is configured with identical toolchains, editor setups, and MCP server configurations.
 
-> **Prebuilt images:** `ubuntu` and `debian` are published to GHCR on release tags (`v*`) via `.github/workflows/publish.yml:1`. Pull instead of building:
-> ```bash
-> docker pull ghcr.io/1999azzar/ghost-machines:ubuntu
-> docker pull ghcr.io/1999azzar/ghost-machines:debian
-> # then
-> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machines:ubuntu ./start.sh -e ubuntu -m single
-> ```
-> `alpine` / `arch` remain build-on-demand (`make build-alpine` / `make build-arch`).
+> **Prebuilt images (GHCR):** 4 separate packages published on release tags (`v*`) via `.github/workflows/publish.yml:1` — pull only the one you need:
+> > ```bash
+> > # Ubuntu (recommended, PPA support) — ~1.38 GB amd64 / 1.21 GB arm64
+> > docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
+> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single
+> >
+> > # Debian (slim, stable) — ~1.36 GB / 1.20 GB
+> > docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
+> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single
+> >
+> > # Alpine (ultra-light, musl)
+> > docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
+> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single
+> >
+> > # Arch (rolling release)
+> > docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
+> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single
+> > ```
 
 | Engine | Base Image | Package Manager | Intended Use |
 | :--- | :--- | :--- | :--- |

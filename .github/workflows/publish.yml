@@ -18,12 +18,20 @@ jobs:
         include:
           - engine: ubuntu
             dockerfile: Dockerfile
-            image: ghcr.io/1999azzar/ghost-machines
-            suffix: ubuntu
+            image: ghcr.io/1999azzar/ghost-machine-ubuntu
+            suffix: latest
           - engine: debian
             dockerfile: Dockerfile.debian
-            image: ghcr.io/1999azzar/ghost-machines
-            suffix: debian
+            image: ghcr.io/1999azzar/ghost-machine-debian
+            suffix: latest
+          - engine: alpine
+            dockerfile: Dockerfile.alpine
+            image: ghcr.io/1999azzar/ghost-machine-alpine
+            suffix: latest
+          - engine: arch
+            dockerfile: Dockerfile.arch
+            image: ghcr.io/1999azzar/ghost-machine-arch
+            suffix: latest
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
