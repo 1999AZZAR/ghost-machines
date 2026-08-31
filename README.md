@@ -130,23 +130,27 @@ ssh -p 2223 developer@localhost
 Ghost Machines provides four base engines. Each image is configured with identical toolchains, editor setups, and MCP server configurations.
 
 > **Prebuilt images (GHCR):** 4 separate packages published on release tags (`v*`) via `.github/workflows/publish.yml:1` — pull only the one you need:
-> > ```bash
-> > # Ubuntu (recommended, PPA support) — ~1.38 GB amd64 / 1.21 GB arm64
-> > docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
-> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single
-> >
-> > # Debian (slim, stable) — ~1.36 GB / 1.20 GB
-> > docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
-> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single
-> >
-> > # Alpine (ultra-light, musl)
-> > docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
-> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single
-> >
-> > # Arch (rolling release) — ~1.63 GB both arches
-> > docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
-> > GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single
-> > ```
+>
+> **Ubuntu** (recommended, PPA support) — ~1.38 GB amd64 / 1.21 GB arm64
+> ```bash
+> docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
+> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single
+> ```
+> **Debian** (slim, stable) — ~1.36 GB amd64 / 1.20 GB arm64
+> ```bash
+> docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
+> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single
+> ```
+> **Alpine** (ultra-light, musl) — ~1.59 GB amd64 / 1.32 GB arm64
+> ```bash
+> docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
+> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single
+> ```
+> **Arch** (rolling release) — ~1.63 GB both arches
+> ```bash
+> docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
+> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single
+> ```
 
 | Engine | Base Image | Package Manager | Intended Use |
 | :--- | :--- | :--- | :--- |
@@ -190,28 +194,37 @@ Ghost Machines implements a multi-tenant **[Workspace as a Service (WaaS)](https
 
 ### Quick Tenant Management Commands
 
-**A. Using prebuilt images (fast, no build):**
+**A. Using prebuilt images (fast, no build) — one per engine:**
 
+Debian:
 ```bash
-# Pull the engine you need first (only once):
 docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
 ./tenant.sh add alice --engine debian --cpu 2.0 --mem 4G --port 2225
-
+```
+Ubuntu:
+```bash
 docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
 ./tenant.sh add bob --engine ubuntu --cpu 4.0 --mem 8G
-
+```
+Alpine:
+```bash
 docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
 ./tenant.sh add carol --engine alpine --port 2227
-
+```
+Arch:
+```bash
 docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
 ./tenant.sh add dave --engine arch --port 2228
 ```
 
 **B. Building locally (from Dockerfile):**
 
+Debian (build):
 ```bash
-# Force a fresh local build instead of using GHCR:
 ./tenant.sh add alice --engine debian --build --cpu 2.0 --mem 4G --port 2225
+```
+Arch (build):
+```bash
 ./tenant.sh add bob --engine arch --build --cpu 4.0 --mem 8G
 ```
 
