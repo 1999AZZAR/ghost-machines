@@ -254,6 +254,9 @@ EOF
                 fi
             done
         fi
+        # Ensure harness state dirs are writable (bind mounts may have been root-owned)
+        chown -R "$USER_NAME:$(id -gn "$USER_NAME" 2>/dev/null || echo "$USER_NAME")" "$USER_DIR/.local" "$USER_DIR/.gemini" "$USER_DIR/.config" "$USER_DIR/.mcp" "$USER_DIR/.agents" 2>/dev/null || true
+        chmod -R u+rwX "$USER_DIR/.local" "$USER_DIR/.gemini" "$USER_DIR/.config" "$USER_DIR/.mcp" 2>/dev/null || true
         chown -R "$USER_NAME:$USER_NAME" "$USER_DIR" 2>/dev/null || true
     fi
 }
