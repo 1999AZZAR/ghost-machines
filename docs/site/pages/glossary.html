@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Glossary — Ghost Machines</title><meta name="description" content="Complete glossary: Container, VM, WaaS, Engine, GHCR, LXCFS, MCP, HeLa, and 25+ more terms — plainly defined."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:900px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}h1.serif{font-size:1.8rem;margin:0 0 8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
+<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · GLOSSARY</div>
+<h1 class="serif">Glossary — Every Term, Plainly</h1>
+<p>Comprehensive, beginner-friendly definitions. Source of truth lives in <a href="https://github.com/1999AZZAR/ghost-machines/blob/master/docs/glossary.md">docs/glossary.md</a> on GitHub — this page mirrors it for the web (30 terms, no todo/conductor internal jargon).</p>
+<table class="tbl mono"><tr><th>Term</th><th>What It Means</th><th>Why It Matters Here</th></tr>
+<tr><td>Ghost Machines</td><td>Toolkit for disposable Linux sandboxes.</td><td>The “hotel”.</td></tr>
+<tr><td>Ghost / Sandbox</td><td>Running container you code inside, thrown away when done.</td><td>Your private room.</td></tr>
+<tr><td>Container</td><td>Sealed Linux room sharing host kernel, own filesystem.</td><td>1–2s boot, ~73 MB idle. Not a VM.</td></tr>
+<tr><td>VM</td><td>Full computer inside (own kernel, hypervisor).</td><td>For hostile/Windows.</td></tr>
+<tr><td>Docker / Compose</td><td>Engine + blueprint (<span class="mono">docker-compose.yml</span>).</td><td>How Ghost is defined.</td></tr>
+<tr><td>Image</td><td>Read-only template built from Dockerfile.</td><td><span class="mono">ubuntu-template</span> or GHCR prebuilt.</td></tr>
+<tr><td>Dockerfile</td><td>Recipe that builds an image.</td><td>4 variants: ubuntu/.debian/.alpine/.arch.</td></tr>
+<tr><td>GHCR</td><td>GitHub Container Registry (<span class="mono">ghcr.io</span>).</td><td>Pull instead of building.</td></tr>
+<tr><td>Multi-arch</td><td>One tag → amd64 + arm64; auto-picked.</td><td>Works on Intel + Apple Silicon.</td></tr>
+<tr><td>Engine</td><td>Linux base choice (Ubuntu/Debian/Alpine/Arch).</td><td>Pick by PPA vs slim vs musl vs rolling.</td></tr>
+<tr><td>Mode</td><td>Resource profile (dual/single/power/half).</td><td>1c/8G → 50% host.</td></tr>
+<tr><td>IaC</td><td>Machines defined in code.</td><td>No “works on my machine”.</td></tr>
+<tr><td>Mount / Volume</td><td>Host folder <span class="mono">mounts/</span> mapped in.</td><td>Work survives deletion.</td></tr>
+<tr><td>UID/GID Sync</td><td>Align <span class="mono">developer</span> to host <span class="mono">id -u/g</span>.</td><td>Fixes permissions.</td></tr>
+<tr><td>LXCFS</td><td>Makes <span class="mono">htop/free</span> show cgroup, not host.</td><td>Linux only.</td></tr>
+<tr><td>Non-root User</td><td><span class="mono">developer</span>, not root; sudo via <span class="mono">ghost</span>.</td><td>Security.</td></tr>
+<tr><td>SSH</td><td><span class="mono">ssh -p 2223 developer@localhost</span>.</td><td>How you connect.</td></tr>
+<tr><td>WaaS / CDE</td><td>Vending workspaces on one host/cloud.</td><td><span class="mono">tenant.sh</span> + Tunnel.</td></tr>
+<tr><td>Tenant</td><td>Isolated user room with port + mount + quotas.</td><td>WaaS primitive.</td></tr>
+<tr><td>Host</td><td>Machine running Docker.</td><td>The building.</td></tr>
+<tr><td>Bridge Network</td><td><span class="mono">ghost_sandbox</span> LAN.</td><td>Tenants isolated.</td></tr>
+<tr><td>Cloudflare Tunnel</td><td>Zero-trust remote without ports.</td><td><span class="mono">TUNNEL_TOKEN</span>.</td></tr>
+<tr><td>MCP</td><td>Model Context Protocol for AI tools.</td><td>Agents → files/terminal.</td></tr>
+<tr><td>HeLa MCP Ecosystem</td><td>7 MCP servers (mitosis/genome/…).</td><td>Agent tooling.</td></tr>
+<tr><td>RTK</td><td>Token saver via PreToolUse hook.</td><td>60–90% save.</td></tr>
+<tr><td>HeLa</td><td>Named for Henrietta Lacks.</td><td>Product naming.</td></tr>
+<tr><td>OrbStack / Docker Desktop</td><td>macOS Docker daemons.</td><td>How macOS runs Ghost.</td></tr>
+<tr><td>WSL2</td><td>Windows Linux kernel for Docker.</td><td>How Windows runs Ghost.</td></tr>
+<tr><td>Snapshot / Restore</td><td>Archive of <span class="mono">mounts/</span> + SHA + atomic undo.</td><td>Save/undo.</td></tr>
+<tr><td>Cleanup Levels</td><td>L1 -s, L2 -v, L3 -a, L4 --nuke (+ GHCR + cache).</td><td>Free disk.</td></tr>
+<tr><td>Builder Cache</td><td>Stored Docker layers.</td><td>Cleared by --nuke.</td></tr>
+</table>
+<p class="mono" style="font-size:11px;color:var(--muted)">Full 30-term table with beginner-friendly “Why It Matters” lives in <span class="mono">docs/glossary.md</span> — this web page is a 1:1 mirror without internal todo/conductor terms.</p>
+<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
+<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
+<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
+</body></html>
