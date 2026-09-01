@@ -30,7 +30,7 @@ Ghost Machines provides reproducible container environments with dynamic host us
 - [License](#license)
 
 > **New to containers?** See [docs/scripts.md](docs/scripts.md) — plain-English guide to each `*.sh`.
-> Also: [docs/comparison-vs-vm.md](docs/comparison-vs-vm.md) (Ghost vs VM).
+> Also: [docs/comparison-vs-vm.md](docs/comparison-vs-vm.md) (Ghost vs VM) · [docs/glossary.md](docs/glossary.md) (30-term glossary) · [ghost.glassgallery.my.id](https://ghost.glassgallery.my.id) (full web docs).
 
 ---
 
