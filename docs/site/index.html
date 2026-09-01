@@ -3,106 +3,198 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ghost Machines — Archival Procedures</title>
+<meta name="description" content="Disposable Linux sandboxes — Ubuntu, Debian, Alpine, Arch. Multi-tenant WaaS via Docker Compose. GHCR prebuilts on v* tags.">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6;--accent:#0f6f6f}
-*{box-sizing:border-box;margin:0;padding:0}html{overflow-x:clip}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);line-height:1.65;overflow-x:clip}
-a{color:var(--accent)}a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}
-.top{border-bottom:1px solid var(--border);padding:14px 32px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:11px;letter-spacing:.1em}
+:root{--paper:#f6f5f1;--paper2:#ebebe7;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6;--accent:#0f6f6f;--accent2:#0a5858;--ease:cubic-bezier(0.16,1,0.3,1);--dur:180ms}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.65;overflow-x:clip}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}
 .hero{max-width:1200px;margin:0 auto;padding:24px 32px 0 32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.bar{max-width:1200px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+@media(max-width:800px){.bar{grid-template-columns:1fr 1fr}}
+.blk{background:#fff;padding:14px 16px}
+.blk .v{font-size:22px;font-weight:700;line-height:1.1}
+.blk .l{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.blk .s{font-size:11px;color:var(--muted)}
 .layout{max-width:1200px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px}
-@media(max-width:900px){.layout{grid-template-columns:1fr}}
-.idx{position:sticky;top:16px;align-self:start;border:1px solid var(--border);background:#fff;padding:14px}
-.idx a{display:block;font-size:11px;padding:6px 0;border-bottom:1px solid #ebebe7}
-h2{font-family:'Newsreader',serif;font-size:1.6rem;margin:28px 0 10px 0;border-bottom:1px solid var(--border);padding-bottom:8px}
-h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px 0}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.idx{position:static;max-height:none;display:none}.idx.open{display:block}#idxToggle{display:block!important}}
+.idx{position:sticky;top:16px;align-self:start;border:1px solid var(--border);background:#fff;padding:14px;max-height:calc(100vh - 32px);overflow:auto}
+.idx a{display:block;font-size:11px;padding:6px 0;border-bottom:1px solid var(--paper2);min-height:28px;display:flex;align-items:center}
+.idx a:hover{color:var(--ink);text-decoration:underline}
+.idx a:last-child{border:0}
+h2{font-family:'Newsreader',serif;font-size:1.6rem;margin:32px 0 10px 0;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}
 p,li{font-size:14px;color:#2a2a28;margin-bottom:8px}li{margin-left:18px}
-.term{background:#0f0f0e;color:#d6d6d2;padding:12px;font-size:11px;line-height:1.7;overflow:auto;margin:8px 0}
-.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7}
+.term{background:#0f0f0e;color:#d6d6d2;padding:12px;font-size:11px;line-height:1.7;overflow:auto;margin:8px 0;border-radius:2px}
+.term .c{color:#8a8a86}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}
+.tbl td{padding:8px;border-bottom:1px solid var(--paper2);vertical-align:top}
 .card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}
 .foot{border-top:1px solid var(--border);padding:18px 32px;text-align:center;font-size:11px;color:var(--muted);margin-top:32px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:8px 16px;z-index:999}
+.skip:focus{left:8px;top:8px}
+.lvl{display:flex;gap:6px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:8px}
+.lvl button{padding:6px 10px;font-size:11px;letter-spacing:.04em;border:1px solid var(--border);background:#fff;cursor:pointer;min-height:32px}
+.lvl button.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.beginner .adv{display:none}.advanced .beg{display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-
+<a class="skip" href="#main">Skip to content</a>
 <div class="hero">
-  <div><div class="mono" style="font-size:11px;letter-spacing:.12em">SYSTEM_DOCUMENTATION_V2.0</div><h1 class="serif">Archival<br>Procedures</h1></div>
-  <div class="mono" style="font-size:11px;color:var(--muted)">DOCS_VERSION_2.0.0<br>4 ENGINES · 7 MCP · GHCR v* · <a href="https://github.com/1999AZZAR/ghost-machines">GITHUB</a></div>
+  <div><div class="mono" style="font-size:11px;letter-spacing:.12em;color:var(--muted)">SYSTEM_DOCUMENTATION_V2.0</div><h1 class="serif" style="font-size:clamp(2rem,4vw,2.8rem);line-height:1;margin:6px 0">Ghost Machines</h1><div class="mono" style="font-size:11px;color:var(--muted)">v1.0.0-beta · MIT</div></div>
+  <div class="mono" style="font-size:11px;color:var(--muted);text-align:right"><a href="https://github.com/1999AZZAR/ghost-machines">GITHUB</a> · <a href="https://github.com/1999AZZAR/ghost-machines/pkgs/container/ghost-machine-ubuntu">GHCR</a><br>4 ENGINES · 4 GHCR PACKAGES · 7 MCP · 8 SCRIPTS</div>
 </div>
-<div class="layout">
-  <nav class="idx mono">
-    <div style="font-size:11px;letter-spacing:.1em;margin-bottom:8px">INDEX</div>
-    <a href="#concept">Core Concept</a>
-    <a href="#user-mgmt">User Management</a>
-    <a href="#multi">Multi-Tenant Hub</a>
-    <a href="#feeds">GHCR Feeds (Prebuilt)</a>
-    <a href="#retention">Snapshot Retention</a>
-    <a href="#specimens">Engine Specimens</a>
-    <a href="#custom">Layout Customization</a>
-    <a href="#provision">Auto-Provisioning</a>
-    <a href="#matrix">Logic Matrix</a>
-    <a href="#howto">How-To Guide</a>
-    <a href="#security">Security Protocol</a>
-    <a href="#vs">Ghost vs VM</a>
-  </nav>
-  <main>
-    <h2 id="concept">Core Concept</h2>
-    <p>Each container is a curated specimen. Narrative and technical metadata are separated for clarity. All workspaces hydrate from host bind mounts on boot, ensuring continuity across reloads.</p>
-    <p>Immutable core (images) + mutable state (<span class="mono">mounts/</span>) = throw-away without loss. <span class="mono">make start</span> provisions; <span class="mono">clean.sh</span> prunes.</p>
 
-    <h2 id="user-mgmt">User Management & Authentication</h2>
-    <p>Tenant-based: each host can vend many isolated users. Each tenant is a specimen with its own SSH port, CPU/RAM quotas, and storage <span class="mono">mounts/tenants/&lt;id&gt;</span>.</p>
-    <h3>Roles</h3>
-    <div class="card mono" style="font-size:12px"><b>HOST</b> — Full access. Can create/delete tenants, run <span class="mono">tenant.sh</span>, manage GHCR pulls, clean --nuke.</div>
-    <div class="card mono" style="font-size:12px"><b>TENANT (developer)</b> — Can SSH on assigned port, sudo with <span class="mono">ghost</span>, work in own mount. Cannot see other tenants.</div>
-    <h3>Registration Flow</h3>
-    <ol><li>Host: <span class="mono">./tenant.sh add alice --engine debian --port 2225</span> — auto-creates mount and SSH.</li><li>Tenant: <span class="mono">ssh -p 2225 developer@localhost</span> — password <span class="mono">ghost</span> or pre-injected <span class="mono">~/.ssh/id_ed25519.pub</span>.</li><li>Verify: <span class="mono">./tenant.sh list</span> shows <span class="mono">RUNNING</span> + port + size.</li></ol>
-    <h3>Inviting / Removing</h3>
-    <p>Host invites via <span class="mono">tenant.sh add</span>; removal via <span class="mono">tenant.sh delete alice -y</span> (optionally <span class="mono">--archive</span>). No per-tenant 5-user limit — each container is single-user.</p>
+<div class="lvl mono" id="lvl" style="justify-content:center">
+  <span style="font-size:11px;color:var(--muted);align-self:center">MODE:</span>
+  <button id="b1" class="active" onclick="setLvl('beginner')">Beginner</button>
+  <button id="b2" onclick="setLvl('advanced')">Advanced</button>
+</div>
 
-    <h2 id="multi">Multi-Tenant Aggregation Hub</h2>
-    <p>The host aggregates multiple engines on one machine, pooling CPU/RAM into a unified <span class="mono">ghost_sandbox</span> network. Each tenant is isolated via non-overlapping mounts and per-tenant cgroup limits — no noisy neighbor.</p>
-    <p><b>Cross-engine logic:</b> One host can run Ubuntu for Rust, Alpine for Go, Debian for Node — all on different ports, sharing host kernel but not files.</p>
+<div class="layout beginner" id="main">
+<button class="mono" id="idxToggle" onclick="document.querySelector('.idx').classList.toggle('open')" style="display:none;padding:8px 12px;border:1px solid var(--border);background:#fff;font-size:11px;letter-spacing:.08em;width:100%;text-align:left">☰ INDEX (21) — tap to show</button>
+<nav class="idx mono" aria-label="Documentation Index">
+  <div style="font-size:11px;letter-spacing:.1em;margin-bottom:8px">INDEX</div>
+  <a href="#concept">1. Core Concept</a>
+  <a href="#audience">2. Intended Audience</a>
+  <a href="#engines">3. Engines & GHCR</a>
+  <a href="#modes">4. Deployment Modes</a>
+  <a href="#host-prereq">5. Host Prerequisites</a>
+  <a href="#user-mgmt">6. User Management</a>
+  <a href="#multi">7. Multi-Tenant Hub</a>
+  <a href="#feeds">8. GHCR Feeds</a>
+  <a href="#retention">9. Snapshot Retention</a>
+  <a href="#specimens">10. Engine Specimens</a>
+  <a href="#custom">11. Layout Customization</a>
+  <a href="#provision">12. Auto-Provisioning</a>
+  <a href="#matrix">13. Logic Matrix</a>
+  <a href="#howto">14. How-To Guide</a>
+  <a href="#security">15. Security Protocol</a>
+  <a href="#vs">16. Ghost vs VM</a>
+  <a href="#scripts">17. Scripts</a>
+  <a href="#cleanup">18. Cleanup</a>
+  <a href="#troubleshoot">19. Troubleshooting</a>
+  <a href="#tested">20. Verified Hosts</a>
+  <a href="#references">21. References</a>
+</nav>
+<main>
+  <h2 id="concept">1. Core Concept</h2>
+  <p class="beg">Ghost Machines is a hotel for developers. Each container is a sealed room sharing the building's foundation (host kernel) but with its own walls. Check in with <span class="mono">make start</span>, work in <span class="mono">mounts/</span>, check out with <span class="mono">clean.sh</span> — host stays pristine. This is <b>not a VM</b> (no hypervisor, 1–2s boot, ~73 MB idle).</p>
+  <p class="adv">IaC disposable workstations via <span class="mono">docker-compose.yml</span> + <span class="mono">entrypoint.sh</span>. Declarative images, bind-mount state, UID/GID sync, LXCFS for accurate <span class="mono">free/htop</span>, GHCR multi-arch prebuilts on <span class="mono">v* tags</span>. Immutable core + mutable state = throw-away without loss.</p>
 
-    <h2 id="feeds">GHCR Feeds (Prebuilt Integration)</h2>
-    <p>Instead of building locally, pull curated prebuilts from GHCR (like Virtual Feeds polling external APIs). Published on <span class="mono">v* tags</span> via <span class="mono">.github/workflows/publish.yml</span>, multi-arch <span class="mono">linux/amd64,arm64</span>.</p>
-    <table class="tbl mono"><tr><th>Package</th><th>Size amd64 / arm64</th><th>Pull</th></tr><tr><td>ghost-machine-ubuntu:latest</td><td>1.38 / 1.21 GB</td><td>docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest</td></tr><tr><td>ghost-machine-debian:latest</td><td>1.36 / 1.20 GB</td><td>docker pull ghcr.io/1999azzar/ghost-machine-debian:latest</td></tr><tr><td>ghost-machine-alpine:latest</td><td>1.59 / 1.32 GB</td><td>docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest</td></tr><tr><td>ghost-machine-arch:latest</td><td>1.63 / 1.63 GB</td><td>docker pull ghcr.io/1999azzar/ghost-machine-arch:latest</td></tr></table>
-    <p>Use via <span class="mono">GHOST_IMAGE=ghcr.io/... ./start.sh -e ubuntu -m single</span> (pull one — not four).</p>
+  <h2 id="audience">2. Intended Audience</h2>
+  <p class="beg">Use Ghost if you want a clean, repeatable place to code without polluting your laptop. Use it for teaching or renting dev rooms to others. <b>Don't</b> use it for Windows apps or to test viruses (use a real VM).</p>
+  <p class="adv">Target: Linux coders, devops engineers, AI-agent integrators, classrooms, VPS resellers. Not for: kernel/driver work, Windows-only software, malware detonation. For those, see <a href="#vs">Ghost vs VM</a>.</p>
 
-    <h2 id="retention">Snapshot Retention</h2>
-    <p>All mounts are mirrored via <span class="mono">snapshot.sh</span> into <span class="mono">snapshots/</span> with SHA-256 + <span class="mono">.meta.json</span>. By default, caches (<span class="mono">node_modules/.cache, target/, __pycache__</span>) are excluded to keep archives lean. Restore verifies SHA and keeps atomic backup.</p><div class="term">./snapshot.sh -o backup.tar.gz<br>./restore.sh backup.tar.gz --force</div>
+  <h2 id="engines">3. Engines & GHCR Sizes <a class="mono" href="pages/engines.html" style="font-size:11px;letter-spacing:.04em">→ dedicated page</a></h2>
+  <p>Four engines, identical toolchain. Pull <b>one</b> — not four. Published on <span class="mono">v* tags</span> via <span class="mono">.github/workflows/publish.yml</span>, multi-arch <span class="mono">linux/amd64,arm64</span>.</p>
+  <table class="tbl mono"><tr><th>Engine</th><th>Base</th><th>GHCR Package</th><th>Size amd64 / arm64</th><th>Pull</th></tr>
+    <tr><td>ubuntu</td><td>ubuntu:latest</td><td>ghost-machine-ubuntu:latest</td><td>1.38 / 1.21 GB</td><td><span class="c">docker pull</span> ghcr.io/1999azzar/ghost-machine-ubuntu:latest</td></tr>
+    <tr><td>debian</td><td>debian:stable-slim</td><td>ghost-machine-debian:latest</td><td>1.36 / 1.20 GB</td><td><span class="c">docker pull</span> ghcr.io/1999azzar/ghost-machine-debian:latest</td></tr>
+    <tr><td>alpine</td><td>alpine:latest</td><td>ghost-machine-alpine:latest</td><td>1.59 / 1.32 GB</td><td><span class="c">docker pull</span> ghcr.io/1999azzar/ghost-machine-alpine:latest</td></tr>
+    <tr><td>arch</td><td>archlinux:latest</td><td>ghost-machine-arch:latest</td><td>1.63 / 1.63 GB</td><td><span class="c">docker pull</span> ghcr.io/1999azzar/ghost-machine-arch:latest</td></tr>
+  </table>
 
-    <h2 id="specimens">Engine Specimens</h2>
-    <div class="card"><b>UBUNTU (STANDARD)</b> — <span class="mono">ubuntu:latest · apt-get · PPA</span> — Default for agents, richest toolchain.</div>
-    <div class="card"><b>DEBIAN (SLIM)</b> — <span class="mono">debian:stable-slim · apt-get</span> — Stable, smallest apt base.</div>
-    <div class="card"><b>ALPINE (MUSL)</b> — <span class="mono">alpine:latest · apk</span> — Ultra-light, musl libc.</div>
-    <div class="card"><b>ARCH (ROLLING)</b> — <span class="mono">archlinux:latest · pacman</span> — Latest upstream.</div>
-    <p>Each specimen ships: Go 1.24, Rust rustup, Node 22 + Bun, uv/pipx, Helix/Micro/Lazygit, agy/opencode/kilo + rtk, 7 HeLa MCP.</p>
+  <h2 id="modes">4. Deployment Modes</h2>
+  <table class="tbl mono"><tr><th>Mode</th><th>Containers</th><th>CPU / RAM (each)</th><th>Use</th></tr>
+    <tr><td>dual</td><td>ghost-machine1, ghost-machine2</td><td>1 core / 8 GB</td><td>client-server, multi-node</td></tr>
+    <tr><td>single</td><td>ghost-machine-single</td><td>1 core / 8 GB</td><td>standard workspace</td></tr>
+    <tr><td>power</td><td>ghost-machine-power</td><td>2 cores / 16 GB</td><td>heavy builds</td></tr>
+    <tr><td>half</td><td>ghost-machine-half</td><td>50% host CPUs / 50% host RAM</td><td>scale to host</td></tr>
+  </table>
+  <p class="adv">Modes select <span class="mono">deploy.resources.limits</span> in <span class="mono">docker-compose.yml</span>. LXCFS auto-mounts in <span class="mono">/proc/cpuinfo,/proc/meminfo,etc</span> for accurate <span class="mono">htop/free</span> reporting.</p>
 
-    <h2 id="custom">Layout Customization</h2>
-    <p>Persistent ordering: tenant mounts under <span class="mono">mounts/tenants/&lt;id&gt;</span> survive reboots and container recreation — layout is host-file, not ephemeral. Rearranging is simply moving tenants or re-adding with different <span class="mono">--port/--cpu/--mem</span>.</p>
+  <h2 id="host-prereq">5. Host Prerequisites</h2>
+  <p class="beg">Any Linux, macOS, or Windows host with Docker. Linux users get the best experience (LXCFS, host UID sync).</p>
+  <p class="adv">Linux x86_64 / aarch64, macOS 13+ (OrbStack or Docker Desktop), Windows 11 + WSL2. Docker Engine ≥ 20.10, Compose v2. <span class="mono">make setup-host</span> on Linux installs LXCFS + Docker if missing. macOS/WSL auto-skip LXCFS via <span class="mono">start.sh:50</span>.</p>
 
-    <h2 id="provision">Auto-Provisioning</h2>
-    <p>Zero-touch: no need to pre-pull. <span class="mono">./start.sh -e ubuntu -m single</span> auto-builds if no GHCR image found; <span class="mono">./tenant.sh add alice --engine debian</span> auto-allocates port from 2225 if omitted. LXCFS auto-detects via <span class="mono">/var/lib/lxcfs/proc</span>.</p><div class="term">./start.sh -e alpine -m power # 2c/16G<br>./tenant.sh add carol --engine alpine --port 2227 # explicit</div>
+  <h2 id="user-mgmt">6. User Management & Authentication</h2>
+  <p>Tenant-based: each host can vend many isolated users. Each tenant is a specimen with its own SSH port, CPU/RAM quotas, and storage <span class="mono">mounts/tenants/&lt;id&gt;</span>.</p>
+  <h3>Roles</h3>
+  <div class="card mono" style="font-size:12px"><b>HOST</b> — Full access. Runs <span class="mono">tenant.sh</span>, <span class="mono">clean.sh</span>, manages GHCR pulls, edits <span class="mono">.env</span>.</div>
+  <div class="card mono" style="font-size:12px"><b>TENANT (developer)</b> — SSH on assigned port, sudo with <span class="mono">ghost</span>, owns <span class="mono">mounts/tenants/&lt;id&gt;</span>. Cannot see other tenants.</div>
+  <h3>Registration Flow</h3>
+  <ol><li>Host: <span class="mono">./tenant.sh add alice --engine debian --port 2225</span> — auto-creates mount and SSH.</li><li>Tenant: <span class="mono">ssh -p 2225 developer@localhost</span> — pass <span class="mono">ghost</span> or pre-injected <span class="mono">~/.ssh/id_ed25519.pub</span>.</li><li>Verify: <span class="mono">./tenant.sh list</span> shows <span class="mono">RUNNING</span> + port + size.</li></ol>
 
-    <h2 id="matrix">Logic Matrix</h2>
-    <p>Local automation matrix linking engines, modes, and cleanup:</p>
-    <ol><li><b>LISTEN & MATCH</b> — Match engine + mode + GHOST_IMAGE to compose profile (<span class="mono">dual/single/power/half</span>).</li><li><b>EVALUATE</b> — Resolve UID/GID, LXCFS, SSH key, tunnel token.</li><li><b>IF/ELSE IF</b> — If GHCR image exists → reuse; else → build via Buildx.</li><li><b>WEBHOOK DISPATCH</b> — Cloudflare Tunnel if <span class="mono">TUNNEL_TOKEN</span> set.</li><li><b>INTER-WIRING</b> — Tenant snapshots chain to restore (max 5 deep).</li><li><b>MANUAL OVERRIDE</b> — <span class="mono">./clean.sh --nuke</span> for full purge test.</li></ol>
+  <h2 id="multi">7. Multi-Tenant Aggregation Hub <a class="mono" href="pages/tenant.html" style="font-size:11px">→ dedicated</a></h2>
+  <p>One host aggregates multiple engines on one machine into a unified <span class="mono">ghost_sandbox</span> bridge network. Each tenant is isolated via non-overlapping mounts and per-tenant cgroup limits — no noisy neighbor. Cross-engine logic: one host can run Ubuntu for Rust, Alpine for Go, Debian for Node — all on different ports, sharing host kernel but not files.</p>
 
-    <h2 id="howto">How-To Guide</h2>
-    <h3>Placing a Workspace (Single)</h3><ol><li><span class="mono">git clone https://github.com/1999AZZAR/ghost-machines.git && cd ghost-machines</span></li><li><span class="mono">make setup-host</span> (once, Linux)</li><li><span class="mono">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest</span></li><li><span class="mono">GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single</span></li><li><span class="mono">ssh -p 2223 developer@localhost</span></li></ol>
-    <h3>Multi-tenant</h3><ol><li><span class="mono">./tenant.sh add alice --engine debian --port 2225</span></li><li><span class="mono">./tenant.sh list · stats</span></li><li><span class="mono">./tenant.sh delete alice -y</span></li></ol>
+  <h2 id="feeds">8. GHCR Feeds (Prebuilt Integration)</h2>
+  <p>Instead of building locally, pull curated prebuilts from GHCR. Published on <span class="mono">v* tags</span>, multi-arch <span class="mono">linux/amd64,arm64</span>, scoped per-engine so Packages tab shows 4 distinct packages.</p>
+  <div class="term">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single<br>ssh -p 2223 developer@localhost <span class="c"># pass ghost</span></div>
 
-    <h2 id="security">Security Protocol</h2>
-    <p>Multi-layered: dev defaults <span class="mono">developer:ghost / root:ghost</span> (rotate via <span class="mono">docs/security-todo.md</span> P0), key-only via <span class="mono">SSH_PASSWORD_AUTH=false</span>, per-tenant <span class="mono">authorized_keys</span> injection, UID/GID sync via <span class="mono">entrypoint.sh</span>, GHCR pull auth via <span class="mono">GITHUB_TOKEN</span>.</p>
+  <h2 id="retention">9. Snapshot Retention</h2>
+  <p><span class="mono">snapshot.sh</span> tars <span class="mono">mounts/</span> excluding caches (<span class="mono">node_modules/.cache, target/, __pycache__, .pytest_cache, logs</span>) + <span class="mono">.sha256</span> + <span class="mono">.meta.json</span> (host arch, timestamp, file count, archive hash). <span class="mono">restore.sh</span> verifies SHA and keeps atomic backup + rolls back on failure.</p>
+  <div class="term">./snapshot.sh -o backup.tar.gz<br>./restore.sh backup.tar.gz --force</div>
 
-    <h2 id="vs">Ghost vs VM</h2>
-    <table class="tbl mono"><tr><th></th><th>Ghost</th><th>VM</th></tr><tr><td>Engine</td><td>Docker + compose</td><td>KVM/QEMU/VirtualBox</td></tr><tr><td>Boot</td><td>1–2s</td><td>30–120s</td></tr><tr><td>Idle</td><td>73 MB / 0% CPU</td><td>0.5–2 GB</td></tr><tr><td>Isolation</td><td>shared kernel (weak)</td><td>hypervisor (strong)</td></tr><tr><td>Use</td><td>disposable dev, agents, WaaS</td><td>Windows, kernel, malware</td></tr></table>
-    <p>Full: <a href="pages/comparison.html">comparison.html</a> · <a href="pages/engines.html">engines</a> · <a href="pages/scripts.html">scripts</a></p>
-  </main>
+  <h2 id="specimens">10. Engine Specimens</h2>
+  <div class="card"><b>UBUNTU (STANDARD)</b> — <span class="mono">ubuntu:latest · apt-get · PPA</span> — Default for agents, richest toolchain.</div>
+  <div class="card"><b>DEBIAN (SLIM)</b> — <span class="mono">debian:stable-slim · apt-get</span> — Stable, smallest apt base.</div>
+  <div class="card"><b>ALPINE (MUSL)</b> — <span class="mono">alpine:latest · apk</span> — Ultra-light, musl libc.</div>
+  <div class="card"><b>ARCH (ROLLING)</b> — <span class="mono">archlinux:latest · pacman</span> — Latest upstream.</div>
+  <p>Each ships: Go 1.24, Rust rustup minimal, Node 22 + Bun, Python uv/pipx, build-essential/cmake/gdb, Helix 25.01.1, Micro, Lazygit, Tmux, agy/opencode/kilo + rtk, 7 HeLa MCP servers + Conductor.</p>
+
+  <h2 id="custom">11. Layout Customization</h2>
+  <p>Persistent: tenant mounts under <span class="mono">mounts/tenants/&lt;id&gt;</span> survive reboots and container recreation — layout is host-file, not ephemeral. Rearranging = re-adding with different <span class="mono">--port/--cpu/--mem</span> or moving <span class="mono">mounts/tenants/&lt;id&gt;</span> on host.</p>
+
+  <h2 id="provision">12. Auto-Provisioning</h2>
+  <p>Zero-touch: <span class="mono">./start.sh -e ubuntu -m single</span> auto-builds if no GHCR image found; <span class="mono">./tenant.sh add alice --engine debian</span> auto-allocates port from 2225 if omitted. <span class="mono">make setup-host</span> on Linux installs LXCFS + Docker if missing.</p>
+  <div class="term">./start.sh -e alpine -m power <span class="c"># 2c/16G</span><br>./tenant.sh add carol --engine alpine --port 2227 <span class="c"># explicit port</span><br>./start.sh --no-lxcfs -t $TUNNEL_TOKEN <span class="c"># Cloudflare remote</span></div>
+
+  <h2 id="matrix">13. Logic Matrix</h2>
+  <ol><li><b>LISTEN &amp; MATCH</b> — Match engine + mode + <span class="mono">GHOST_IMAGE</span> to compose profile (<span class="mono">dual/single/power/half</span>).</li><li><b>EVALUATE</b> — Resolve UID/GID, LXCFS, SSH key, tunnel token, host AGY binary.</li><li><b>IF/ELSE IF</b> — If GHCR image exists → reuse (<span class="mono">GHOST_IMAGE</span> honored); else → build via Buildx.</li><li><b>WEBHOOK DISPATCH</b> — Cloudflare Tunnel if <span class="mono">TUNNEL_TOKEN</span> set.</li><li><b>INTER-WIRING</b> — Tenant snapshots chain to restore (max depth enforced).</li><li><b>MANUAL OVERRIDE</b> — <span class="mono">./clean.sh --nuke</span> for full purge test.</li></ol>
+
+  <h2 id="howto">14. How-To Guide</h2>
+  <h3>Single Workspace (Beginner)</h3>
+  <ol><li><span class="mono">git clone https://github.com/1999AZZAR/ghost-machines.git &amp;&amp; cd ghost-machines</span></li><li><span class="mono">make setup-host</span> (once, Linux)</li><li><span class="mono">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest</span></li><li><span class="mono">GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single</span></li><li><span class="mono">ssh -p 2223 developer@localhost</span> — pass <span class="mono">ghost</span></li></ol>
+  <h3>Multi-Tenant (WaaS)</h3>
+  <div class="term"><span class="c"># prebuilt</span><br>docker pull ghcr.io/1999azzar/ghost-machine-debian:latest<br>./tenant.sh add alice --engine debian --port 2225<br>./tenant.sh add bob --engine ubuntu --cpu 4 --mem 8G<br><br><span class="c"># or build locally</span><br>./tenant.sh add alice --engine debian --build<br><br><span class="c"># manage</span><br>./tenant.sh list · stats · snapshot alice · delete bob -y</div>
+
+  <h2 id="security">15. Security Protocol</h2>
+  <p>Multi-layered: dev defaults <span class="mono">developer:ghost / root:ghost</span> (rotate to key-only for any real use), key-only via <span class="mono">SSH_PASSWORD_AUTH=false</span>, per-tenant <span class="mono">authorized_keys</span> injection, UID/GID sync via <span class="mono">entrypoint.sh</span>, GHCR pull auth via <span class="mono">GITHUB_TOKEN</span>, Cloudflare Tunnel for zero-trust remote. <b>Container is not a security boundary</b> — for hostile code use a real VM.</p>
+
+  <h2 id="vs">16. Ghost vs VM <a class="mono" href="pages/comparison.html" style="font-size:11px">→ dedicated</a></h2>
+  <table class="tbl mono"><tr><th></th><th>Ghost</th><th>VM</th></tr><tr><td>Engine</td><td>Docker + compose</td><td>KVM / QEMU / VirtualBox</td></tr><tr><td>Boot</td><td>1–2s</td><td>30–120s</td></tr><tr><td>Idle RAM</td><td>~73 MB</td><td>0.5–2 GB</td></tr><tr><td>Kernel</td><td>shared host</td><td>own</td></tr><tr><td>Isolation</td><td>weak (container escape = host)</td><td>strong (hypervisor boundary)</td></tr><tr><td>Use</td><td>disposable dev, agents, WaaS, CI</td><td>Windows, kernel, malware</td></tr></table>
+
+  <h2 id="scripts">17. Scripts <a class="mono" href="pages/scripts.html" style="font-size:11px">→ dedicated</a></h2>
+  <p>Hotel analogy: <b>start.sh</b> front desk · <b>tenant.sh</b> manager · <b>snapshot/restore</b> backup · <b>clean.sh</b> housekeeping (L1–4) · <b>setup-host.sh</b> building setup · <b>entrypoint.sh</b> butler (auto) · <b>aliases.sh</b> shortcuts. Full reference: <span class="mono">docs/scripts.md</span>.</p>
+
+  <h2 id="cleanup">18. Cleanup <a class="mono" href="pages/cleanup.html" style="font-size:11px">→ dedicated</a></h2>
+  <table class="tbl mono"><tr><th>Level</th><th>Command</th><th>Effect</th></tr>
+    <tr><td>1</td><td>./clean.sh -s</td><td>down (containers + network)</td></tr>
+    <tr><td>2</td><td>./clean.sh -v</td><td>down -v (incl. volumes)</td></tr>
+    <tr><td>3</td><td>./clean.sh -a -y</td><td>down -v --rmi local + rmi *-template:latest</td></tr>
+    <tr><td>4</td><td>./clean.sh --nuke -y</td><td>L3 + rmi ghcr ghost-machine-*:latest + builder prune</td></tr>
+  </table>
+
+  <h2 id="troubleshoot">19. Troubleshooting</h2>
+  <ul><li><b>Permission denied on mounts</b> — host UID/GID mismatch. Re-run <span class="mono">./start.sh</span> (it auto-syncs from <span class="mono">id -u/g</span>).</li><li><b>Port 2223 in use</b> — pass <span class="mono">-p 2225</span> or let tenant auto-allocate from 2225.</li><li><b>SSH asks password every time</b> — copy <span class="mono">~/.ssh/id_ed25519.pub</span> to host; <span class="mono">start.sh:24</span> auto-mounts it.</li><li><b>htop shows host resources, not container</b> — install LXCFS via <span class="mono">make setup-host</span> on Linux.</li><li><b>Build fails on Alpine</b> — some npm packages need glibc; use debian/ubuntu instead.</li><li><b>GHCR pull denied</b> — login: <span class="mono">echo $GH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin</span>.</li><li><b>Tenant can't be deleted</b> — <span class="mono">./tenant.sh delete alice -y</span> skips confirm; <span class="mono">--archive</span> saves mount first.</li></ul>
+
+  <h2 id="tested">20. Verified Hosts</h2>
+  <p><b>Successfully tried on both local workstation and VPS.</b></p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0">
+  <div class="card mono" style="font-size:11px"><b>LOCAL — lappy</b><br>Debian GNU/Linux 13 (trixie) · 7.1.8+deb13-amd64<br>Intel Core i5-10310U (4C/8T @ 1.70–4.40 GHz) · 31 Gi RAM · 55 Gi Swap<br>836 GB NVMe (38% used) · Docker 29.7.2 · x86_64</div>
+  <div class="card mono" style="font-size:11px"><b>VPS — servy</b><br>Ubuntu 24.04.4 LTS (Noble) · 6.17.0-1020-oracle aarch64<br>ARM Neoverse-N1 (2C) · 11 Gi RAM · 11 Gi Swap<br>193 GB (51% used) · Docker 29.7.2 · aarch64 (Oracle) · up 10 days</div>
+  </div>
+  <p class="mono" style="font-size:11px;color:var(--muted)">Both pull and run GHCR multi-arch images: <span class="mono">ghost-machine-*:latest</span> auto-selects amd64/arm64.</p>
+
+  <h2 id="references">21. References</h2>
+  <ul><li><a href="https://github.com/1999AZZAR/ghost-machines">GitHub Repository</a></li><li><a href="https://github.com/1999AZZAR/ghost-machines/blob/master/docs/comparison-vs-vm.md">Ghost vs VM (full)</a></li><li><a href="https://github.com/1999AZZAR/ghost-machines/blob/master/docs/scripts.md">Scripts Guide</a></li><li><a href="https://github.com/1999AZZAR/hela-mcp-ecosystem">HeLa MCP Ecosystem</a></li><li><a href="https://en.wikipedia.org/wiki/Workspace_as_a_service">Workspace as a Service (WaaS)</a></li><li><a href="https://learn.microsoft.com/en-us/azure/dev-box/overview-what-is-microsoft-dev-box">Cloud Development Environment (CDE)</a></li></ul>
+</main>
 </div>
 <div class="foot mono">GHOST_MACHINES · ARCHIVE 001 · MIT · <a href="https://github.com/1999AZZAR/ghost-machines">github.com/1999AZZAR/ghost-machines</a></div>
+<script>
+function setLvl(l){document.getElementById('main').className='layout '+l;document.getElementById('b1').classList.toggle('active',l==='beginner');document.getElementById('b2').classList.toggle('active',l==='advanced');localStorage.setItem('gm-lvl',l)}
+setLvl(localStorage.getItem('gm-lvl')||'beginner');
+</script>
 </body>
 </html>

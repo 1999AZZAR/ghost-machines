@@ -1,1 +1,44 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Engines — Ghost Machines</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,700&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#141412;--muted:#6b6b68;--border:#dbdbd6}body{font-family:system-ui;background:var(--paper);color:var(--ink);max-width:800px;margin:0 auto;padding:32px}.mono{font-family:'IBM Plex Mono',monospace}a{color:#0f6f6f}table{width:100%;border-collapse:collapse;font-size:13px}th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px;border-bottom:1px solid var(--border)}td{padding:10px;border-bottom:1px solid #ebebe7}.term{background:#111;color:#d6d6d2;padding:12px;font-size:12px}</style></head><body><p class="mono"><a href="../index.html">← Ghost Machines</a> · Engines</p><h1 style="font-family:'Newsreader',serif;font-size:2.2rem">Engines — Ubuntu / Debian / Alpine / Arch</h1><p>Each GHCR package is <b>multi-arch amd64+arm64</b>, published on <span class="mono">v* tags</span>.</p><table class="mono"><tr><th>Engine</th><th>Base</th><th>GHCR</th><th>Size amd64 / arm64</th><th>For</th></tr><tr><td>ubuntu</td><td>ubuntu:latest</td><td>ghost-machine-ubuntu:latest</td><td>1.38 / 1.21 GB</td><td>PPA, default for agents</td></tr><tr><td>debian</td><td>debian:stable-slim</td><td>ghost-machine-debian:latest</td><td>1.36 / 1.20 GB</td><td>Slim, stable</td></tr><tr><td>alpine</td><td>alpine:latest</td><td>ghost-machine-alpine:latest</td><td>1.59 / 1.32 GB</td><td>Musl, tiny</td></tr><tr><td>arch</td><td>archlinux:latest</td><td>ghost-machine-arch:latest</td><td>1.63 / 1.63 GB</td><td>Rolling</td></tr></table><p class="mono" style="margin-top:12px">Pull one — not four:</p><div class="term">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single<br>ssh -p 2223 developer@localhost</div><p>Also see <a href="../index.html#engines">index#engines</a> + <a href="https://github.com/1999AZZAR/ghost-machines">README</a>.</p></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Engines — Ghost Machines</title><meta name="description" content="Four Ghost Machines engines: Ubuntu, Debian, Alpine, Arch. GHCR multi-arch prebuilts with sizes and how to pick."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6;--accent:#0f6f6f}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:var(--accent)}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.term{background:#0f0f0e;color:#d6d6d2;padding:12px;font-size:11px;line-height:1.7;overflow:auto;margin:8px 0}.term .c{color:#8a8a86}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}.card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
+<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · ENGINES</div>
+<h1 class="serif">Engines — Ubuntu / Debian / Alpine / Arch</h1>
+<p>Each engine ships an <b>identical toolchain</b> so your workflow is portable. Only the <b>base image</b> and <b>package manager</b> change. All 4 are published as <b>GHCR multi-arch</b> (<span class="mono">linux/amd64 + arm64</span>) on <span class="mono">v* tags</span> — pull <b>one</b> that matches your needs.</p>
+
+<h3>At a Glance</h3>
+<table class="tbl mono"><tr><th>Engine</th><th>Base</th><th>PM</th><th>GHCR Package</th><th>Size amd64 / arm64</th><th>Best for</th></tr>
+<tr><td>ubuntu</td><td>ubuntu:latest</td><td>apt-get</td><td>ghost-machine-ubuntu:latest</td><td>1.38 / 1.21 GB</td><td>AI agents, PPA, daily dev</td></tr>
+<tr><td>debian</td><td>debian:stable-slim</td><td>apt-get</td><td>ghost-machine-debian:latest</td><td>1.36 / 1.20 GB</td><td>Slim &amp; stable, prod-like</td></tr>
+<tr><td>alpine</td><td>alpine:latest</td><td>apk</td><td>ghost-machine-alpine:latest</td><td>1.59 / 1.32 GB</td><td>Ultra-light, musl</td></tr>
+<tr><td>arch</td><td>archlinux:latest</td><td>pacman</td><td>ghost-machine-arch:latest</td><td>1.63 / 1.63 GB</td><td>Rolling, latest upstream</td></tr>
+</table>
+<p class="mono" style="font-size:11px;color:var(--muted)">Host distro does not matter — Debian host can run Arch image. Only CPU arch matters (amd64 vs arm64 auto-picked).</p>
+
+<h3>Identical Toolchain (all engines)</h3>
+<table class="tbl mono"><tr><th>Layer</th><th>What</th></tr>
+<tr><td>Runtimes</td><td>Go 1.24, Rust rustup minimal (cargo/rustc), Node current + Bun, Python uv + pipx + venv</td></tr>
+<tr><td>Editors & Git</td><td>Helix 25.01.1, Micro, Lazygit, Tmux</td></tr>
+<tr><td>AI Harnesses</td><td>agy/antigravity, opencode, kilo + rtk (60–90% token save)</td></tr>
+<tr><td>MCP & Conductor</td><td>7 HeLa headless servers (mitosis/genome/membrane/nucleus/ribosome/enzyme/phenotype) + Conductor /opt/conductor</td></tr>
+<tr><td>Shell UX</td><td>Oh-My-Bash, Alias-Hub, Fastfetch/Neofetch, fortunes, openssh-server, LXCFS</td></tr>
+</table>
+
+<h3>When to Pick Which</h3>
+<div class="card"><b>Ubuntu</b> — <span class="mono">Recommended</span>. PPA support (`add-apt-repository`) for drivers and newer toolchains. Largest apt footprint but most compatible with AI agent scripts that expect Ubuntu. Use when unsure.</div>
+<div class="card"><b>Debian</b> — <span class="mono">slim</span> base, fewer packages out-of-the-box, closest to production Debian stable. Choose for smaller images and longer stability; good for WaaS classrooms where you want minimal bloat.</div>
+<div class="card"><b>Alpine</b> — <span class="mono">apk + musl</span>. Smallest base but musl can break some npm/native addons (needs glibc shim). Pick when you explicitly want a tiny image; avoid if you rely on many binary wheels.</div>
+<div class="card"><b>Arch</b> — <span class="mono">pacman + rolling</span>. Always latest upstream packages; biggest and slowest to build; good for bleeding-edge testing.</div>
+
+<h3>How Images Are Built</h3>
+<p>All 4 Dockerfiles share the same stages: <span class="mono">base → system tools → Go/Rust → Node/Bun/uv → Micro/Helix/Lazygit → AI harnesses → HeLa MCP → Conductor → non-root user (developer)</span>. The only differences are <span class="mono">apk add</span> vs <span class="mono">apt-get install</span> and package names (e.g. <span class="mono">build-base</span> vs <span class="mono">build-essential</span>). Build args <span class="mono">HOST_UID/HOST_GID</span> sync the <span class="mono">developer</span> user to your host.</p>
+
+<h3>Copy-Paste</h3>
+<p class="mono" style="font-size:11px;color:var(--muted)">Pull one — not four.</p>
+<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single<br>ssh -p 2223 developer@localhost <span class="c"># pass ghost</span></div>
+<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-debian:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single</div>
+<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single</div>
+<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-arch:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single</div>
+
+<h3>Host Compatibility</h3>
+<p>Any Linux (x86_64/aarch64), macOS with OrbStack or Docker Desktop, or Windows with WSL2. Image arch is auto-selected: Intel/AMD → <span class="mono">amd64</span>, Apple Silicon/ARM VPS → <span class="mono">arm64</span>. Debian host can run Arch image — only the kernel (host) and userland (image) are split.</p>
+
+<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
+</body></html>

@@ -1,1 +1,36 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ghost vs VM — Ghost Machines</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Newsreader:opsz,wght@6..72,700&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#141412;--muted:#6b6b68;--border:#dbdbd6}body{font-family:system-ui;background:var(--paper);color:var(--ink);max-width:900px;margin:0 auto;padding:32px}.mono{font-family:'IBM Plex Mono',monospace}a{color:#0f6f6f}table{width:100%;border-collapse:collapse;font-size:13px}th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px;border-bottom:1px solid var(--border)}td{padding:10px;border-bottom:1px solid #ebebe7}</style></head><body><p class="mono"><a href="../index.html">← Ghost Machines</a> · Ghost vs VM</p><h1 style="font-family:'Newsreader',serif">Ghost Machines vs Regular VM</h1><p>Ghost = Docker container (shared kernel). VM = hypervisor (own kernel).</p><table class="mono"><tr><th></th><th>Ghost</th><th>VM</th></tr><tr><td>Engine</td><td>Docker + compose</td><td>KVM/QEMU/VirtualBox</td></tr><tr><td>Boot</td><td>1–2s</td><td>30–120s</td></tr><tr><td>Idle</td><td>73 MB, 0% CPU</td><td>0.5–2 GB</td></tr><tr><td>Kernel</td><td>shared host</td><td>own</td></tr><tr><td>Isolation</td><td>weak (escape = host)</td><td>strong</td></tr><tr><td>Use</td><td>disposable dev, agents, WaaS</td><td>Windows, kernel, malware</td></tr></table><p>Full source: <span class="mono">docs/comparison-vs-vm.md</span> — this page is the web rendering.</p></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ghost vs VM — Ghost Machines</title><meta name="description" content="Ghost Machines (Docker container, shared kernel, 1–2s boot) vs Regular VM (hypervisor, own kernel, 30–120s). When to use which."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.card{border:1px solid var(--border);padding:12px;margin:8px 0;background:#fff}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
+<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · GHOST vs VM</div>
+<h1 class="serif">Ghost Machines vs Regular VM</h1>
+<p>Ghost is a <b>Docker container</b> (shares host kernel). A VM is a <b>hypervisor guest</b> (own kernel). They are complementary — Ghost for disposable dev, VM for hostile/Windows work.</p>
+
+<h3>Architecture</h3>
+<table class="tbl mono"><tr><th>Axis</th><th>Ghost Machines</th><th>Regular VM</th></tr>
+<tr><td>Engine</td><td>Docker + <span class="mono">docker-compose.yml</span> (namespaces + cgroups)</td><td>KVM / QEMU / VirtualBox / VMware / Hyper-V</td></tr>
+<tr><td>Kernel</td><td>shared with host</td><td>own kernel — can be Windows/BSD, different version</td></tr>
+<tr><td>Base images</td><td>ubuntu / debian / alpine / arch (Linux userlands)</td><td>any OS incl. Windows</td></tr>
+<tr><td>Boot time</td><td>~1–2s (<span class="mono">docker compose up -d</span>)</td><td>30–120s (full kernel boot)</td></tr>
+<tr><td>Idle overhead</td><td>~73.5 MB / 0% CPU / 1 PID (measured)</td><td>0.5–2 GB + vCPU pinned</td></tr>
+<tr><td>Active agent</td><td>~1.0 GB / 1.99% CPU (opencode + 7 MCP)</td><td>+ 1–2 GB hypervisor overhead</td></tr>
+<tr><td>Reproducibility</td><td>IaC pure — Dockerfile + compose versioned in git</td><td>manual; Packer/Vagrant needed</td></tr>
+<tr><td>Multi-tenancy</td><td>10+ tenants on 32 GB host (WaaS)</td><td>1 VM = 1 user — heavy</td></tr>
+<tr><td>Isolation</td><td>weak — container escape = host compromise</td><td>strong — hypervisor boundary</td></tr>
+</table>
+
+<h3>When Ghost Wins — Disposable Dev</h3>
+<ul><li>5 identical workstations in 10s — <span class="mono">GHOST_IMAGE=... ./start.sh</span> on any linux/macOS/WSL host.</li><li>Classroom / VPS WaaS for 20 students on one host — <span class="mono">./tenant.sh add</span> per student.</li><li>CI parity with prod Linux userland — same image as CI runner.</li><li>Cost &amp; speed over hard isolation — GHCR pull (~1.2 GB) faster than 10-min apt build.</li></ul>
+
+<h3>When VM Wins — Strong Isolation &amp; Kernel Work</h3>
+<ul><li>Run Windows / BSD / different kernel version — Ghost is Linux userland only.</li><li>Detonate untrusted binary / malware analysis — Ghost shares kernel; VM boundary is stronger.</li><li>Kernel module / driver / <span class="mono">iptables/nftables</span> / <span class="mono">systemd</span> low-level testing.</li><li>Full hardware virtualization (nested virt, PCI passthrough, GUI desktop).</li></ul>
+
+<h3>Cost Example (16 GB Host)</h3>
+<div class="card mono">Ghost dual — 2 × (1c / 8G): ~73 MB idle each → ~15 GB free for builds.<br>2 VMs (2 vCPU / 4G each): ~9 GB pinned (hypervisor + guest OS) before you open an editor. Ghost leaves ~88% headroom for compilers.</div>
+
+<h3>Middle Ground — MicroVMs</h3>
+<p>Need both speed <b>and</b> isolation? Use <b>Firecracker microVMs</b> — bare-metal performance with VM boundary (boot ~125ms). Use Ghost for dev, Firecracker for hostile code.</p>
+
+<h3>Practical Rule</h3>
+<div class="card"><b>If the task is Linux userland coding or agent work → Ghost.</b><br><b>If it's Windows, hostile, or kernel → VM.</b><br><b>If you need Windows <i>and</i> speed → Firecracker.</b></div>
+
+<p>Full narrative: <a href="https://github.com/1999AZZAR/ghost-machines/blob/master/docs/comparison-vs-vm.md">docs/comparison-vs-vm.md</a> on GitHub.</p>
+<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
+</body></html>

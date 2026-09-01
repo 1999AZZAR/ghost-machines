@@ -1,1 +1,31 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cleanup — Ghost Machines</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Newsreader:opsz,wght@6..72,700&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#141412;--muted:#6b6b68;--border:#dbdbd6}body{font-family:system-ui;background:var(--paper);color:var(--ink);max-width:800px;margin:0 auto;padding:32px}.mono{font-family:'IBM Plex Mono',monospace}a{color:#0f6f6f}.term{background:#111;color:#d6d6d2;padding:12px;font-size:12px}</style></head><body><p class="mono"><a href="../index.html">← Ghost Machines</a> · Cleanup</p><h1 style="font-family:'Newsreader',serif">Cleanup — Levels 1–4</h1><p>Level 1 stop· 2 + volumes· 3 + local images· 4 --nuke + GHCR + builder cache.</p><div class="term">./clean.sh        # pick 1–4<br>./clean.sh -a -y   # level 3<br>./clean.sh --nuke -y # full purge incl. GHCR ghost-machine-*:latest</div></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cleanup — Ghost Machines</title><meta name="description" content="Cleanup L1-L4: containers, volumes, local images, GHCR prebuilts, builder cache. Tenants need tenant.sh delete."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}.term{background:#0f0f0e;color:#d6d6d2;padding:12px;font-size:11px;line-height:1.7;overflow:auto;margin:8px 0}.term .c{color:#8a8a86}h1.serif{font-size:1.8rem;margin:0 0 8px 0}.card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
+<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · CLEANUP</div>
+<h1 class="serif">Cleanup — Levels 1–4</h1>
+<p>Four levels. <b>Level 4 = full purge</b> incl. GHCR prebuilts and builder cache. <span class="mono">clean.sh</span> only handles the main <span class="mono">docker-compose.yml</span> (ghost-machine*). Tenants use <span class="mono">tenant.sh delete</span> — they are a separate Compose project (<span class="mono">ghost-tenant-&lt;id&gt;</span>).</p>
+
+<table class="tbl mono"><tr><th>Level</th><th>Command</th><th>Effect</th><th>When</th></tr>
+<tr><td>1</td><td>./clean.sh -s</td><td><span class="mono">down</span> — containers + network</td><td>Stop for the day, keep work + images</td></tr>
+<tr><td>2</td><td>./clean.sh -v</td><td><span class="mono">down -v</span> — incl. Docker volumes</td><td>Volumes are unused here (bind mounts), so rarely needed</td></tr>
+<tr><td>3</td><td>./clean.sh -a -y</td><td><span class="mono">down -v --rmi local</span> + <span class="mono">rmi *-template:latest</span> (ubuntu/debian/alpine/arch)</td><td>Rebuild from scratch, free ~1 GB local image per engine</td></tr>
+<tr><td>4</td><td>./clean.sh --nuke -y</td><td>L3 + <span class="mono">rmi ghcr.io/1999azzar/ghost-machine-*:latest</span> + <span class="mono">builder prune</span></td><td>Full purge — GHCR prebuilts (~1.2–1.6 GB each) + Buildx cache</td></tr>
+</table>
+
+<h3>Tenants — Separate System</h3>
+<div class="card">
+<b>Tenants are not covered by <span class="mono">clean.sh</span>.</b> They live under <span class="mono">mounts/tenants/&lt;id&gt;</span> and Compose project <span class="mono">ghost-tenant-&lt;id&gt;</span>.
+<div class="term" style="margin-top:8px">./tenant.sh list                          <span class="c"># see active tenants</span><br>./tenant.sh delete alice -y                <span class="c"># stops + removes container + mount</span><br>./tenant.sh delete alice --archive -y      <span class="c"># saves snapshots/snapshot_alice_*.tar.gz first</span><br>./tenant.sh delete bob -y && ./tenant.sh delete carol -y <span class="c"># loop for many</span></div>
+</div>
+
+<h3>Full Purge Example</h3>
+<div class="term"><span class="c"># 1) remove all tenants</span><br>for t in $(./tenant.sh list 2>/dev/null | awk 'NR>2{print $1}'); do ./tenant.sh delete $t -y; done<br><br><span class="c"># 2) nuke main + GHCR + builder</span><br>./clean.sh --nuke -y</div>
+
+<h3>What Is Kept Where</h3>
+<table class="tbl mono"><tr><th>Data</th><th>Location</th><th>Removed by</th></tr>
+<tr><td>Your code / home</td><td><span class="mono">mounts/*</span> (bind mounts)</td><td>Never by <span class="mono">clean.sh</span> — manual <span class="mono">rm</span></td></tr>
+<tr><td>Tenant homes</td><td><span class="mono">mounts/tenants/&lt;id&gt;</span></td><td><span class="mono">tenant.sh delete</span></td></tr>
+<tr><td>Local built images</td><td><span class="mono">*-template:latest</span></td><td>L3 / L4</td></tr>
+<tr><td>GHCR prebuilts</td><td><span class="mono">ghcr.io/1999azzar/ghost-machine-*:latest</span></td><td>Only L4 (--nuke)</td></tr>
+</table>
+
+<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
+</body></html>
