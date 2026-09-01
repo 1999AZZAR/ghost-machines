@@ -50,7 +50,7 @@ p,li{font-size:14px;color:#2a2a28;margin-bottom:8px}li{margin-left:18px}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="hero">
-  <div><div class="mono" style="font-size:11px;letter-spacing:.12em;color:var(--muted)">SYSTEM_DOCUMENTATION_V2.0</div><h1 class="serif" style="font-size:clamp(2rem,4vw,2.8rem);line-height:1;margin:6px 0">Ghost Machines</h1><div class="mono" style="font-size:11px;color:var(--muted)">v1.0.0-beta · MIT</div></div>
+  <div><div class="mono" style="font-size:11px;letter-spacing:.12em;color:var(--muted)">SYSTEM_DOCUMENTATION_V2.0</div><h1 class="serif" style="font-size:clamp(2rem,4vw,2.8rem);line-height:1;margin:6px 0">Ghost Machines</h1><div class="mono" style="font-size:11px;color:var(--muted)">v1.0.0-beta · MIT · <a href="https://asciinema.org/a/sDNJP7aYOabLz0k6">▶ Demo 1.8 min</a></div></div>
   <div class="mono" style="font-size:11px;color:var(--muted);text-align:right"><a href="https://github.com/1999AZZAR/ghost-machines">GITHUB</a> · <a href="https://github.com/1999AZZAR/ghost-machines/pkgs/container/ghost-machine-ubuntu">GHCR</a><br>4 ENGINES · 4 GHCR PACKAGES · 7 MCP · 8 SCRIPTS</div>
 </div>
 
@@ -186,7 +186,8 @@ p,li{font-size:14px;color:#2a2a28;margin-bottom:8px}li{margin-left:18px}
   <h2 id="matrix">13. Logic Matrix</h2>
   <ol><li><b>LISTEN &amp; MATCH</b> — Match engine + mode + <span class="mono">GHOST_IMAGE</span> to compose profile (<span class="mono">dual/single/power/half</span>).</li><li><b>EVALUATE</b> — Resolve UID/GID, LXCFS, SSH key, tunnel token, host AGY binary.</li><li><b>IF/ELSE IF</b> — If GHCR image exists → reuse (<span class="mono">GHOST_IMAGE</span> honored); else → build via Buildx.</li><li><b>WEBHOOK DISPATCH</b> — Cloudflare Tunnel if <span class="mono">TUNNEL_TOKEN</span> set.</li><li><b>INTER-WIRING</b> — Tenant snapshots chain to restore (max depth enforced).</li><li><b>MANUAL OVERRIDE</b> — <span class="mono">./clean.sh --nuke</span> for full purge test.</li></ol>
 
-  <h2 id="howto">14. How-To Guide</h2>
+  <h2 id="howto">14. How-To Guide <a class="mono" href="https://asciinema.org/a/sDNJP7aYOabLz0k6" style="font-size:11px">▶ watch 1.8 min demo</a></h2>
+  <div style="margin:8px 0"><a href="https://asciinema.org/a/sDNJP7aYOabLz0k6"><img src="https://asciinema.org/a/sDNJP7aYOabLz0k6.svg" alt="Demo" style="max-width:100%;border:1px solid var(--border)"></a></div>
   <h3>Single Workspace (Beginner)</h3>
   <ol><li><span class="mono">git clone https://github.com/1999AZZAR/ghost-machines.git &amp;&amp; cd ghost-machines</span></li><li><span class="mono">make setup-host</span> (once, Linux)</li><li><span class="mono">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest</span></li><li><span class="mono">GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single</span></li><li><span class="mono">ssh -p 2223 developer@localhost</span> — pass <span class="mono">ghost</span></li></ol>
   <h3>Multi-Tenant (WaaS)</h3>
