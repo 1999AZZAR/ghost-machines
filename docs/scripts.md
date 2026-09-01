@@ -49,11 +49,12 @@ docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
 
 ## clean.sh — Housekeeping
 
-**What:** Shuts down and cleans up. 3 levels: just stop, also clear rooms, also throw away images.
+**What:** Shuts down and cleans up. 4 levels: just stop, clear rooms, throw away images, nuke GHCR + builder. Add `--hard` with `--nuke` to also wipe `mounts/` (true 1st-user).
 
 ```bash
-./clean.sh           # menu — choose level
+./clean.sh           # menu — choose level (5 options)
 ./clean.sh -a -y     # deep clean, no questions
+./clean.sh --nuke --hard -y  # full nuke + mounts/
 ```
 
 ## setup-host.sh — Building Setup (once)

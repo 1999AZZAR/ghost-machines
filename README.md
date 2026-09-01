@@ -441,7 +441,8 @@ make clean
 ./clean.sh -s          # Level 1 — stop containers/network
 ./clean.sh -v          # Level 2 — above + volumes
 ./clean.sh -a -y       # Level 3 — above + local *-template images
-./clean.sh --nuke -y   # Level 4 — Level 3 + GHCR prebuilts + builder cache (full purge)
+./clean.sh --nuke -y   # Level 4 — Level 3 + GHCR prebuilts + builder cache
+./clean.sh --nuke --hard -y  # Level 4 hard — also wipe mounts/ (true 1st-user nuke)
 ```
 
 ---

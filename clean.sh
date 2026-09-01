@@ -27,6 +27,10 @@ while [[ $# -gt 0 ]]; do
             LEVEL="4"
             shift
             ;;
+        --hard)
+            HARD=true
+            shift
+            ;;
         -y|--yes|--force)
             FORCE=true
             shift
@@ -41,6 +45,7 @@ while [[ $# -gt 0 ]]; do
             echo "  -v, --volumes, --deep Stop and remove containers, networks, AND volumes (Level 2)"
             echo "  -a, --all, --reset   All of above, plus remove local images (Level 3)"
             echo "      --nuke, --purge  Level 3 + remove GHCR prebuilt images + prune builder cache (Level 4)"
+            echo "      --hard           With --nuke: also wipe mounts/ (true 1st-user nuke)"
             echo "  -y, --yes, --force   Skip confirmation prompts"
             echo "  -h, --help           Show this help message"
             exit 0
@@ -97,6 +102,14 @@ case $LEVEL in
         docker rmi -f debian-template:latest ubuntu-template:latest alpine-template:latest arch-template:latest 2>/dev/null || true
         docker rmi -f ghcr.io/1999azzar/ghost-machine-ubuntu:latest ghcr.io/1999azzar/ghost-machine-debian:latest ghcr.io/1999azzar/ghost-machine-alpine:latest ghcr.io/1999azzar/ghost-machine-arch:latest 2>/dev/null || true
         docker builder prune -f 2>/dev/null || true
+        if [ "${HARD:-false}" = true ]; then
+            echo "[INFO] Hard nuke: wiping mounts/ (true 1st-user reset)..."
+            rm -rf mounts/ubuntu1 mounts/ubuntu2 mounts/tenants 2>/dev/null || true
+            mkdir -p mounts/ubuntu1 mounts/ubuntu2 mounts/tenants
+            touch mounts/ubuntu1/.gitkeep mounts/ubuntu2/.gitkeep mounts/tenants/.gitkeep 2>/dev/null || true
+        else
+            echo "[TIP] Add --hard to also wipe mounts/ for a true 1st-user nuke: ./clean.sh --nuke --hard -y"
+        fi
         ;;
     *)
         echo "Cleanup cancelled."
