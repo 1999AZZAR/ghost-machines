@@ -220,6 +220,7 @@ p,li{font-size:14px;color:#2a2a28;margin-bottom:8px}li{margin-left:18px}
     <tr><td>2</td><td>./clean.sh -v</td><td>down -v (incl. volumes)</td></tr>
     <tr><td>3</td><td>./clean.sh -a -y</td><td>down -v --rmi local + rmi *-template:latest</td></tr>
     <tr><td>4</td><td>./clean.sh --nuke -y</td><td>L3 + rmi ghcr ghost-machine-*:latest + builder prune</td></tr>
+    <tr><td>4 hard</td><td>./clean.sh --nuke --hard -y</td><td>L4 + wipe mounts/ (true 1st-user nuke)</td></tr>
   </table>
 
   <h2 id="troubleshoot">19. Troubleshooting</h2>

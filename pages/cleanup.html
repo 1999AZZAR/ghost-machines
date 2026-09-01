@@ -10,6 +10,7 @@
 <tr><td>2</td><td>./clean.sh -v</td><td><span class="mono">down -v</span> — incl. Docker volumes</td><td>Volumes are unused here (bind mounts), so rarely needed</td></tr>
 <tr><td>3</td><td>./clean.sh -a -y</td><td><span class="mono">down -v --rmi local</span> + <span class="mono">rmi *-template:latest</span> (ubuntu/debian/alpine/arch)</td><td>Rebuild from scratch, free ~1 GB local image per engine</td></tr>
 <tr><td>4</td><td>./clean.sh --nuke -y</td><td>L3 + <span class="mono">rmi ghcr.io/1999azzar/ghost-machine-*:latest</span> + <span class="mono">builder prune</span></td><td>Full purge — GHCR prebuilts (~1.2–1.6 GB each) + Buildx cache</td></tr>
+<tr><td>4 hard</td><td>./clean.sh --nuke --hard -y</td><td>L4 + wipe <span class="mono">mounts/</span></td><td>True 1st-user nuke (also clears host work)</td></tr>
 </table>
 
 <h3>Tenants — Separate System</h3>
