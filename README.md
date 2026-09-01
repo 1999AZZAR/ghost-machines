@@ -6,6 +6,8 @@ Ghost Machines provides reproducible container environments with dynamic host us
 
 ![Ghost Machines Architecture](assets/ghost-machines-architecture.png)
 
+[![Demo](https://asciinema.org/a/sDNJP7aYOabLz0k6.svg)](https://asciinema.org/a/sDNJP7aYOabLz0k6)
+
 ---
 
 ## Table of Contents
