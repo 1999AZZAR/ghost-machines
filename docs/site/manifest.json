@@ -1,0 +1,10 @@
+{
+  "name": "Ghost Machines",
+  "short_name": "Ghost",
+  "description": "Disposable Linux sandboxes — Ubuntu, Debian, Alpine, Arch via Docker Compose",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#0f6f6f",
+  "icons": [{ "src": "favicon.png", "sizes": "32x32", "type": "image/png" }]
+}
