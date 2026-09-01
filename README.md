@@ -1,0 +1,1 @@
+ghost-machines docs
