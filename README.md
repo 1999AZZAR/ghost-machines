@@ -438,9 +438,10 @@ Use the cleanup script to remove containers, networks, volumes, and images:
 make clean
 
 # Headless options:
-./clean.sh -s          # Stop and remove containers/network (Level 1)
-./clean.sh -v          # Stop containers and prune mounts/volumes (Level 2)
-./clean.sh -a -y       # Remove containers, volumes, and local images (Level 3)
+./clean.sh -s          # Level 1 — stop containers/network
+./clean.sh -v          # Level 2 — above + volumes
+./clean.sh -a -y       # Level 3 — above + local *-template images
+./clean.sh --nuke -y   # Level 4 — Level 3 + GHCR prebuilts + builder cache (full purge)
 ```
 
 ---
