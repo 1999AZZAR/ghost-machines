@@ -260,11 +260,10 @@ Arch (build):
 
 ### AI Harness Suite & RTK Token Optimization
 
-Each Ghost Machine environment includes three dedicated CLI harnesses alongside the RTK token optimization runner:
+Each Ghost Machine environment includes two dedicated CLI harnesses alongside the RTK token optimization runner:
 
 - **[Antigravity CLI](https://github.com/google/antigravity)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
 - **[OpenCode CLI](https://github.com/opencode-ai/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
-- **[Kilo CLI](https://github.com/kilocode/kilo)** (`kilo` / `kilocode`): Interactive terminal coding assistant.
 - **[RTK](https://github.com/rtk-ai/rtk)** (`rtk`): Token-optimized terminal execution runner.
 
 #### RTK Universal Auto-Rewrite Hook
@@ -286,10 +285,9 @@ All images build the **[HeLa MCP Ecosystem](https://github.com/1999AZZAR/hela-mc
 | `mcp-enzyme` | `hela-enzyme` | Research assistant combining Google Search and cached Wikipedia lookups. |
 | `mcp-phenotype` | `hela-phenotype` | UI/UX token generator, OKLCH palettes, and Tailwind utility synthesis. |
 
-Client configuration files are automatically generated and pre-configured for all three AI harnesses:
+Client configuration files are automatically generated and pre-configured for both AI harnesses:
 - **Antigravity CLI:** `~/.mcp/config.json`
 - **OpenCode CLI:** `~/.config/opencode/config.json`
-- **Kilo CLI:** `~/.config/kilo/config.json`
 
 To mount a local clone of the ecosystem during container development, set `MCP_ECOSYSTEM_LOCAL_PATH` in `.env`:
 
@@ -331,7 +329,7 @@ MCP_ECOSYSTEM_LOCAL_PATH=/path/to/mcp-ecosystem
 #### Cross-Harness Compatibility
 
 - **Antigravity / Jetski:** Loaded via `~/.gemini/config/plugins/conductor` + `ask_question` GUI modal UX adapter.
-- **kilo-cli / OpenCode / Agent SDK:** Discovered automatically from global `~/.agents/skills/`.
+- **OpenCode / Agent SDK:** Discovered automatically from global `~/.agents/skills/`.
 - **Live Updates:** Run `git -C ~/.agents/plugins/conductor pull` inside any instance to pull upstream updates immediately.
 
 #### Available Commands

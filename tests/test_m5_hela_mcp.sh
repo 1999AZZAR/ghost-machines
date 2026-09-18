@@ -48,13 +48,9 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
 done
 echo "PASSED"
 
-# Test 3: Verify AI harnesses (Kilo, OpenCode, Antigravity) and absence of codex/gemini
-echo -n "[TEST 3] Dockerfile AI harness packages (@kilocode/cli, opencode-ai, agy - no codex/gemini)... "
+# Test 3: Verify AI harnesses (OpenCode, Antigravity) and absence of codex/gemini/kilo
+echo -n "[TEST 3] Dockerfile AI harness packages (opencode-ai, agy - no codex/gemini/kilo)... "
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
-    if ! grep -q "@kilocode/cli" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing @kilocode/cli"
-        exit 1
-    fi
     if ! grep -q "opencode-ai" "$DOCKERFILE"; then
         echo "FAILED: $DOCKERFILE missing opencode-ai"
         exit 1
@@ -65,6 +61,10 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
     fi
     if grep -q "@google/gemini-cli" "$DOCKERFILE"; then
         echo "FAILED: $DOCKERFILE still contains @google/gemini-cli"
+        exit 1
+    fi
+    if grep -q "@kilocode/cli" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE still contains @kilocode/cli"
         exit 1
     fi
     if grep -q "@openai/codex" "$DOCKERFILE"; then
@@ -80,13 +80,12 @@ export MCP_ECOSYSTEM_LOCAL_PATH="$ECOSYSTEM_DIR"
 docker compose config --quiet
 echo "PASSED"
 
-# Test 5: Verify test client generation for all 3 harnesses (antigravity, opencode, kilo)
-echo -n "[TEST 5] Test generate-config.mjs for Antigravity, OpenCode, and Kilo... "
+# Test 5: Verify test client generation for 2 harnesses (antigravity, opencode)
+echo -n "[TEST 5] Test generate-config.mjs for Antigravity and OpenCode... "
 (
     cd "$ECOSYSTEM_DIR"
     node scripts/generate-config.mjs headless-server --backend antigravity --stdout > /dev/null
     node scripts/generate-config.mjs headless-server --backend opencode --stdout > /dev/null
-    node scripts/generate-config.mjs headless-server --backend kilo --stdout > /dev/null
 )
 echo "PASSED"
 

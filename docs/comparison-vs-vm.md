@@ -25,7 +25,7 @@ They solve different problems. Not replacements.
 
 - **IaC & reproducibility**: `Dockerfile` + `entrypoint.sh:1` + `start.sh:9` UID/GID sync = no "works on my machine"
 - **Near-zero cost**: 10 tenants on one 32GB box via `tenant.sh` + `deploy.resources.limits`
-- **Batteries included**: Go/Rust/Node/Bun/Helix + HeLa 7 MCP + `agy/opencode/kilo/rtk` pre-wired
+- **Batteries included**: Go/Rust/Node/Bun/Helix + HeLa 7 MCP + `agy/opencode/rtk` pre-wired
 - **Snapshots**: `snapshot.sh` tar + `sha256` + atomic `restore.sh` rollback, caches excluded
 - **LXCFS**: `docker-compose.yml:26` mounts make `free/htop` show container limits, not host
 - **Remote**: `cloudflared` tunnel `docker-compose.yml:88` without opening ports

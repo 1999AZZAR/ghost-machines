@@ -43,7 +43,7 @@ setup_user_harnesses_and_conductor() {
     local USER_DIR="$1"
     local USER_NAME="$2"
     if [ -d "$USER_DIR" ]; then
-        mkdir -p "$USER_DIR/.gemini/config/plugins" "$USER_DIR/.gemini/antigravity-cli" "$USER_DIR/.gemini/antigravity-cli/log" "$USER_DIR/.gemini/antigravity-cli/crashes" "$USER_DIR/.mcp" "$USER_DIR/.config/opencode" "$USER_DIR/.config/kilo" "$USER_DIR/.agents/plugins" "$USER_DIR/.agents/skills" "$USER_DIR/.local/share" "$USER_DIR/.local/state" "$USER_DIR/.local/state/opencode" "$USER_DIR/.local/share/opencode/log" "$USER_DIR/.local/state/kilo" "$USER_DIR/.local/bin" "$USER_DIR/.local/share/kilo" "$USER_DIR/.local/share/kilo/state" "$USER_DIR/.local/share/opencode" "$USER_DIR/.local/share/opencode/repos" "$USER_DIR/.config/opencode" "$USER_DIR/.config/kilo"
+        mkdir -p "$USER_DIR/.gemini/config/plugins" "$USER_DIR/.gemini/antigravity-cli" "$USER_DIR/.gemini/antigravity-cli/log" "$USER_DIR/.gemini/antigravity-cli/crashes" "$USER_DIR/.mcp" "$USER_DIR/.config/opencode" "$USER_DIR/.agents/plugins" "$USER_DIR/.agents/skills" "$USER_DIR/.local/share" "$USER_DIR/.local/state" "$USER_DIR/.local/state/opencode" "$USER_DIR/.local/share/opencode/log" "$USER_DIR/.local/bin" "$USER_DIR/.local/share/opencode" "$USER_DIR/.local/share/opencode/repos" "$USER_DIR/.config/opencode"
 
         # Copy skeleton bash environment if .bashrc missing or empty
         if [ ! -s "$USER_DIR/.bashrc" ] && [ -f /root/.bashrc ]; then
@@ -156,15 +156,12 @@ EOF
         if [ ! -f "$USER_DIR/.config/opencode/config.json" ] && [ -f /root/.config/opencode/config.json ]; then
             cp /root/.config/opencode/config.json "$USER_DIR/.config/opencode/config.json"
         fi
-        if [ ! -f "$USER_DIR/.config/kilo/config.json" ] && [ -f /root/.config/kilo/config.json ]; then
-            cp /root/.config/kilo/config.json "$USER_DIR/.config/kilo/config.json"
-        fi
 
         # RTK Universal Rewrite Hook setup for all AI Harnesses
         mkdir -p "$USER_DIR/.config/rtk" "$USER_DIR/.gemini/config/hooks" "$USER_DIR/.claude/hooks"
         cat <<'EOF' > "$USER_DIR/.config/rtk/rtk-rewrite.sh"
 #!/usr/bin/env bash
-# Universal RTK Rewrite Hook for AI Harnesses (Antigravity, OpenCode, Kilo, Claude)
+# Universal RTK Rewrite Hook for AI Harnesses (Antigravity, OpenCode, Claude)
 if ! command -v jq &>/dev/null || ! command -v rtk &>/dev/null; then
   exit 0
 fi

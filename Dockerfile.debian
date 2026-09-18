@@ -69,8 +69,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends micro \
     install fastfetch-*/usr/bin/fastfetch /usr/local/bin/fastfetch && rm -rf fastfetch-* \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# 7. AI Harness CLIs (Antigravity CLI, OpenCode, Kilo CLI, RTK)
-RUN npm install -g @kilocode/cli opencode-ai \
+# 7. AI Harness CLIs (Antigravity CLI, OpenCode, RTK)
+RUN npm install -g opencode-ai \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
     elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
@@ -96,10 +96,9 @@ RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt
     && cd /opt/mcp-ecosystem \
     && sed -i 's|1999AZZAR/research-mcp-server|1999AZZAR/research-assistant-mcp-server|g' config/inventory.json \
     && ./setup.sh --profile headless-server --client antigravity --non-interactive \
-    && mkdir -p /root/.mcp /root/.config/opencode /root/.config/kilo \
+    && mkdir -p /root/.mcp /root/.config/opencode \
     && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
     && node scripts/generate-config.mjs headless-server --backend opencode --root /opt/mcp-ecosystem --out /root/.config/opencode/config.json \
-    && node scripts/generate-config.mjs headless-server --backend kilo --root /opt/mcp-ecosystem --out /root/.config/kilo/config.json \
     && ln -sf /opt/mcp-ecosystem /root/MCPservers \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/chaining-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-mitosis \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/Project-Guardian-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-genome \
@@ -135,10 +134,10 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     echo "${GHOST_USER} ALL=(ALL) ALL" > /etc/sudoers.d/${GHOST_USER} && \
     chmod 0440 /etc/sudoers.d/${GHOST_USER} && \
     echo "${GHOST_USER}:ghost" | chpasswd && \
-    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.config/opencode /home/${GHOST_USER}/.config/kilo /home/${GHOST_USER}/.agents/plugins /home/${GHOST_USER}/.agents/skills /home/${GHOST_USER}/.gemini/config/plugins /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
+    mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.config/opencode /home/${GHOST_USER}/.agents/plugins /home/${GHOST_USER}/.agents/skills /home/${GHOST_USER}/.gemini/config/plugins /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
     cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
     cp /root/.config/opencode/config.json /home/${GHOST_USER}/.config/opencode/config.json 2>/dev/null || true && \
-    cp /root/.config/kilo/config.json /home/${GHOST_USER}/.config/kilo/config.json 2>/dev/null || true && \
+    cp/config.json/config.json 2>/dev/null || true && \
     ln -sf /opt/conductor /home/${GHOST_USER}/.agents/plugins/conductor && \
     ln -sf /opt/conductor /home/${GHOST_USER}/.gemini/config/plugins/conductor && \
     for skill in conductor-setup conductor-new-track conductor-implement conductor-status conductor-revert conductor-review; do \
