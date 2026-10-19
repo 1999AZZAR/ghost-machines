@@ -153,8 +153,8 @@ EOF
         if [ ! -f "$USER_DIR/.mcp/config.json" ] && [ -f /root/.mcp/config.json ]; then
             cp /root/.mcp/config.json "$USER_DIR/.mcp/config.json"
         fi
-        if [ ! -f "$USER_DIR/.config/opencode/config.json" ] && [ -f /root/.config/opencode/config.json ]; then
-            cp /root/.config/opencode/config.json "$USER_DIR/.config/opencode/config.json"
+        if [ ! -f "$USER_DIR/.config/opencode/opencode.json" ] && [ -f /root/.config/opencode/opencode.json ]; then
+            cp /root/.config/opencode/opencode.json "$USER_DIR/.config/opencode/opencode.json"
         fi
 
         # RTK Universal Rewrite Hook setup for all AI Harnesses

@@ -69,8 +69,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends micro \
     install lazygit /usr/local/bin && rm -f lazygit \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# 7. AI Harness CLIs (Antigravity CLI, OpenCode, RTK)
-RUN npm install -g opencode-ai \
+# 7. AI Harness CLIs (Antigravity CLI, OpenCode v2, RTK)
+RUN curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path \
+    && mv /root/.opencode/bin/opencode /usr/local/bin/opencode \
+    && rm -rf /root/.opencode \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
     elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
@@ -101,7 +103,7 @@ RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt
     && ./setup.sh --profile headless-server --client antigravity --non-interactive \
     && mkdir -p /root/.mcp /root/.config/opencode \
     && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
-    && node scripts/generate-config.mjs headless-server --backend opencode --root /opt/mcp-ecosystem --out /root/.config/opencode/config.json \
+    && node scripts/generate-config.mjs headless-server --backend opencode --root /opt/mcp-ecosystem --out /root/.config/opencode/opencode.json \
     && ln -sf /opt/mcp-ecosystem /root/MCPservers \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/chaining-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-mitosis \
     && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/Project-Guardian-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-genome \
@@ -139,7 +141,7 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     echo "${GHOST_USER}:ghost" | chpasswd && \
     mkdir -p /home/${GHOST_USER}/.ssh /home/${GHOST_USER}/.mcp /home/${GHOST_USER}/.config/opencode /home/${GHOST_USER}/.agents/plugins /home/${GHOST_USER}/.agents/skills /home/${GHOST_USER}/.gemini/config/plugins /home/${GHOST_USER}/.local/bin /home/${GHOST_USER}/.cargo/bin && \
     cp /root/.mcp/config.json /home/${GHOST_USER}/.mcp/config.json 2>/dev/null || true && \
-    cp /root/.config/opencode/config.json /home/${GHOST_USER}/.config/opencode/config.json 2>/dev/null || true && \
+    cp /root/.config/opencode/opencode.json /home/${GHOST_USER}/.config/opencode/opencode.json 2>/dev/null || true && \
     cp/config.json/config.json 2>/dev/null || true && \
     ln -sf /opt/conductor /home/${GHOST_USER}/.agents/plugins/conductor && \
     ln -sf /opt/conductor /home/${GHOST_USER}/.gemini/config/plugins/conductor && \

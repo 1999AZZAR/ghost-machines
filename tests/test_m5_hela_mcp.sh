@@ -48,11 +48,11 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
 done
 echo "PASSED"
 
-# Test 3: Verify AI harnesses (OpenCode, Antigravity) and absence of codex/gemini/kilo
-echo -n "[TEST 3] Dockerfile AI harness packages (opencode-ai, agy - no codex/gemini/kilo)... "
+# Test 3: Verify AI harnesses (OpenCode v2, Antigravity) and absence of codex/gemini/kilo
+echo -n "[TEST 3] Dockerfile AI harness packages (opencode v2, agy - no codex/gemini/kilo)... "
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
-    if ! grep -q "opencode-ai" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing opencode-ai"
+    if ! grep -q "opencode.ai/v2/install" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE missing OpenCode v2 installer"
         exit 1
     fi
     if ! grep -q "agy" "$DOCKERFILE"; then

@@ -263,7 +263,7 @@ Arch (build):
 Each Ghost Machine environment includes two dedicated CLI harnesses alongside the RTK token optimization runner:
 
 - **[Antigravity CLI](https://github.com/google/antigravity)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
-- **[OpenCode CLI](https://github.com/opencode-ai/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
+- **[OpenCode v2](https://github.com/anomalyco/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
 - **[RTK](https://github.com/rtk-ai/rtk)** (`rtk`): Token-optimized terminal execution runner.
 
 #### RTK Universal Auto-Rewrite Hook
@@ -287,7 +287,7 @@ All images build the **[HeLa MCP Ecosystem](https://github.com/1999AZZAR/hela-mc
 
 Client configuration files are automatically generated and pre-configured for both AI harnesses:
 - **Antigravity CLI:** `~/.mcp/config.json`
-- **OpenCode CLI:** `~/.config/opencode/config.json`
+- **OpenCode v2:** `~/.config/opencode/opencode.json`
 
 To mount a local clone of the ecosystem during container development, set `MCP_ECOSYSTEM_LOCAL_PATH` in `.env`:
 
