@@ -135,6 +135,8 @@ for page in pages:
     for href in re.findall(r'href="([^"]+)"', page.read_text()):
         if href.startswith(("http", "mailto:", "#")):
             continue
+        if any(ch in href for ch in ("'", "+", "{", "}", "<", ">", "\\")):
+            continue  # JS-built href, not a static link
         target_part, _, anchor = href.partition("#")
         target = (page.parent / target_part).resolve() if target_part else page
         if not target.exists():
@@ -175,6 +177,11 @@ if problems:
     print("\n".join(problems))
     sys.exit(1)
 CHECK
+grep -q 'class="doc-shell"' docs/site/index.html || { echo "FAILED: index.html is not using the docs shell"; exit 1; }
+grep -q 'class="doc-sidebar"' docs/site/index.html || { echo "FAILED: missing sidebar navigation"; exit 1; }
+grep -q 'id="search-index"' docs/site/index.html || { echo "FAILED: missing search index"; exit 1; }
+grep -q 'id="tocList"' docs/site/pages/start.html || { echo "FAILED: missing on-this-page TOC"; exit 1; }
+grep -q 'class="doc-nav-num"' docs/site/pages/start.html || { echo "FAILED: navigation is not numbered"; exit 1; }
 echo "PASSED"
 
 # Test 8: Site builder is syntactically valid

@@ -1,96 +1,134 @@
 {
+  "brand": "Ghost Machines",
+  "meta": "docs · docker compose · 4 engines · MIT",
+  "repo": "https://github.com/1999AZZAR/ghost-machines",
+  "base_url": "https://ghost.glassgallery.my.id",
+  "cname": "ghost.glassgallery.my.id",
+  "home": {
+    "source": "index.md",
+    "title": "Ghost Machines",
+    "description": "Disposable, multi-engine Linux sandboxes and autonomous agent workstations, orchestrated with Docker Compose."
+  },
   "pages": [
     {
       "slug": "start",
       "source": "getting-started.md",
+      "group": "GETTING STARTED",
+      "nav_title": "Getting Started",
       "title": "Getting Started",
       "description": "Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop."
     },
     {
       "slug": "images",
       "source": "images.md",
+      "group": "GETTING STARTED",
+      "nav_title": "Prebuilt vs Build",
       "title": "Images: Prebuilt vs Build",
       "description": "GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback."
     },
     {
       "slug": "engines",
       "source": "engines.md",
+      "group": "GETTING STARTED",
+      "nav_title": "Engines & Toolchain",
       "title": "Engines & Toolchain",
       "description": "The four Linux engines, what is inside them, and how they differ."
     },
     {
       "slug": "lifecycle",
       "source": "lifecycle.md",
+      "group": "OPERATE",
+      "nav_title": "Lifecycle & Cleanup",
       "title": "Lifecycle & Cleanup",
       "description": "Start, stop, pause, restart, inspect and remove sandboxes without losing work."
     },
     {
       "slug": "connecting",
       "source": "connecting.md",
+      "group": "OPERATE",
+      "nav_title": "Connecting",
       "title": "Connecting",
       "description": "SSH, keys, ports, port-forwarding, editors and Cloudflare Tunnel access."
     },
     {
       "slug": "configuration",
       "source": "configuration.md",
+      "group": "OPERATE",
+      "nav_title": "Configuration",
       "title": "Configuration",
-      "description": "Every environment variable, its default, and when it takes effect."
+      "description": "Every environment variable and build arg, its default, and when it takes effect."
+    },
+    {
+      "slug": "troubleshooting",
+      "source": "troubleshooting.md",
+      "group": "OPERATE",
+      "nav_title": "Troubleshooting",
+      "title": "Troubleshooting",
+      "description": "Symptom-to-fix table plus the diagnostics that answer most questions."
     },
     {
       "slug": "architecture",
       "source": "architecture.md",
+      "group": "REFERENCE",
+      "nav_title": "Architecture",
       "title": "Architecture",
-      "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP wrappers."
+      "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP runtime."
     },
     {
       "slug": "tenant",
       "source": "tenants.md",
+      "group": "REFERENCE",
+      "nav_title": "Multi-Tenant (WaaS)",
       "title": "Multi-Tenant (WaaS)",
       "description": "Provision, monitor, snapshot and delete isolated per-user workspaces."
     },
     {
       "slug": "security",
       "source": "security.md",
+      "group": "REFERENCE",
+      "nav_title": "Security & Hardening",
       "title": "Security & Hardening",
       "description": "Dev defaults, their risks, and the exact changes needed before exposing a sandbox."
     },
     {
-      "slug": "troubleshooting",
-      "source": "troubleshooting.md",
-      "title": "Troubleshooting",
-      "description": "Symptom-to-fix table plus the diagnostics that answer most questions."
-    },
-    {
       "slug": "scripts",
       "source": "scripts.md",
+      "group": "REFERENCE",
+      "nav_title": "Scripts Guide",
       "title": "Scripts Guide",
       "description": "Plain-English guide to what each shell script does."
     },
     {
       "slug": "glossary",
       "source": "glossary.md",
+      "group": "REFERENCE",
+      "nav_title": "Glossary",
       "title": "Glossary",
       "description": "Container, cgroup, LXCFS, bind mount and other terms used in these docs."
     },
     {
       "slug": "comparison",
       "source": "comparison-vs-vm.md",
+      "group": "REFERENCE",
+      "nav_title": "Ghost vs VM",
       "title": "Ghost vs VM",
       "description": "When a container sandbox beats a full virtual machine, and when it does not."
     },
     {
       "slug": "contributing",
       "source": "contributing.md",
+      "group": "PROJECT",
+      "nav_title": "Contributing",
       "title": "Contributing",
       "description": "Repo layout, test suite, docs rules, release process and how to add an engine."
     },
     {
       "slug": "cheatsheet",
       "source": "cheatsheet.md",
+      "group": "PROJECT",
+      "nav_title": "Cheatsheet",
       "title": "Cheatsheet",
       "description": "One page: every command you need day to day."
     }
-  ],
-  "base_url": "https://ghost.glassgallery.my.id",
-  "cname": "ghost.glassgallery.my.id"
+  ]
 }

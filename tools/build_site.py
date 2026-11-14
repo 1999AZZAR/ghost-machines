@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Render docs/*.md into the static site under docs/site/pages/.
+"""Render docs/*.md into the static site under docs/site/.
 
-Single source of truth: the markdown in docs/. The landing page
-(docs/site/index.html) is hand-written marketing; everything under
-pages/ is generated and must never be edited by hand.
+Layout and navigation follow the hela.my.id documentation shell; colours and
+content are Ghost Machines'. Single source of truth: markdown in docs/.
+Everything under docs/site/ except assets/site.css is generated — do not edit
+by hand.
 
 Usage:
-    python3 tools/build_site.py            # regenerate pages + css
+    python3 tools/build_site.py            # regenerate the site
     python3 tools/build_site.py --check    # fail if output is stale (CI)
 
 Requires: python3 -m pip install markdown
@@ -33,99 +34,301 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 SITE = DOCS / "site"
 PAGES = SITE / "pages"
-ASSETS = SITE / "assets"
 MANIFEST = SITE / "site.json"
 
 MD_EXTENSIONS = ["tables", "fenced_code", "sane_lists", "toc", "attr_list"]
+DEFAULT_BASE_URL = "https://1999azzar.github.io/ghost-machines"
 
-CSS = """\
-:root{--paper:#f6f5f1;--paper2:#ebebe7;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6;--accent:#0f6f6f;--accent2:#0a5858}
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.65}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.mono,code,pre{font-family:'JetBrains Mono',ui-monospace,monospace}
-.serif{font-family:'Newsreader',Georgia,serif}
-.wrap{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:40px;max-width:1120px;margin:0 auto;padding:0 32px 64px}
-@media(max-width:900px){.wrap{grid-template-columns:1fr}}
-header.top{max-width:1120px;margin:0 auto;padding:24px 32px;display:flex;justify-content:space-between;align-items:baseline;gap:16px;border-bottom:1px solid var(--border)}
-header.top .crumbs{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-header.top a.home{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-main{padding-top:32px;min-width:0}
-main h1.serif{font-size:2rem;line-height:1.2;margin:0 0 12px}
-main h2{font-size:1.25rem;margin:36px 0 12px;padding-top:8px;border-top:1px solid var(--border)}
-main h3{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
-main h4{font-size:.95rem;margin:20px 0 8px}
-main p{margin:10px 0}
-main ul,main ol{margin:10px 0 10px 22px}
-main li{margin:5px 0}
-main code{background:var(--paper2);border:1px solid var(--border);padding:1px 5px;font-size:.86em}
-main pre{background:#fff;border:1px solid var(--border);padding:14px 44px 14px 14px;overflow:auto;font-size:12px;line-height:1.7;margin:12px 0;position:relative}
-main pre code{background:none;border:none;padding:0;font-size:inherit}
-main blockquote{border-left:2px solid var(--accent);background:#fff;padding:10px 16px;margin:14px 0;color:var(--muted)}
-main blockquote p{margin:4px 0}
-main table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px;background:#fff;display:block;overflow-x:auto}
-main th,main td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
-main th{background:var(--paper2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-main hr{border:none;border-top:1px solid var(--border);margin:28px 0}
-main img{max-width:100%;height:auto}
-aside.toc{position:sticky;top:24px;align-self:start;padding-top:36px;font-size:12px}
-aside.toc b{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-aside.toc ul{list-style:none;margin:0;padding:0}
-aside.toc li{margin:6px 0;line-height:1.35}
-aside.toc li.sub{padding-left:12px;font-size:11px;color:var(--muted)}
-.copy-btn{position:absolute;top:6px;right:6px;padding:3px 7px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}
-.copy-btn:active{transform:translateY(1px)}
-footer.foot{border-top:1px solid var(--border);margin-top:32px;padding:24px 32px;text-align:center;font-size:11px;color:var(--muted)}
-footer.foot nav{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
-"""
+APP_JS = """<script>
+(function () {
+  var dataEl = document.getElementById("search-index");
+  var index = dataEl ? JSON.parse(dataEl.textContent) : [];
+  var palette = document.getElementById("cmdPalette");
+  var input = document.getElementById("cmdInput");
+  var results = document.getElementById("cmdResults");
+  var active = -1;
 
-COPY_JS = """<script>
-document.querySelectorAll("main pre").forEach(function(el){
-  var b=document.createElement("button");
-  b.className="mono copy-btn";b.textContent="copy";
-  b.setAttribute("aria-label","Copy code");
-  b.onclick=function(){
-    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
-      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
-  };
-  el.appendChild(b);
-});
+  function esc(value) {
+    return String(value).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function render(items) {
+    active = -1;
+    if (!items.length) {
+      results.innerHTML = '<div class="cmd-empty">no matches</div>';
+      return;
+    }
+    results.innerHTML = items.map(function (item) {
+      return '<a class="cmd-item" href="' + item.u + '">' +
+        '<span>' + esc(item.t) + (item.p ? ' <span class="cmd-item-tag">' + esc(item.p) + '</span>' : '') + '</span>' +
+        '<span class="cmd-item-tag">' + item.k + '</span></a>';
+    }).join("");
+  }
+
+  function filter() {
+    var q = input.value.trim().toLowerCase();
+    var hits = !q ? index.filter(function (i) { return i.k === "page"; })
+      : index.filter(function (i) { return i.t.toLowerCase().indexOf(q) !== -1; });
+    render(hits.slice(0, 24));
+  }
+
+  function openPalette() {
+    palette.style.display = "flex";
+    input.value = "";
+    filter();
+    input.focus();
+  }
+
+  function closePalette() {
+    palette.style.display = "none";
+  }
+
+  function move(delta) {
+    var items = results.querySelectorAll(".cmd-item");
+    if (!items.length) return;
+    active = (active + delta + items.length) % items.length;
+    items.forEach(function (el, i) { el.classList.toggle("is-active", i === active); });
+    items[active].scrollIntoView({ block: "nearest" });
+  }
+
+  document.querySelectorAll(".open-cmd-palette").forEach(function (btn) {
+    btn.addEventListener("click", openPalette);
+  });
+  palette.addEventListener("click", function (event) {
+    if (event.target === palette) closePalette();
+  });
+  input.addEventListener("input", filter);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowDown") { event.preventDefault(); move(1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); move(-1); }
+    else if (event.key === "Enter") {
+      var current = results.querySelectorAll(".cmd-item")[active] ||
+        results.querySelector(".cmd-item");
+      if (current) window.location.href = current.getAttribute("href");
+    } else if (event.key === "Escape") closePalette();
+  });
+  document.addEventListener("keydown", function (event) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      palette.style.display === "flex" ? closePalette() : openPalette();
+    } else if (event.key === "Escape") {
+      closePalette();
+    }
+  });
+
+  document.querySelectorAll(".doc-nav a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      var drawer = document.querySelector(".doc-mobile-nav");
+      if (drawer) drawer.open = false;
+    });
+  });
+
+  document.querySelectorAll(".doc-content pre").forEach(function (el) {
+    var b = document.createElement("button");
+    b.className = "copy-btn";
+    b.textContent = "copy";
+    b.setAttribute("aria-label", "Copy code");
+    b.addEventListener("click", function () {
+      var code = el.querySelector("code");
+      navigator.clipboard.writeText(code ? code.innerText : el.innerText).then(function () {
+        b.textContent = "copied";
+        setTimeout(function () { b.textContent = "copy"; }, 1200);
+      });
+    });
+    el.appendChild(b);
+  });
+
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('#tocList a[href^="#"]'));
+  var heads = tocLinks.map(function (a) {
+    return document.getElementById(a.getAttribute("href").slice(1));
+  }).filter(Boolean);
+  if ("IntersectionObserver" in window && heads.length) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        tocLinks.forEach(function (a) {
+          a.classList.toggle("is-active", a.getAttribute("href") === "#" + entry.target.id);
+        });
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    heads.forEach(function (h) { observer.observe(h); });
+  }
+})();
 </script>"""
-
-
-def render_markdown(text: str) -> tuple[str, list[tuple[str, str]]]:
-    """Return (html, [ (anchor, title) ] for the sidebar)."""
-    md = markdown.Markdown(extensions=MD_EXTENSIONS, output_format="html5")
-    html = md.convert(text)
-    entries: list[tuple[str, str]] = []
-    for token in md.toc_tokens:
-        children = token["children"] if token["level"] == 1 else [token]
-        for child in children:
-            entries.append((child["id"], strip_tags(child["name"])))
-    return html, entries
 
 
 def strip_tags(value: str) -> str:
     return re.sub(r"<[^>]+>", "", value).strip()
 
 
-def rewrite_links(html: str) -> str:
-    """Point intra-docs markdown links at the generated pages."""
-    return re.sub(r'href="([^"#]+)\.md(#[^"]*)?"', _to_html_link, html)
+def render_markdown(text: str) -> tuple[str, list[tuple[str, str, int]]]:
+    """Return (html without the leading H1, [(anchor, title, level)])."""
+    md = markdown.Markdown(extensions=MD_EXTENSIONS, output_format="html5")
+    html = md.convert(text)
+    html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", html, count=1, flags=re.S)
+
+    entries: list[tuple[str, str, int]] = []
+    for token in md.toc_tokens:
+        children = token["children"] if token["level"] == 1 else [token]
+        for child in children:
+            if child["level"] > 3:
+                continue
+            entries.append((child["id"], strip_tags(child["name"]), child["level"]))
+            for grandchild in child["children"]:
+                if grandchild["level"] <= 3:
+                    entries.append((grandchild["id"], strip_tags(grandchild["name"]), grandchild["level"]))
+    return html, entries
 
 
-def _to_html_link(match: re.Match[str]) -> str:
-    target, anchor = match.group(1), match.group(2) or ""
-    name = os.path.basename(target)
-    slug = NAME_MAP.get(name) or NAME_MAP.get(f"{name}.md")
-    if slug:
-        return f'href="{slug}.html{anchor}"'
-    return match.group(0)
+def rewrite_links(html: str, prefix: str = "") -> str:
+    def to_html(match: re.Match[str]) -> str:
+        target, anchor = match.group(1), match.group(2) or ""
+        name = os.path.basename(target)
+        slug = NAME_MAP.get(name) or NAME_MAP.get(f"{name}.md")
+        return f'href="{prefix}{slug}.html{anchor}"' if slug else match.group(0)
+
+    return re.sub(r'href="([^"#]+)\.md(#[^"]*)?"', to_html, html)
 
 
-DEFAULT_BASE_URL = "https://1999azzar.github.io/ghost-machines"
+def toc_html(entries: list[tuple[str, str, int]]) -> str:
+    out, h2 = [], 0
+    for anchor, title, level in entries:
+        if level == 2:
+            h2 += 1
+            out.append(f'<li><a href="#{anchor}">'
+                       f'<span class="doc-nav-num">{h2:02d}</span> {title}</a></li>')
+        else:
+            out.append(f'<li class="toc-sub"><a href="#{anchor}">{h2}.{len(out)} {title}</a></li>')
+    return "".join(out)
+
+
+def nav_html(active: str, rel_pages: str, rel_root: str, is_home: bool) -> str:
+    groups: list[tuple[str, list[dict]]] = []
+    for entry in PAGE_LIST:
+        if not groups or groups[-1][0] != entry["group"]:
+            groups.append((entry["group"], []))
+        groups[-1][1].append(entry)
+
+    home_current = ' aria-current="page"' if is_home else ""
+    chunks = [
+        '<div class="doc-nav-section">OVERVIEW</div>',
+        '<ol class="doc-nav" start="0">',
+        f'<li><a href="{rel_root}index.html"{home_current}>'
+        '<span class="doc-nav-num">00</span> <span>Overview</span></a></li>',
+        "</ol>",
+    ]
+    number = 1
+    for title, entries in groups:
+        chunks.append(f'<div class="doc-nav-section">{title}</div>')
+        chunks.append(f'<ol class="doc-nav" start="{number}">')
+        for entry in entries:
+            current = ' aria-current="page"' if entry["slug"] == active else ""
+            chunks.append(
+                f'<li><a href="{rel_pages}{entry["slug"]}.html"{current}>'
+                f'<span class="doc-nav-num">{number:02d}</span> '
+                f'<span>{entry["nav_title"]}</span></a></li>'
+            )
+            number += 1
+        chunks.append("</ol>")
+    return "".join(chunks)
+
+
+def search_index(rel_pages: str) -> str:
+    items = [{"t": HOME["title"], "u": f"{rel_pages}index.html", "k": "page"}]
+    for entry in PAGE_LIST:
+        items.append({"t": entry["title"], "u": f"{rel_pages}{entry['slug']}.html", "k": "page"})
+    for entry in PAGE_LIST:
+        source = (DOCS / entry["source"]).read_text()
+        _, entries = render_markdown(source)
+        for anchor, title, _level in entries:
+            items.append({
+                "t": title,
+                "u": f"{rel_pages}{entry['slug']}.html#{anchor}",
+                "k": "section",
+                "p": entry["nav_title"],
+            })
+    payload = json.dumps(items, separators=(",", ":")).replace("<", "\\u003c")
+    return f'<script type="application/json" id="search-index">{payload}</script>'
+
+
+def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: bool) -> str:
+    rel_root = "" if is_home else "../"
+    rel_pages = "pages/" if is_home else ""
+    number = 0 if is_home else next((i for i, p in enumerate(PAGE_LIST, 1) if p["slug"] == entry["slug"]), 0)
+    spec = "SPEC_00 // GHOST-MACHINES" if is_home else f"DOC_{number:02d} // GHOST-MACHINES"
+    dossier = "OVERVIEW" if is_home else entry["slug"].upper().replace("-", "_")
+    html = rewrite_links(body, "pages/" if is_home else "")
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{entry['title']} — {BRAND}</title>
+<meta name="description" content="{entry['description']}">
+<link rel="icon" href="{rel_root}favicon.png" type="image/png">
+<link rel="manifest" href="{rel_root}manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{rel_root}assets/site.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div class="doc-shell">
+  <aside class="doc-sidebar" aria-label="Documentation sections">
+    <div class="doc-brand">
+      <a href="{rel_root}index.html" class="doc-brand-title">{BRAND}</a>
+      <div class="doc-brand-meta">{META}</div>
+    </div>
+    <nav aria-label="Documentation">
+      <details class="doc-mobile-nav" open>
+        <summary>Browse documentation</summary>
+        {nav_html(entry['slug'], rel_pages, rel_root, is_home)}
+      </details>
+    </nav>
+  </aside>
+  <div class="doc-main">
+    <div class="doc-topbar">
+      <span class="doc-topbar-title">{spec}</span>
+      <div class="topbar-actions">
+        <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
+        <a class="btn" href="{REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+    <main id="main-content" class="doc-content">
+      <header class="specimen-plate">
+        <div class="specimen-ref"><span>{spec}</span><span>DOSSIER: {dossier}</span></div>
+        <h1 class="doc-title">{entry['title']}</h1>
+        <p class="doc-lead">{entry['description']}</p>
+      </header>
+{html}
+      <footer class="doc-footer">
+        <span>MIT LICENSE · AZZAR</span>
+        <span>ARCHIVAL_RECORD_SEALED // GHOST_MACHINES</span>
+      </footer>
+    </main>
+    <nav class="doc-toc" aria-label="On this page">
+      <div class="doc-toc-title">ON THIS PAGE</div>
+      <ol id="tocList">{toc_html(toc)}</ol>
+    </nav>
+  </div>
+</div>
+
+<div class="cmd-backdrop" id="cmdPalette" role="dialog" aria-label="Search documentation">
+  <div class="cmd-modal">
+    <div class="cmd-input-row">
+      <span aria-hidden="true">§</span>
+      <input type="text" class="cmd-input" id="cmdInput" aria-label="Search pages and sections" placeholder="Search pages and sections…">
+      <span class="cmd-item-tag">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+  </div>
+</div>
+{search_index(rel_pages)}
+{APP_JS}
+</body>
+</html>
+"""
 
 
 def sitemap(pages: list[dict], base_url: str) -> str:
@@ -141,77 +344,46 @@ def robots(base_url: str) -> str:
     return f"User-agent: *\nAllow: /\nSitemap: {base_url}/sitemap.xml\n"
 
 
-def page_html(entry: dict, body: str, toc: list[tuple[str, str]], prev: dict | None, nxt: dict | None) -> str:
-    toc_html = "".join(f'<li><a href="#{anchor}">{title}</a></li>' for anchor, title in toc[:24])
-    nav_prev = f'<a href="{prev["slug"]}.html">← {prev["title"]}</a>' if prev else ""
-    nav_next = f'<a href="{nxt["slug"]}.html">{nxt["title"]} →</a>' if nxt else ""
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{entry['title']} — Ghost Machines</title>
-<meta name="description" content="{entry['description']}">
-<link rel="icon" href="../favicon.png" type="image/png">
-<link rel="manifest" href="../manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css">
-</head>
-<body>
-<header class="top">
-  <span class="crumbs mono">GHOST_MACHINES · {entry['title'].upper()}</span>
-  <a class="home mono" href="../index.html">← index</a>
-</header>
-<div class="wrap">
-  <main>
-{body}
-  </main>
-  <aside class="toc mono">
-    <b>On this page</b>
-    <ul>{toc_html}</ul>
-  </aside>
-</div>
-<footer class="foot mono">
-  <nav>{nav_prev}{nav_next}<a href="../index.html">index</a></nav>
-  Generated from <code>docs/{entry['source']}</code> · edit the markdown, not this file · MIT
-</footer>
-{COPY_JS}
-</body>
-</html>
-"""
-
-
 def main() -> int:
     check = "--check" in sys.argv[1:]
     manifest = json.loads(MANIFEST.read_text())
 
-    global NAME_MAP
-    NAME_MAP = {entry["source"]: entry["slug"] for entry in manifest["pages"]}
+    global NAME_MAP, PAGE_LIST, HOME, BRAND, META, REPO
+    BRAND = manifest.get("brand", "Ghost Machines")
+    META = manifest.get("meta", "")
+    REPO = manifest.get("repo", "https://github.com/1999AZZAR/ghost-machines")
+    HOME = manifest["home"]
+    PAGE_LIST = manifest["pages"]
+    NAME_MAP = {entry["source"]: entry["slug"] for entry in PAGE_LIST}
 
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    PAGES.mkdir(parents=True, exist_ok=True)
-
-    pages = manifest["pages"]
+    pages = PAGE_LIST
     base_url = manifest.get("base_url", DEFAULT_BASE_URL).rstrip("/")
     outputs: dict[Path, str] = {
-        ASSETS / "site.css": CSS,
         SITE / "sitemap.xml": sitemap(pages, base_url),
         SITE / "robots.txt": robots(base_url),
     }
     if manifest.get("cname"):
         outputs[SITE / "CNAME"] = f"{manifest['cname']}\n"
-    for index, entry in enumerate(pages):
+
+    PAGES.mkdir(parents=True, exist_ok=True)
+    for entry in pages:
         source = DOCS / entry["source"]
         if not source.exists():
             sys.exit(f"missing source: {source}")
         body, toc = render_markdown(source.read_text())
-        body = rewrite_links(body)
-        outputs[PAGES / f"{entry['slug']}.html"] = page_html(
-            entry,
-            body,
-            toc,
-            pages[index - 1] if index > 0 else None,
-            pages[index + 1] if index + 1 < len(pages) else None,
-        )
+        outputs[PAGES / f"{entry['slug']}.html"] = page_html(entry, body, toc, False)
+
+    home_source = DOCS / HOME["source"]
+    if not home_source.exists():
+        sys.exit(f"missing source: {home_source}")
+    home_body, home_toc = render_markdown(home_source.read_text())
+    home_entry = {
+        "slug": "index",
+        "source": HOME["source"],
+        "title": HOME["title"],
+        "description": HOME["description"],
+    }
+    outputs[SITE / "index.html"] = page_html(home_entry, home_body, home_toc, True)
 
     stale = []
     for path, content in outputs.items():
