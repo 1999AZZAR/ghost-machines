@@ -40,7 +40,7 @@
         <p class="doc-lead">Provision, monitor, snapshot and delete isolated per-user workspaces.</p>
       </header>
       <figure class="figure-plate">
-        <div class="figure-mat"><img src="../assets/blotcat/09-tenants.svg" alt="Blotcat handing keys and boxes to four small cats" loading="lazy"></div>
+        <div class="figure-mat"><img src="../assets/blotcat/09-tenants.png" alt="Blotcat handing keys and boxes to four small cats" loading="lazy"></div>
         <figcaption class="figure-caption"><strong>FIG.</strong><span>09 · Multi-tenant · one workspace each</span></figcaption>
       </figure>
 <p><code>tenant.sh</code> turns one host into a workspace-as-a-service box: each user gets an isolated container, its own SSH port, its own storage under <code>mounts/tenants/&lt;id&gt;</code>, and hard CPU/RAM quotas. Tenants are independent of the main <code>start.sh</code> machines — separate lifecycle, separate cleanup.</p>

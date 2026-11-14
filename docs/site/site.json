@@ -9,7 +9,7 @@
     "title": "Ghost Machines",
     "description": "Disposable, multi-engine Linux sandboxes and autonomous agent workstations, orchestrated with Docker Compose.",
     "figure": {
-      "src": "assets/blotcat/00-overview.svg",
+      "src": "assets/blotcat/00-overview.png",
       "alt": "Blotcat packing a laptop into a crate next to a shelf labelled mounts/",
       "caption": "00 \u00b7 Overview \u00b7 throwaway container, persistent work"
     }
@@ -23,7 +23,7 @@
       "title": "Getting Started",
       "description": "Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop.",
       "figure": {
-        "src": "assets/blotcat/01-getting-started.svg",
+        "src": "assets/blotcat/01-getting-started.png",
         "alt": "Blotcat handing a key through a small door labelled 2223",
         "caption": "01 \u00b7 Getting Started \u00b7 five minutes to a shell"
       }
@@ -36,7 +36,7 @@
       "title": "Images: Prebuilt vs Build",
       "description": "GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback.",
       "figure": {
-        "src": "assets/blotcat/02-images.svg",
+        "src": "assets/blotcat/02-images.png",
         "alt": "Blotcat weighing a sealed parcel against an open toolbox",
         "caption": "02 \u00b7 Prebuilt vs build \u00b7 pull or build, same image"
       }
@@ -49,7 +49,7 @@
       "title": "Engines & Toolchain",
       "description": "The four Linux engines, what is inside them, and how they differ.",
       "figure": {
-        "src": "assets/blotcat/03-engines.svg",
+        "src": "assets/blotcat/03-engines.png",
         "alt": "Blotcat swapping four labelled shells",
         "caption": "03 \u00b7 Engines \u00b7 four shells, one toolchain"
       }
@@ -62,7 +62,7 @@
       "title": "Lifecycle & Cleanup",
       "description": "Start, stop, pause, restart, inspect and remove sandboxes without losing work.",
       "figure": {
-        "src": "assets/blotcat/04-lifecycle.svg",
+        "src": "assets/blotcat/04-lifecycle.png",
         "alt": "Blotcat lifting a workbench out of a crushed crate",
         "caption": "04 \u00b7 Lifecycle \u00b7 the container goes, the work stays"
       }
@@ -75,7 +75,7 @@
       "title": "Connecting",
       "description": "SSH, keys, ports, port-forwarding, editors and Cloudflare Tunnel access.",
       "figure": {
-        "src": "assets/blotcat/05-connecting.svg",
+        "src": "assets/blotcat/05-connecting.png",
         "alt": "Blotcat threading a cable through one narrow port",
         "caption": "05 \u00b7 Connecting \u00b7 one port in, tunnels for the rest"
       }
@@ -88,7 +88,7 @@
       "title": "Configuration",
       "description": "Every environment variable and build arg, its default, and when it takes effect.",
       "figure": {
-        "src": "assets/blotcat/06-configuration.svg",
+        "src": "assets/blotcat/06-configuration.png",
         "alt": "Blotcat turning labelled dials on a small panel",
         "caption": "06 \u00b7 Configuration \u00b7 knobs and when they apply"
       }
@@ -101,7 +101,7 @@
       "title": "Troubleshooting",
       "description": "Symptom-to-fix table plus the diagnostics that answer most questions.",
       "figure": {
-        "src": "assets/blotcat/07-troubleshooting.svg",
+        "src": "assets/blotcat/07-troubleshooting.png",
         "alt": "Blotcat following footprints to a cut cable",
         "caption": "07 \u00b7 Troubleshooting \u00b7 follow the logs"
       }
@@ -114,7 +114,7 @@
       "title": "Architecture",
       "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP runtime.",
       "figure": {
-        "src": "assets/blotcat/08-architecture.svg",
+        "src": "assets/blotcat/08-architecture.png",
         "alt": "Blotcat assembling labelled pipes end to end",
         "caption": "08 \u00b7 Architecture \u00b7 the boot chain"
       }
@@ -127,7 +127,7 @@
       "title": "Multi-Tenant (WaaS)",
       "description": "Provision, monitor, snapshot and delete isolated per-user workspaces.",
       "figure": {
-        "src": "assets/blotcat/09-tenants.svg",
+        "src": "assets/blotcat/09-tenants.png",
         "alt": "Blotcat handing keys and boxes to four small cats",
         "caption": "09 \u00b7 Multi-tenant \u00b7 one workspace each"
       }
@@ -140,7 +140,7 @@
       "title": "Security & Hardening",
       "description": "Dev defaults, their risks, and the exact changes needed before exposing a sandbox.",
       "figure": {
-        "src": "assets/blotcat/10-security.svg",
+        "src": "assets/blotcat/10-security.png",
         "alt": "Blotcat locking a door and scratching out a password",
         "caption": "10 \u00b7 Security \u00b7 dev defaults, production posture"
       }
@@ -153,7 +153,7 @@
       "title": "Scripts Guide",
       "description": "Plain-English guide to what each shell script does.",
       "figure": {
-        "src": "assets/blotcat/11-scripts.svg",
+        "src": "assets/blotcat/11-scripts.png",
         "alt": "Blotcat pulling levers on a labelled machine",
         "caption": "11 \u00b7 Scripts \u00b7 one station per script"
       }
@@ -166,7 +166,7 @@
       "title": "Glossary",
       "description": "Container, cgroup, LXCFS, bind mount and other terms used in these docs.",
       "figure": {
-        "src": "assets/blotcat/12-glossary.svg",
+        "src": "assets/blotcat/12-glossary.png",
         "alt": "Blotcat translating between a light box and a heavy crate",
         "caption": "12 \u00b7 Glossary \u00b7 container vs VM"
       }
@@ -179,7 +179,7 @@
       "title": "Ghost vs VM",
       "description": "When a container sandbox beats a full virtual machine, and when it does not.",
       "figure": {
-        "src": "assets/blotcat/13-comparison.svg",
+        "src": "assets/blotcat/13-comparison.png",
         "alt": "Blotcat balancing a light box against a heavy crate",
         "caption": "13 \u00b7 Ghost vs VM \u00b7 weight and isolation"
       }
@@ -192,7 +192,7 @@
       "title": "Contributing",
       "description": "Repo layout, test suite, docs rules, release process and how to add an engine.",
       "figure": {
-        "src": "assets/blotcat/14-contributing.svg",
+        "src": "assets/blotcat/14-contributing.png",
         "alt": "Blotcat slotting a new shell into a rack",
         "caption": "14 \u00b7 Contributing \u00b7 add an engine"
       }
@@ -205,7 +205,7 @@
       "title": "Cheatsheet",
       "description": "One page: every command you need day to day.",
       "figure": {
-        "src": "assets/blotcat/15-cheatsheet.svg",
+        "src": "assets/blotcat/15-cheatsheet.png",
         "alt": "Blotcat taping a single page to a wall",
         "caption": "15 \u00b7 Cheatsheet \u00b7 one page"
       }
