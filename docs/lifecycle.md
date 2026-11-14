@@ -89,11 +89,11 @@ What L4 (`--nuke`) removes:
 | :--- | :--- |
 | Containers | Main instances, the tunnel, and every `ghost-tenant-*` compose project |
 | Images | All local `*-template` tags **and** every GHCR tag (`latest`, `vX.Y.Z`, `latest-<sha>`) |
-| Dangling images | Only those carrying this project's OCI source label — other projects are untouched |
+| Dangling images | Only those carrying this project's OCI source label (images built from the current Dockerfiles) — other projects are untouched |
 | Volumes | Compose volumes belonging to `ghost-machines` / `ghost-tenant-*` only |
 | Networks | `ghost_sandbox` and any `ghost-machines_*` / `ghost-tenant-*` network |
 | Build cache | `docker builder prune -af` and `docker buildx prune -af` |
-| Registry | `config/tenants.json` reset to an empty registry |
+| Registry | `config/tenants.json` restored to its committed (empty) state — no spurious git diff |
 
 What it deliberately keeps: `mounts/` (your work) and `snapshots/` (your backups), unless `--hard` is passed. `--hard` deletes both and recreates the empty directories, returning the checkout to a first-run state.
 

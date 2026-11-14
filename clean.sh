@@ -67,7 +67,11 @@ reset_tenant_registry() {
         echo "    [dry-run] reset config/tenants.json to an empty registry"
         return 0
     fi
-    printf '{"version": "1.0", "tenants": {}}\n' > config/tenants.json
+    # Prefer the committed content so a nuke leaves no spurious diff.
+    if git ls-files --error-unmatch config/tenants.json >/dev/null 2>&1; then
+        git checkout -- config/tenants.json 2>/dev/null && return 0
+    fi
+    printf '{\n  "version": "1.0",\n  "tenants": {}\n}\n' > config/tenants.json
 }
 
 warn_tenants_present() {
@@ -211,7 +215,9 @@ case $LEVEL in
 
         for PROJECT in $(tenant_projects); do
             echo "       tenant project: $PROJECT"
-            run docker compose -p "$PROJECT" -f "$TENANT_TEMPLATE" down -v --remove-orphans >/dev/null 2>&1 \
+            # Teardown must parse even when no tenant env vars are exported.
+            run env TENANT_MOUNT_PATH="${TENANT_MOUNT_PATH:-/tmp/ghost-tenant-teardown}" \
+                docker compose -p "$PROJECT" -f "$TENANT_TEMPLATE" down -v --remove-orphans >/dev/null 2>&1 \
                 || run docker rm -f "$PROJECT" >/dev/null 2>&1 || true
         done
         for CONTAINER in $(ghost_containers); do

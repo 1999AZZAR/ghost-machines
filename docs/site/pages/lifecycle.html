@@ -204,7 +204,7 @@ docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
 </tr>
 <tr>
 <td style="text-align: left;">Dangling images</td>
-<td style="text-align: left;">Only those carrying this project's OCI source label — other projects are untouched</td>
+<td style="text-align: left;">Only those carrying this project's OCI source label (images built from the current Dockerfiles) — other projects are untouched</td>
 </tr>
 <tr>
 <td style="text-align: left;">Volumes</td>
@@ -220,7 +220,7 @@ docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
 </tr>
 <tr>
 <td style="text-align: left;">Registry</td>
-<td style="text-align: left;"><code>config/tenants.json</code> reset to an empty registry</td>
+<td style="text-align: left;"><code>config/tenants.json</code> restored to its committed (empty) state — no spurious git diff</td>
 </tr>
 </tbody>
 </table>
