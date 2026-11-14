@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!-- Pure white background -->
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <!-- Ground line -->
+  <line x1="240" y1="680" x2="1360" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- MODULAR CHASSIS RACK (X=660 to 1300) -->
+  <line x1="660" y1="360" x2="1320" y2="360" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="680" y1="360" x2="680" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="1300" y1="360" x2="1300" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Slot 1 (Ubuntu shell already mounted) -->
+  <rect x="715" y="410" width="85" height="160" rx="15" fill="#ffffff" stroke="#000000" stroke-width="5"/>
+  <circle cx="757" cy="460" r="10" fill="none" stroke="#000000" stroke-width="3"/>
+  <line x1="757" y1="360" x2="757" y2="410" stroke="#000000" stroke-width="4"/>
+
+  <!-- Slot 2 (Debian shell mounted) -->
+  <rect x="850" y="410" width="85" height="160" rx="10" fill="#ffffff" stroke="#000000" stroke-width="5"/>
+  <path d="M 892 455 C 902 455 902 470 892 470" fill="none" stroke="#000000" stroke-width="3"/>
+  <line x1="892" y1="360" x2="892" y2="410" stroke="#000000" stroke-width="4"/>
+
+  <!-- Slot 3 (Alpine shell mounted) -->
+  <polygon points="985,420 1025,405 1065,420 1070,570 980,570" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linejoin="round"/>
+  <line x1="1025" y1="360" x2="1025" y2="405" stroke="#000000" stroke-width="4"/>
+
+  <!-- Slot 4 (Empty slot waiting for new shell - dashed guideline) -->
+  <rect x="1155" y="410" width="95" height="165" rx="8" fill="none" stroke="#ea580c" stroke-width="4" stroke-dasharray="8 6"/>
+  <line x1="1202" y1="360" x2="1202" y2="410" stroke="#ea580c" stroke-width="4" stroke-dasharray="6 4"/>
+
+  <!-- BLOTCAT CARRYING NEW 4TH SHELL TO SLOT IT IN -->
+  <!-- New shell carried in Blotcat paws -->
+  <polygon points="560,420 600,400 640,420 645,560 555,560" fill="#ffffff" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <line x1="600" y1="440" x2="600" y2="520" stroke="#000000" stroke-width="4"/>
+
+  <!-- Blotcat (X=420 to 500) -->
+  <!-- Tail -->
+  <path d="M 400 595 C 370 605 360 565 370 530" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Thin stick legs -->
+  <line x1="420" y1="620" x2="415" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="450" y1="620" x2="455" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="405" y1="680" x2="420" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="455" y1="680" x2="470" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Solid black body -->
+  <path d="M 400 540 C 390 480 425 445 455 445 C 485 445 500 480 495 540 C 490 590 480 625 445 625 C 415 625 405 590 400 540 Z" fill="#000000"/>
+  <!-- Ears -->
+  <polygon points="420,455 410,425 435,447" fill="#000000"/>
+  <polygon points="460,447 480,425 480,455" fill="#000000"/>
+  <!-- White dot eyes looking forward at the rack -->
+  <circle cx="455" cy="475" r="5" fill="#ffffff"/>
+  <circle cx="473" cy="476" r="5" fill="#ffffff"/>
+
+  <!-- Stick arms lifting and sliding new shell forward -->
+  <path d="M 470 530 L 520 500 L 560 480" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 465 545 L 515 520 L 555 505" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Insertion arrow into empty slot 4 -->
+  <path d="M 645 480 Q 890 320 1145 450" fill="none" stroke="#ea580c" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/>
+  <polygon points="1135,440 1155,455 1138,465" fill="#ea580c"/>
+
+  <!-- LABELS (Completely clear of strokes) -->
+  <!-- Blue: Dockerfile (above Blotcat & new shell) -->
+  <text x="500" y="340" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">Dockerfile</text>
+  <!-- Orange: tests (above rack center) -->
+  <text x="890" y="300" fill="#ea580c" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">tests</text>
+  <!-- Blue: docs (above rack empty slot destination) -->
+  <text x="1200" y="300" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">docs</text>
+</svg>

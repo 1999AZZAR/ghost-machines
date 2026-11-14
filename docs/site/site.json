@@ -1,13 +1,18 @@
 {
   "brand": "Ghost Machines",
-  "meta": "docs · docker compose · 4 engines · MIT",
+  "meta": "docs \u00b7 docker compose \u00b7 4 engines \u00b7 MIT",
   "repo": "https://github.com/1999AZZAR/ghost-machines",
   "base_url": "https://ghost.glassgallery.my.id",
   "cname": "ghost.glassgallery.my.id",
   "home": {
     "source": "index.md",
     "title": "Ghost Machines",
-    "description": "Disposable, multi-engine Linux sandboxes and autonomous agent workstations, orchestrated with Docker Compose."
+    "description": "Disposable, multi-engine Linux sandboxes and autonomous agent workstations, orchestrated with Docker Compose.",
+    "figure": {
+      "src": "assets/blotcat/00-overview.svg",
+      "alt": "Blotcat packing a laptop into a crate next to a shelf labelled mounts/",
+      "caption": "00 \u00b7 Overview \u00b7 throwaway container, persistent work"
+    }
   },
   "pages": [
     {
@@ -16,7 +21,12 @@
       "group": "GETTING STARTED",
       "nav_title": "Getting Started",
       "title": "Getting Started",
-      "description": "Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop."
+      "description": "Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop.",
+      "figure": {
+        "src": "assets/blotcat/01-getting-started.svg",
+        "alt": "Blotcat handing a key through a small door labelled 2223",
+        "caption": "01 \u00b7 Getting Started \u00b7 five minutes to a shell"
+      }
     },
     {
       "slug": "images",
@@ -24,7 +34,12 @@
       "group": "GETTING STARTED",
       "nav_title": "Prebuilt vs Build",
       "title": "Images: Prebuilt vs Build",
-      "description": "GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback."
+      "description": "GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback.",
+      "figure": {
+        "src": "assets/blotcat/02-images.svg",
+        "alt": "Blotcat weighing a sealed parcel against an open toolbox",
+        "caption": "02 \u00b7 Prebuilt vs build \u00b7 pull or build, same image"
+      }
     },
     {
       "slug": "engines",
@@ -32,7 +47,12 @@
       "group": "GETTING STARTED",
       "nav_title": "Engines & Toolchain",
       "title": "Engines & Toolchain",
-      "description": "The four Linux engines, what is inside them, and how they differ."
+      "description": "The four Linux engines, what is inside them, and how they differ.",
+      "figure": {
+        "src": "assets/blotcat/03-engines.svg",
+        "alt": "Blotcat swapping four labelled shells",
+        "caption": "03 \u00b7 Engines \u00b7 four shells, one toolchain"
+      }
     },
     {
       "slug": "lifecycle",
@@ -40,7 +60,12 @@
       "group": "OPERATE",
       "nav_title": "Lifecycle & Cleanup",
       "title": "Lifecycle & Cleanup",
-      "description": "Start, stop, pause, restart, inspect and remove sandboxes without losing work."
+      "description": "Start, stop, pause, restart, inspect and remove sandboxes without losing work.",
+      "figure": {
+        "src": "assets/blotcat/04-lifecycle.svg",
+        "alt": "Blotcat lifting a workbench out of a crushed crate",
+        "caption": "04 \u00b7 Lifecycle \u00b7 the container goes, the work stays"
+      }
     },
     {
       "slug": "connecting",
@@ -48,7 +73,12 @@
       "group": "OPERATE",
       "nav_title": "Connecting",
       "title": "Connecting",
-      "description": "SSH, keys, ports, port-forwarding, editors and Cloudflare Tunnel access."
+      "description": "SSH, keys, ports, port-forwarding, editors and Cloudflare Tunnel access.",
+      "figure": {
+        "src": "assets/blotcat/05-connecting.svg",
+        "alt": "Blotcat threading a cable through one narrow port",
+        "caption": "05 \u00b7 Connecting \u00b7 one port in, tunnels for the rest"
+      }
     },
     {
       "slug": "configuration",
@@ -56,7 +86,12 @@
       "group": "OPERATE",
       "nav_title": "Configuration",
       "title": "Configuration",
-      "description": "Every environment variable and build arg, its default, and when it takes effect."
+      "description": "Every environment variable and build arg, its default, and when it takes effect.",
+      "figure": {
+        "src": "assets/blotcat/06-configuration.svg",
+        "alt": "Blotcat turning labelled dials on a small panel",
+        "caption": "06 \u00b7 Configuration \u00b7 knobs and when they apply"
+      }
     },
     {
       "slug": "troubleshooting",
@@ -64,7 +99,12 @@
       "group": "OPERATE",
       "nav_title": "Troubleshooting",
       "title": "Troubleshooting",
-      "description": "Symptom-to-fix table plus the diagnostics that answer most questions."
+      "description": "Symptom-to-fix table plus the diagnostics that answer most questions.",
+      "figure": {
+        "src": "assets/blotcat/07-troubleshooting.svg",
+        "alt": "Blotcat following footprints to a cut cable",
+        "caption": "07 \u00b7 Troubleshooting \u00b7 follow the logs"
+      }
     },
     {
       "slug": "architecture",
@@ -72,7 +112,12 @@
       "group": "REFERENCE",
       "nav_title": "Architecture",
       "title": "Architecture",
-      "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP runtime."
+      "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP runtime.",
+      "figure": {
+        "src": "assets/blotcat/08-architecture.svg",
+        "alt": "Blotcat assembling labelled pipes end to end",
+        "caption": "08 \u00b7 Architecture \u00b7 the boot chain"
+      }
     },
     {
       "slug": "tenant",
@@ -80,7 +125,12 @@
       "group": "REFERENCE",
       "nav_title": "Multi-Tenant (WaaS)",
       "title": "Multi-Tenant (WaaS)",
-      "description": "Provision, monitor, snapshot and delete isolated per-user workspaces."
+      "description": "Provision, monitor, snapshot and delete isolated per-user workspaces.",
+      "figure": {
+        "src": "assets/blotcat/09-tenants.svg",
+        "alt": "Blotcat handing keys and boxes to four small cats",
+        "caption": "09 \u00b7 Multi-tenant \u00b7 one workspace each"
+      }
     },
     {
       "slug": "security",
@@ -88,7 +138,12 @@
       "group": "REFERENCE",
       "nav_title": "Security & Hardening",
       "title": "Security & Hardening",
-      "description": "Dev defaults, their risks, and the exact changes needed before exposing a sandbox."
+      "description": "Dev defaults, their risks, and the exact changes needed before exposing a sandbox.",
+      "figure": {
+        "src": "assets/blotcat/10-security.svg",
+        "alt": "Blotcat locking a door and scratching out a password",
+        "caption": "10 \u00b7 Security \u00b7 dev defaults, production posture"
+      }
     },
     {
       "slug": "scripts",
@@ -96,7 +151,12 @@
       "group": "REFERENCE",
       "nav_title": "Scripts Guide",
       "title": "Scripts Guide",
-      "description": "Plain-English guide to what each shell script does."
+      "description": "Plain-English guide to what each shell script does.",
+      "figure": {
+        "src": "assets/blotcat/11-scripts.svg",
+        "alt": "Blotcat pulling levers on a labelled machine",
+        "caption": "11 \u00b7 Scripts \u00b7 one station per script"
+      }
     },
     {
       "slug": "glossary",
@@ -104,7 +164,12 @@
       "group": "REFERENCE",
       "nav_title": "Glossary",
       "title": "Glossary",
-      "description": "Container, cgroup, LXCFS, bind mount and other terms used in these docs."
+      "description": "Container, cgroup, LXCFS, bind mount and other terms used in these docs.",
+      "figure": {
+        "src": "assets/blotcat/12-glossary.svg",
+        "alt": "Blotcat translating between a light box and a heavy crate",
+        "caption": "12 \u00b7 Glossary \u00b7 container vs VM"
+      }
     },
     {
       "slug": "comparison",
@@ -112,7 +177,12 @@
       "group": "REFERENCE",
       "nav_title": "Ghost vs VM",
       "title": "Ghost vs VM",
-      "description": "When a container sandbox beats a full virtual machine, and when it does not."
+      "description": "When a container sandbox beats a full virtual machine, and when it does not.",
+      "figure": {
+        "src": "assets/blotcat/13-comparison.svg",
+        "alt": "Blotcat balancing a light box against a heavy crate",
+        "caption": "13 \u00b7 Ghost vs VM \u00b7 weight and isolation"
+      }
     },
     {
       "slug": "contributing",
@@ -120,7 +190,12 @@
       "group": "PROJECT",
       "nav_title": "Contributing",
       "title": "Contributing",
-      "description": "Repo layout, test suite, docs rules, release process and how to add an engine."
+      "description": "Repo layout, test suite, docs rules, release process and how to add an engine.",
+      "figure": {
+        "src": "assets/blotcat/14-contributing.svg",
+        "alt": "Blotcat slotting a new shell into a rack",
+        "caption": "14 \u00b7 Contributing \u00b7 add an engine"
+      }
     },
     {
       "slug": "cheatsheet",
@@ -128,7 +203,17 @@
       "group": "PROJECT",
       "nav_title": "Cheatsheet",
       "title": "Cheatsheet",
-      "description": "One page: every command you need day to day."
+      "description": "One page: every command you need day to day.",
+      "figure": {
+        "src": "assets/blotcat/15-cheatsheet.svg",
+        "alt": "Blotcat taping a single page to a wall",
+        "caption": "15 \u00b7 Cheatsheet \u00b7 one page"
+      }
     }
-  ]
+  ],
+  "demo": {
+    "id": "sDNJP7aYOabLz0k6",
+    "url": "https://asciinema.org/a/sDNJP7aYOabLz0k6",
+    "caption": "PLATE 00 \u00b7 terminal demo \u00b7 clone \u2192 start \u2192 ssh \u2192 stop"
+  }
 }

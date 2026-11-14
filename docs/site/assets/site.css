@@ -1179,3 +1179,15 @@ ol.steps > li::marker {
 /* Spacing fixes for the nav/toc number prefix */
 .doc-nav-num { margin-right: 2px; }
 .doc-toc a .doc-nav-num { margin-right: 4px; }
+
+/* 16:9 media plates (demo + illustrations) */
+.figure-mat img, .demo-frame { border: 1px solid var(--rule-strong); background: var(--paper-raised); width: 100%; display: block; }
+.demo-frame { position: relative; overflow: hidden; padding: 0; }
+.demo-frame iframe, .demo-frame .ap-player { width: 100%; border: 0; display: block; }
+.figure-plate { margin: 28px 0 36px; }
+.figure-caption { display: flex; gap: 8px; justify-content: flex-start; margin-top: 8px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-meta); }
+.figure-caption strong { color: var(--accent); }
+
+/* Line-art plates: no black mat, no double frame */
+.figure-mat { background: var(--paper-raised); padding: 0; border: 1px solid var(--rule-strong); }
+.figure-mat img { border: 0; outline: none; }

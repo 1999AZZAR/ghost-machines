@@ -182,6 +182,15 @@ grep -q 'class="doc-sidebar"' docs/site/index.html || { echo "FAILED: missing si
 grep -q 'id="search-index"' docs/site/index.html || { echo "FAILED: missing search index"; exit 1; }
 grep -q 'id="tocList"' docs/site/pages/start.html || { echo "FAILED: missing on-this-page TOC"; exit 1; }
 grep -q 'class="doc-nav-num"' docs/site/pages/start.html || { echo "FAILED: navigation is not numbered"; exit 1; }
+python3 - <<'CHECK'
+import json, pathlib, sys
+manifest = json.loads(pathlib.Path("docs/site/site.json").read_text())
+figures = [p.get("figure") for p in manifest["pages"]] + [manifest["home"].get("figure")]
+missing = [f["src"] for f in figures if f and not pathlib.Path("docs/site", f["src"]).exists()]
+if missing:
+    print("missing figures: " + ", ".join(missing))
+    sys.exit(1)
+CHECK
 echo "PASSED"
 
 # Test 8: Site builder is syntactically valid

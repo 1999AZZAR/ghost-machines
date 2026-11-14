@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!-- Pure white background -->
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <!-- Ground line -->
+  <line x1="220" y1="680" x2="1380" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- LEFT: BLOTCAT OPERATOR (Distributing keys & tenant boxes) -->
+  <!-- Storage shelf behind Blotcat -->
+  <line x1="240" y1="520" x2="340" y2="520" stroke="#000000" stroke-width="5"/>
+  <line x1="250" y1="520" x2="250" y2="680" stroke="#000000" stroke-width="5"/>
+  <line x1="330" y1="520" x2="330" y2="680" stroke="#000000" stroke-width="5"/>
+  <!-- Stacked tenant boxes on shelf -->
+  <rect x="260" y="475" width="60" height="45" rx="2" fill="#ffffff" stroke="#000000" stroke-width="4"/>
+
+  <!-- Blotcat Operator Body -->
+  <!-- Tail -->
+  <path d="M 370 595 C 340 605 330 565 340 530" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Thin stick legs -->
+  <line x1="390" y1="620" x2="385" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="420" y1="620" x2="425" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="375" y1="680" x2="390" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="420" y1="680" x2="435" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Body -->
+  <path d="M 370 540 C 360 480 395 445 425 445 C 455 445 470 480 465 540 C 460 590 450 625 415 625 C 385 625 375 590 370 540 Z" fill="#000000"/>
+  <!-- Ears -->
+  <polygon points="390,455 380,425 405,447" fill="#000000"/>
+  <polygon points="430,447 450,425 450,455" fill="#000000"/>
+  <!-- White dot eyes -->
+  <circle cx="425" cy="475" r="5" fill="#ffffff"/>
+  <circle cx="443" cy="476" r="5" fill="#ffffff"/>
+
+  <!-- Arm extending out handing key and box -->
+  <path d="M 450 535 L 530 535 L 575 540" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Key held in paw -->
+  <circle cx="530" cy="535" r="10" fill="none" stroke="#000000" stroke-width="4"/>
+  <line x1="540" y1="535" x2="565" y2="535" stroke="#000000" stroke-width="4"/>
+
+  <!-- FOUR SEPARATE TENANT STATIONS WITH SMALL CATS -->
+
+  <!-- TENANT 1 (X=650 to 760) -->
+  <rect x="640" y="500" width="105" height="180" rx="6" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-dasharray="6 6"/>
+  <!-- Small cat 1 -->
+  <path d="M 670 600 C 665 570 680 550 695 550 C 710 550 720 570 715 600 C 712 620 705 640 692 640 C 678 640 672 620 670 600 Z" fill="#000000"/>
+  <polygon points="680,555 675,540 690,550" fill="#000000"/>
+  <polygon points="700,550 715,540 710,555" fill="#000000"/>
+  <circle cx="698" cy="565" r="3" fill="#ffffff"/>
+  <!-- Small cat legs -->
+  <line x1="685" y1="640" x2="685" y2="680" stroke="#000000" stroke-width="4"/>
+  <line x1="700" y1="640" x2="700" y2="680" stroke="#000000" stroke-width="4"/>
+  <!-- Personal box -->
+  <rect x="665" y="640" width="35" height="25" rx="2" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+
+  <!-- TENANT 2 (X=790 to 900) -->
+  <rect x="785" y="500" width="105" height="180" rx="6" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-dasharray="6 6"/>
+  <!-- Small cat 2 -->
+  <path d="M 815 600 C 810 570 825 550 840 550 C 855 550 865 570 860 600 C 857 620 850 640 837 640 C 823 640 817 620 815 600 Z" fill="#000000"/>
+  <polygon points="825,555 820,540 835,550" fill="#000000"/>
+  <polygon points="845,550 860,540 855,555" fill="#000000"/>
+  <circle cx="843" cy="565" r="3" fill="#ffffff"/>
+  <!-- Small cat legs -->
+  <line x1="830" y1="640" x2="830" y2="680" stroke="#000000" stroke-width="4"/>
+  <line x1="845" y1="640" x2="845" y2="680" stroke="#000000" stroke-width="4"/>
+  <!-- Personal box -->
+  <rect x="810" y="640" width="35" height="25" rx="2" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+
+  <!-- TENANT 3 (X=935 to 1045) -->
+  <rect x="930" y="500" width="105" height="180" rx="6" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-dasharray="6 6"/>
+  <!-- Small cat 3 -->
+  <path d="M 960 600 C 955 570 970 550 985 550 C 1000 550 1010 570 1005 600 C 1002 620 995 640 982 640 C 968 640 962 620 960 600 Z" fill="#000000"/>
+  <polygon points="970,555 965,540 980,550" fill="#000000"/>
+  <polygon points="990,550 1005,540 1000,555" fill="#000000"/>
+  <circle cx="988" cy="565" r="3" fill="#ffffff"/>
+  <!-- Small cat legs -->
+  <line x1="975" y1="640" x2="975" y2="680" stroke="#000000" stroke-width="4"/>
+  <line x1="990" y1="640" x2="990" y2="680" stroke="#000000" stroke-width="4"/>
+  <!-- Personal box -->
+  <rect x="955" y="640" width="35" height="25" rx="2" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+
+  <!-- TENANT 4 (X=1075 to 1185) -->
+  <rect x="1070" y="500" width="105" height="180" rx="6" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-dasharray="6 6"/>
+  <!-- Small cat 4 -->
+  <path d="M 1100 600 C 1095 570 1110 550 1125 550 C 1140 550 1150 570 1145 600 C 1142 620 1135 640 1122 640 C 1108 640 1102 620 1100 600 Z" fill="#000000"/>
+  <polygon points="1110,555 1105,540 1120,550" fill="#000000"/>
+  <polygon points="1130,550 1145,540 1140,555" fill="#000000"/>
+  <circle cx="1128" cy="565" r="3" fill="#ffffff"/>
+  <!-- Small cat legs -->
+  <line x1="1115" y1="640" x2="1115" y2="680" stroke="#000000" stroke-width="4"/>
+  <line x1="1130" y1="640" x2="1130" y2="680" stroke="#000000" stroke-width="4"/>
+  <!-- Personal box -->
+  <rect x="1095" y="640" width="35" height="25" rx="2" fill="#ffffff" stroke="#000000" stroke-width="3"/>
+
+  <!-- LABELS (Completely clear of strokes) -->
+  <!-- Blue: port (well above Tenant 1) -->
+  <text x="692" y="445" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">port</text>
+  <!-- Orange: 4G (well above Tenant 2 & 3 in middle space) -->
+  <text x="910" y="380" fill="#ea580c" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">4G</text>
+  <!-- Red: isolated (well above Tenant 4) -->
+  <text x="1122" y="445" fill="#dc2626" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">isolated</text>
+</svg>

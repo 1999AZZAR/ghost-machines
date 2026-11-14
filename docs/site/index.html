@@ -28,6 +28,7 @@
     <div class="doc-topbar">
       <span class="doc-topbar-title">SPEC_00 // GHOST-MACHINES</span>
       <div class="topbar-actions">
+        <a class="btn" href="https://asciinema.org/a/sDNJP7aYOabLz0k6" target="_blank" rel="noopener noreferrer">Demo</a>
         <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
         <a class="btn" href="https://github.com/1999AZZAR/ghost-machines" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
@@ -38,6 +39,14 @@
         <h1 class="doc-title">Ghost Machines</h1>
         <p class="doc-lead">Disposable, multi-engine Linux sandboxes and autonomous agent workstations, orchestrated with Docker Compose.</p>
       </header>
+      <figure class="figure-plate">
+        <div class="demo-frame"><script src="https://asciinema.org/a/sDNJP7aYOabLz0k6.js" id="asciicast-sDNJP7aYOabLz0k6" async></script></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>PLATE 00 · terminal demo · clone → start → ssh → stop</span></figcaption>
+      </figure>
+      <figure class="figure-plate">
+        <div class="figure-mat"><img src="assets/blotcat/00-overview.svg" alt="Blotcat packing a laptop into a crate next to a shelf labelled mounts/" loading="lazy"></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>00 · Overview · throwaway container, persistent work</span></figcaption>
+      </figure>
 <h2 id="what-this-is">What this is</h2>
 <p>Ghost Machines provisions reproducible development environments as containers: Ubuntu, Debian, Alpine or Arch, each with the same compiler, editor and agent toolchain. Your work lives in <code>mounts/</code> on the host, so the container is disposable — stop it, rebuild it, re-pull it, and the workspace survives.</p>
 <p>Two image sources, resolved by one rule: a reference containing <code>/</code> is pulled from GHCR, a plain tag is built locally. <code>start.sh</code> prints which one it chose.</p>

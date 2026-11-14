@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!-- Pure white background -->
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <!-- Ground line -->
+  <line x1="240" y1="680" x2="1360" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- CENTER: Dividing Wall with narrow labeled port/hole -->
+  <line x1="770" y1="260" x2="770" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="850" y1="260" x2="850" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="770" y1="260" x2="850" y2="260" stroke="#000000" stroke-width="6"/>
+
+  <!-- Wall hash marks -->
+  <line x1="770" y1="330" x2="850" y2="330" stroke="#000000" stroke-width="3"/>
+  <line x1="810" y1="260" x2="810" y2="330" stroke="#000000" stroke-width="3"/>
+  <line x1="770" y1="400" x2="850" y2="400" stroke="#000000" stroke-width="3"/>
+  <line x1="790" y1="330" x2="790" y2="400" stroke="#000000" stroke-width="3"/>
+  <line x1="830" y1="330" x2="830" y2="400" stroke="#000000" stroke-width="3"/>
+  <line x1="770" y1="620" x2="850" y2="620" stroke="#000000" stroke-width="3"/>
+
+  <!-- Narrow Hole through wall at Y=520 -->
+  <ellipse cx="810" cy="520" rx="22" ry="14" fill="#ffffff" stroke="#000000" stroke-width="5"/>
+
+  <!-- BLOTCAT (Left / Host side, threading cable) -->
+  <!-- Tail -->
+  <path d="M 480 595 C 450 605 440 565 450 530" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Thin stick legs -->
+  <line x1="500" y1="620" x2="495" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="530" y1="620" x2="535" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="485" y1="680" x2="500" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="535" y1="680" x2="550" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Solid black body -->
+  <path d="M 480 540 C 470 480 505 445 535 445 C 565 445 580 480 575 540 C 570 590 560 625 525 625 C 495 625 485 590 480 540 Z" fill="#000000"/>
+  <!-- Ears -->
+  <polygon points="500,455 490,425 515,447" fill="#000000"/>
+  <polygon points="540,447 560,425 560,455" fill="#000000"/>
+  <!-- White dot eyes -->
+  <circle cx="535" cy="475" r="5" fill="#ffffff"/>
+  <circle cx="553" cy="476" r="5" fill="#ffffff"/>
+
+  <!-- Stick arms threading cable forward -->
+  <path d="M 560 530 L 630 535 L 720 525" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 555 545 L 625 550 L 710 535" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Cable on Host Side (coiling from ground, passing through paws, straight into hole) -->
+  <path d="M 360 680 C 370 640 420 640 430 670 C 440 690 490 690 490 650 C 490 580 590 540 680 530 L 800 520" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Cable connector pin entering hole -->
+  <rect x="755" y="513" width="30" height="14" rx="2" fill="#ffffff" stroke="#000000" stroke-width="4"/>
+
+  <!-- RIGHT: Container Side (Cable exits hole, travels into laptop) -->
+  <path d="M 820 520 L 930 520 Q 990 520 1010 570 L 1025 585" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Small Desk & Laptop on container side -->
+  <!-- Desk stand -->
+  <line x1="990" y1="610" x2="1140" y2="610" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="1010" y1="610" x2="1010" y2="680" stroke="#000000" stroke-width="5" stroke-linecap="round"/>
+  <line x1="1120" y1="610" x2="1120" y2="680" stroke="#000000" stroke-width="5" stroke-linecap="round"/>
+  <!-- Open Laptop -->
+  <!-- Keyboard base -->
+  <rect x="1025" y="590" width="85" height="18" rx="2" fill="#ffffff" stroke="#000000" stroke-width="5"/>
+  <!-- Open Screen -->
+  <path d="M 1035 590 L 1030 530 L 1095 530 L 1090 590 Z" fill="#ffffff" stroke="#000000" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Screen glow / shell prompt line -->
+  <line x1="1040" y1="545" x2="1070" y2="545" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- ANNOTATIONS -->
+  <!-- Blue: 22 (directly above the hole) -->
+  <text x="810" y="475" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">22</text>
+  <!-- Orange: -L 3000 (above cable coil on host side) -->
+  <text x="440" y="480" fill="#ea580c" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">-L 3000</text>
+  <!-- Blue: tunnel (along connection on container side) -->
+  <text x="960" y="480" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">tunnel</text>
+</svg>

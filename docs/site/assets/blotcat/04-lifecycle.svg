@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!-- Pure white background -->
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <!-- Ground line -->
+  <line x1="220" y1="680" x2="1380" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- LEFT: Crushing Industrial Press & Crushed Crate -->
+  <!-- Hydraulic piston shaft -->
+  <rect x="420" y="240" width="60" height="180" fill="#ffffff" stroke="#000000" stroke-width="6"/>
+  <!-- Heavy crusher anvil block coming down -->
+  <polygon points="340,420 560,420 540,470 360,470" fill="#ffffff" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Downward crushing force arrows -->
+  <line x1="450" y1="360" x2="450" y2="400" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="440,395 450,412 460,395" fill="#dc2626"/>
+
+  <!-- Crushed / splintered crate under the press -->
+  <path d="M 340 680 L 330 580 L 370 540 L 410 570 L 460 520 L 510 560 L 550 510 L 580 680 Z" fill="#ffffff" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Splinter cracks and debris -->
+  <line x1="370" y1="580" x2="430" y2="640" stroke="#000000" stroke-width="4"/>
+  <line x1="480" y1="570" x2="520" y2="650" stroke="#000000" stroke-width="4"/>
+  <line x1="390" y1="680" x2="350" y2="620" stroke="#000000" stroke-width="4"/>
+  <line x1="560" y1="600" x2="600" y2="630" stroke="#000000" stroke-width="4"/>
+
+  <!-- CENTER-RIGHT: BLOTCAT LIFTING WORKBENCH CLEANLY OUT -->
+  <!-- Sturdy Workbench (held safely in mid-air above ground) -->
+  <!-- Workbench tabletop -->
+  <rect x="820" y="450" width="260" height="30" rx="4" fill="#ffffff" stroke="#000000" stroke-width="6" stroke-linejoin="round"/>
+  <!-- Table legs -->
+  <line x1="845" y1="480" x2="845" y2="570" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="1055" y1="480" x2="1055" y2="570" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Stretcher bar between legs -->
+  <line x1="845" y1="540" x2="1055" y2="540" stroke="#000000" stroke-width="5"/>
+  <!-- Work tools on workbench: small vise / blueprint scroll -->
+  <rect x="860" y="425" width="24" height="25" fill="#ffffff" stroke="#000000" stroke-width="4"/>
+  <line x1="900" y1="438" x2="950" y2="438" stroke="#000000" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Blotcat (standing at X ~ 730 to 800, deadpan, lifting with both stick arms) -->
+  <!-- Tail curling backwards -->
+  <path d="M 690 595 C 660 605 645 565 655 530" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Thin stick legs planted firmly on ground -->
+  <line x1="710" y1="620" x2="705" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="740" y1="620" x2="745" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="695" y1="680" x2="710" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <line x1="745" y1="680" x2="760" y2="680" stroke="#000000" stroke-width="6" stroke-linecap="round"/>
+  <!-- Solid black body leaning forward with effort -->
+  <path d="M 690 540 C 680 480 715 445 745 445 C 775 445 790 480 785 540 C 780 590 770 625 735 625 C 705 625 695 590 690 540 Z" fill="#000000"/>
+  <!-- Ears -->
+  <polygon points="710,455 700,425 725,447" fill="#000000"/>
+  <polygon points="750,447 770,425 770,455" fill="#000000"/>
+  <!-- White dot eyes looking right at the workbench -->
+  <circle cx="745" cy="475" r="5" fill="#ffffff"/>
+  <circle cx="763" cy="476" r="5" fill="#ffffff"/>
+  <!-- Stick arms lifting underneath the workbench tabletop -->
+  <path d="M 770 530 L 810 500 L 840 470" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 765 545 L 815 520 L 850 480" fill="none" stroke="#000000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Upward survival trajectory arc -->
+  <path d="M 580 540 Q 700 360 840 400" fill="none" stroke="#ea580c" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/>
+  <polygon points="835,390 855,404 838,412" fill="#ea580c"/>
+
+  <!-- ANNOTATIONS -->
+  <!-- Red: stop (completely clear of piston shaft) -->
+  <text x="310" y="320" fill="#dc2626" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">stop</text>
+  <!-- Blue: mounts/ (above the rescued workbench) -->
+  <text x="950" y="380" fill="#2563eb" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">mounts/</text>
+  <!-- Orange: survives (right side of safe arc) -->
+  <text x="1150" y="520" fill="#ea580c" font-family="JetBrains Mono, monospace" font-size="28" font-weight="600" text-anchor="middle">survives</text>
+</svg>

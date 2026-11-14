@@ -253,6 +253,32 @@ def search_index(rel_pages: str) -> str:
     return f'<script type="application/json" id="search-index">{payload}</script>'
 
 
+def figure_html(figure: dict, rel_root: str) -> str:
+    return f"""      <figure class="figure-plate">
+        <div class="figure-mat"><img src="{rel_root}{figure['src']}" alt="{figure['alt']}" loading="lazy"></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>{figure['caption']}</span></figcaption>
+      </figure>
+"""
+
+
+def demo_link() -> str:
+    demo = MANIFEST_DATA.get("demo")
+    if not demo:
+        return ""
+    return f'<a class="btn" href="{demo["url"]}" target="_blank" rel="noopener noreferrer">Demo</a>'
+
+
+def demo_html(rel_root: str) -> str:
+    demo = MANIFEST_DATA.get("demo")
+    if not demo:
+        return ""
+    return f"""      <figure class="figure-plate">
+        <div class="demo-frame"><script src="https://asciinema.org/a/{demo['id']}.js" id="asciicast-{demo['id']}" async></script></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>{demo['caption']}</span></figcaption>
+      </figure>
+"""
+
+
 def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: bool) -> str:
     rel_root = "" if is_home else "../"
     rel_pages = "pages/" if is_home else ""
@@ -260,6 +286,12 @@ def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: 
     spec = "SPEC_00 // GHOST-MACHINES" if is_home else f"DOC_{number:02d} // GHOST-MACHINES"
     dossier = "OVERVIEW" if is_home else entry["slug"].upper().replace("-", "_")
     html = rewrite_links(body, "pages/" if is_home else "")
+    plate = figure_html(entry["figure"], rel_root) if entry.get("figure") else ""
+    if is_home:
+        plate = demo_html(rel_root) + plate
+    home_figure = MANIFEST_DATA.get("home", {}).get("figure")
+    if is_home and home_figure and (SITE / home_figure["src"]).exists():
+        plate += figure_html(home_figure, rel_root)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -291,6 +323,7 @@ def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: 
     <div class="doc-topbar">
       <span class="doc-topbar-title">{spec}</span>
       <div class="topbar-actions">
+        {demo_link()}
         <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
         <a class="btn" href="{REPO}" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
@@ -301,7 +334,7 @@ def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: 
         <h1 class="doc-title">{entry['title']}</h1>
         <p class="doc-lead">{entry['description']}</p>
       </header>
-{html}
+{plate}{html}
       <footer class="doc-footer">
         <span>MIT LICENSE · AZZAR</span>
         <span>ARCHIVAL_RECORD_SEALED // GHOST_MACHINES</span>
@@ -348,7 +381,8 @@ def main() -> int:
     check = "--check" in sys.argv[1:]
     manifest = json.loads(MANIFEST.read_text())
 
-    global NAME_MAP, PAGE_LIST, HOME, BRAND, META, REPO
+    global NAME_MAP, PAGE_LIST, HOME, BRAND, META, REPO, MANIFEST_DATA
+    MANIFEST_DATA = manifest
     BRAND = manifest.get("brand", "Ghost Machines")
     META = manifest.get("meta", "")
     REPO = manifest.get("repo", "https://github.com/1999AZZAR/ghost-machines")
@@ -370,6 +404,10 @@ def main() -> int:
         source = DOCS / entry["source"]
         if not source.exists():
             sys.exit(f"missing source: {source}")
+        figure = entry.get("figure")
+        if figure and not (SITE / figure["src"]).exists():
+            print(f"[WARN] missing figure for {entry['slug']}: {figure['src']} (skipped)")
+            entry["figure"] = None
         body, toc = render_markdown(source.read_text())
         outputs[PAGES / f"{entry['slug']}.html"] = page_html(entry, body, toc, False)
 

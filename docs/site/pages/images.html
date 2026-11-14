@@ -28,6 +28,7 @@
     <div class="doc-topbar">
       <span class="doc-topbar-title">DOC_02 // GHOST-MACHINES</span>
       <div class="topbar-actions">
+        <a class="btn" href="https://asciinema.org/a/sDNJP7aYOabLz0k6" target="_blank" rel="noopener noreferrer">Demo</a>
         <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
         <a class="btn" href="https://github.com/1999AZZAR/ghost-machines" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
@@ -38,6 +39,10 @@
         <h1 class="doc-title">Images: Prebuilt vs Build</h1>
         <p class="doc-lead">GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback.</p>
       </header>
+      <figure class="figure-plate">
+        <div class="figure-mat"><img src="../assets/blotcat/02-images.svg" alt="Blotcat weighing a sealed parcel against an open toolbox" loading="lazy"></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>02 · Prebuilt vs build · pull or build, same image</span></figcaption>
+      </figure>
 <p>Every run uses exactly one image. <code>start.sh</code> resolves it in this order:</p>
 <ol>
 <li><code>--image &lt;ref&gt;</code> — explicit, wins over everything.</li>
