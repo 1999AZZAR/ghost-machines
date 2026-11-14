@@ -173,6 +173,11 @@ if [ -z "$LEVEL" ]; then
     read -r -p "Select cleanup level [1-5]: " LEVEL
 fi
 
+if [ "$HARD" = true ] && [ "$LEVEL" != "4" ]; then
+    echo "[ERROR] --hard only applies to --nuke (Level 4)."
+    exit 1
+fi
+
 case $LEVEL in
     1)
         echo "[INFO] L1 — stopping containers and removing the network..."
@@ -202,7 +207,7 @@ case $LEVEL in
         echo "       - every Ghost container (main, tunnel, and tenant projects)"
         echo "       - every Ghost network and Ghost-owned volume"
         echo "       - every local template image AND every GHCR ghost-machine tag"
-        echo "       - all builder/buildx cache, and dangling images built from this project"
+        echo "       - all builder/buildx cache (host-wide), and dangling images built from this project"
         echo "       - the tenant registry (config/tenants.json reset)"
         if [ "$HARD" = true ]; then
             echo "       - mounts/ and snapshots/ (--hard: WORK AND BACKUPS ARE DELETED)"
@@ -244,7 +249,7 @@ case $LEVEL in
             run docker network rm "$NETWORK" >/dev/null 2>&1 || true
         done
 
-        echo "[INFO] Clearing build cache..."
+        echo "[INFO] Clearing build cache (host-wide: Docker cannot scope build cache per project)..."
         run docker builder prune -af >/dev/null 2>&1 || true
         if docker buildx version >/dev/null 2>&1; then
             run docker buildx prune -af >/dev/null 2>&1 || true
@@ -264,6 +269,7 @@ case $LEVEL in
                 touch mounts/ubuntu1/.gitkeep mounts/ubuntu2/.gitkeep mounts/tenants/.gitkeep snapshots/.gitkeep 2>/dev/null || true
             fi
         else
+            echo "[NOTE] Build cache is shared by every Docker project on this host; --nuke clears it all."
             echo "[TIP] Add --hard to also delete mounts/ and snapshots/ (true 1st-user nuke)."
         fi
 

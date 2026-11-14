@@ -92,12 +92,12 @@ What L4 (`--nuke`) removes:
 | Dangling images | Only those carrying this project's OCI source label (images built from the current Dockerfiles) — other projects are untouched |
 | Volumes | Compose volumes belonging to `ghost-machines` / `ghost-tenant-*` only |
 | Networks | `ghost_sandbox` and any `ghost-machines_*` / `ghost-tenant-*` network |
-| Build cache | `docker builder prune -af` and `docker buildx prune -af` |
+| Build cache | `docker builder prune -af` and `docker buildx prune -af`. Host-wide — Docker cannot scope build cache per project |
 | Registry | `config/tenants.json` restored to its committed (empty) state — no spurious git diff |
 
 What it deliberately keeps: `mounts/` (your work) and `snapshots/` (your backups), unless `--hard` is passed. `--hard` deletes both and recreates the empty directories, returning the checkout to a first-run state.
 
-Every level supports `--dry-run`, which prints the exact Docker commands without executing them, and `-y` to skip the confirmation prompt. L1–L3 warn when tenant containers exist, because they only manage the main machines.
+Every level supports `--dry-run`, which prints the exact Docker commands without executing them, and `-y` to skip the confirmation prompt. L1–L3 warn when tenant containers exist, because they only manage the main machines. `--hard` outside `--nuke` is rejected rather than silently ignored.
 
 ## Backup and restore
 
