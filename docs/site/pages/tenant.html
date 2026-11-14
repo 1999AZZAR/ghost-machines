@@ -1,42 +1,242 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tenant WaaS — Ghost Machines</title><meta name="description" content="Multi-tenant WaaS: one host → many isolated dev rooms with per-tenant ports, CPU/RAM, mounts, snapshots."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.term{background:#fff;color:var(--ink);border:1px solid var(--border);padding:12px 36px 12px 12px;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;margin:8px 0}.term .c{color:var(--muted)}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}.card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
-<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · TENANT WaaS</div>
-<h1 class="serif">Multi-Tenant WaaS</h1>
-<p>One host → many isolated dev rooms.</p>
-<p>Each tenant gets: own container (<span class="mono">ghost-tenant-&lt;id&gt;</span>), own SSH port (auto from 2225), own <span class="mono">mounts/tenants/&lt;id&gt;</span> folder, CPU/RAM quotas via cgroup, and a registry entry in <span class="mono">config/tenants.json</span>.</p>
-<p>Ideal for classrooms, VPS hosts, and team WaaS.</p>
-
-<h3>Architecture & Isolation</h3>
-<table class="tbl mono"><tr><th>Guarantee</th><th>How</th></tr>
-<tr><td>Storage isolation</td><td>Non-overlapping bind mounts: <span class="mono">mounts/tenants/&lt;id&gt;</span> per tenant. No cross-tenant access. No shared volume leaking.</td></tr>
-<tr><td>Resource quotas</td><td>cgroup <span class="mono">cpus: 2.0</span> + <span class="mono">memory: 4G</span> + optional <span class="mono">pids_limit</span> per tenant — noisy neighbor is throttled.</td></tr>
-<tr><td>Network identity</td><td>Bridge <span class="mono">ghost_sandbox</span> (external: true), one mapped port per tenant (2225 → tenant alice, 2226 → bob). Optionally Cloudflare Tunnel per tenant.</td></tr>
-<tr><td>Lifecycle</td><td>Per-tenant <span class="mono">docker compose -p ghost-tenant-&lt;id&gt;</span> — start/stop/snapshot/delete one without touching others.</td></tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Multi-Tenant (WaaS) — Ghost Machines</title>
+<meta name="description" content="Provision, monitor, snapshot and delete isolated per-user workspaces.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · MULTI-TENANT (WAAS)</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="multi-tenant-waas">Multi-Tenant (WaaS)</h1>
+<p><code>tenant.sh</code> turns one host into a workspace-as-a-service box: each user gets an isolated container, its own SSH port, its own storage under <code>mounts/tenants/&lt;id&gt;</code>, and hard CPU/RAM quotas. Tenants are independent of the main <code>start.sh</code> machines — separate lifecycle, separate cleanup.</p>
+<h2 id="isolation-guarantees">Isolation guarantees</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Layer</th>
+<th style="text-align: left;">Guarantee</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Storage</td>
+<td style="text-align: left;">Each tenant mounts only <code>mounts/tenants/&lt;id&gt;</code>; no path is shared between tenants.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Compute</td>
+<td style="text-align: left;">cgroup CPU quota and memory limit per container (<code>--cpu</code>, <code>--mem</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;">Network</td>
+<td style="text-align: left;">Own published SSH port (auto-allocated from 2225 upward).</td>
+</tr>
+<tr>
+<td style="text-align: left;">Lifecycle</td>
+<td style="text-align: left;">Start/stop/restart/snapshot/delete one tenant without touching the others.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Credentials</td>
+<td style="text-align: left;">Own workspace user and own authorized key.</td>
+</tr>
+</tbody>
 </table>
-
-<h3>A. Prebuilt (fast — preferred)</h3>
-<p>Pull one GHCR package per engine, then <span class="mono">add</span>. The script honors <span class="mono">GHOST_IMAGE/TENANT_IMAGE</span> if set — it reuses the pulled image instead of rebuilding.</p>
-<div class="term"><span class="c"># Debian for alice, Ubuntu for bob, Alpine for carol, Arch for dave</span><br>docker pull ghcr.io/1999azzar/ghost-machine-debian:latest<br>./tenant.sh add alice --engine debian --cpu 2 --mem 4G --port 2225<br><br>docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest<br>./tenant.sh add bob --engine ubuntu --cpu 4 --mem 8G  <span class="c"># auto-port 2226</span><br><br>docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest<br>./tenant.sh add carol --engine alpine --port 2227<br><br>docker pull ghcr.io/1999azzar/ghost-machine-arch:latest<br>./tenant.sh add dave --engine arch --port 2228</div>
-
-<h3>B. Build Locally (when you need local changes)</h3>
-<div class="term"><span class="c"># forces docker compose build from Dockerfile.*</span><br>./tenant.sh add alice --engine debian --build<br>./tenant.sh add bob --engine arch --build --cpu 4 --mem 8G</div>
-
-<h3>Manage — Daily Ops</h3>
-<div class="term">./tenant.sh list    <span class="c"># TENANT ID | ENGINE | PORT | LIMITS | STATUS | STORAGE SIZE</span><br>./tenant.sh stats   <span class="c"># live docker stats for all running tenants</span><br>./tenant.sh stats alice<br>./tenant.sh exec alice "cargo test"<br>./tenant.sh start alice    <span class="c"># restart a stopped tenant</span><br>./tenant.sh stop alice<br>./tenant.sh restart alice<br>./tenant.sh delete alice -y  <span class="c"># skips confirm; add --archive to save mount first</span></div>
-
-<h3>Snapshots — Per-Tenant</h3>
-<p>Each tenant's mount can be archived with SHA-256 + <span class="mono">.meta.json</span> (no cache bloat — <span class="mono">node_modules/.cache, target/</span> excluded).</p>
-<div class="term">./tenant.sh snapshot alice     <span class="c"># → snapshots/snapshot_alice_20260901_...tar.gz + .sha256 + .meta.json</span><br>./tenant.sh restore alice snapshots/snapshot_alice_20260901.tar.gz<br>./tenant.sh snapshot alice --archive <span class="c"># (via delete --archive)</span></div>
-
-<h3>Per-Tenant Flags (full)</h3>
-<div class="term">./tenant.sh add &lt;id&gt; <br>  --engine &lt;ubuntu|debian|alpine|arch&gt;   <span class="c"># default: debian</span><br>  --port &lt;port&gt;        <span class="c"># default: auto ≥ 2225 (find_next_port)</span><br>  --cpu &lt;cores&gt;        <span class="c"># default: 2.0 (e.g. 4.0 for 4 vCPU)</span><br>  --mem &lt;size&gt;         <span class="c"># default: 4G (e.g. 8G)</span><br>  --user &lt;name&gt;        <span class="c"># default: developer</span><br>  --pubkey &lt;path&gt;      <span class="c"># SSH key path; else auto-detects ~/.ssh/id_ed25519.pub</span><br>  --build               <span class="c"># force local build instead of GHCR</span><br>  -y                    <span class="c"># skip confirm prompts</span></div>
-<p class="mono" style="font-size:11px;color:var(--muted)">Storage path is always <span class="mono">mounts/tenants/&lt;id&gt;</span> on host — even after <span class="mono">delete</span>, work is only removed if you confirm.</p>
-
-<h3>When vs Single Mode</h3>
-<p><b>Single</b> (<span class="mono">./start.sh</span>) = one workstation for you.</p>
-<p><b>Tenant</b> = vend many workstations to others on the same host.</p>
-<p>Both can coexist: run <span class="mono">ghost-machine-single</span> for you while vendoring <span class="mono">ghost-tenant-alice/bob</span> to others — they use separate Compose projects and ports.</p>
-
-<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · <a href="start.html">Start →</a> · <a href="cleanup.html">Cleanup →</a> · GHOST_MACHINES · MIT</div>
-<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
-<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
-</body></html>
+<p>What is <strong>not</strong> isolated: the kernel, Docker itself, and the host. A kernel-level escape affects everyone — see <a href="security.html">Security</a> before giving tenants to untrusted people.</p>
+<h2 id="provision">Provision</h2>
+<p><strong>Prebuilt image</strong> (fast, no build):</p>
+<pre><code class="language-bash">./tenant.sh add alice --prebuilt --engine debian --cpu 2.0 --mem 4G --port 2225
+</code></pre>
+<p><strong>Local build</strong> (slow, first time only):</p>
+<pre><code class="language-bash">./tenant.sh add bob --engine arch --build --cpu 4.0 --mem 8G
+</code></pre>
+<p><strong>Explicit image</strong> (pin a release):</p>
+<pre><code class="language-bash">./tenant.sh add carol --image ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0
+</code></pre>
+<p><code>add</code> flags:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>-e</code>, <code>--engine</code></td>
+<td style="text-align: left;"><code>debian</code></td>
+<td style="text-align: left;"><code>ubuntu</code>, <code>debian</code>, <code>alpine</code>, <code>arch</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-p</code>, <code>--port</code></td>
+<td style="text-align: left;">auto ≥ 2225</td>
+<td style="text-align: left;">Host SSH port</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-c</code>, <code>--cpu</code></td>
+<td style="text-align: left;"><code>2.0</code></td>
+<td style="text-align: left;">CPU quota</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-m</code>, <code>--mem</code></td>
+<td style="text-align: left;"><code>4G</code></td>
+<td style="text-align: left;">Memory limit</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-u</code>, <code>--user</code></td>
+<td style="text-align: left;"><code>developer</code></td>
+<td style="text-align: left;">Workspace account</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-k</code>, <code>--pubkey</code></td>
+<td style="text-align: left;">auto-detected</td>
+<td style="text-align: left;">Authorized public key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--prebuilt</code></td>
+<td style="text-align: left;">off</td>
+<td style="text-align: left;">Use the GHCR image for the engine</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--image &lt;ref&gt;</code></td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Explicit reference (pulled if missing)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--pull</code></td>
+<td style="text-align: left;">off</td>
+<td style="text-align: left;">Force-pull before starting</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-b</code>, <code>--build</code></td>
+<td style="text-align: left;">off</td>
+<td style="text-align: left;">Build locally</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>-y</code>, <code>--yes</code></td>
+<td style="text-align: left;">off</td>
+<td style="text-align: left;">Non-interactive</td>
+</tr>
+</tbody>
+</table>
+<p>A registry reference (contains <code>/</code>) is pulled, never built; <code>--build</code> is ignored with a notice. No <code>--build</code> and no local tag means Compose builds once, then reuses it.</p>
+<h2 id="operate">Operate</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Command</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh list</code></td>
+<td style="text-align: left;">Registry view: id, engine, port, image, container, storage size</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh stats</code></td>
+<td style="text-align: left;">Live CPU/RAM per tenant (<code>stats &lt;id&gt;</code> for one)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh stop alice</code></td>
+<td style="text-align: left;">Stop the container; workspace and port assignment kept</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh start alice</code></td>
+<td style="text-align: left;">Start it again</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh restart alice</code></td>
+<td style="text-align: left;">Restart in place</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh exec alice &lt;cmd&gt;</code></td>
+<td style="text-align: left;">Run a command inside the container</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh snapshot alice</code></td>
+<td style="text-align: left;">Archive the workspace + checksum + metadata</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh restore alice snapshots/&lt;file&gt;.tar.gz</code></td>
+<td style="text-align: left;">Restore (validates checksum)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh delete alice -y</code></td>
+<td style="text-align: left;">Remove container <strong>and</strong> workspace</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>./tenant.sh delete alice --archive -y</code></td>
+<td style="text-align: left;">Snapshot first, then remove</td>
+</tr>
+</tbody>
+</table>
+<p>Connect exactly like the main machines, on the tenant's port:</p>
+<pre><code class="language-bash">ssh -p 2225 alice@localhost     # user as configured, password: ghost
+</code></pre>
+<h2 id="registry">Registry</h2>
+<p>Tenants are tracked in <code>config/tenants.json</code> (committed; safe to inspect, do not hand-edit while a command runs):</p>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;1.0&quot;,
+  &quot;tenants&quot;: {
+    &quot;alice&quot;: {
+      &quot;id&quot;: &quot;alice&quot;,
+      &quot;engine&quot;: &quot;debian&quot;,
+      &quot;image&quot;: &quot;ghcr.io/1999azzar/ghost-machine-debian:latest&quot;,
+      &quot;container_name&quot;: &quot;ghost-tenant-alice&quot;,
+      &quot;project_name&quot;: &quot;ghost-tenant-alice&quot;,
+      &quot;port&quot;: 2225,
+      &quot;cpu_limit&quot;: &quot;2.0&quot;,
+      &quot;mem_limit&quot;: &quot;4G&quot;,
+      &quot;username&quot;: &quot;developer&quot;,
+      &quot;mount_path&quot;: &quot;/…/mounts/tenants/alice&quot;,
+      &quot;created_at&quot;: &quot;2026-08-30T10:00:00Z&quot;,
+      &quot;status&quot;: &quot;running&quot;
+    }
+  }
+}
+</code></pre>
+<p>Each tenant is its own Compose project (<code>-p ghost-tenant-&lt;id&gt;</code>) built from <code>templates/docker-compose.tenant.yml</code>, which is why they never interfere with each other or with <code>start.sh</code>.</p>
+<h2 id="snapshots-and-upgrades">Snapshots and upgrades</h2>
+<pre><code class="language-bash">./tenant.sh snapshot alice
+# snapshots/snapshot_alice_&lt;timestamp&gt;.tar.gz
+# snapshots/snapshot_alice_&lt;timestamp&gt;.tar.gz.sha256
+# snapshots/snapshot_alice_&lt;timestamp&gt;.tar.gz.meta.json
+</code></pre>
+<p>Restores validate the checksum before extracting. To move a tenant to a newer image: snapshot, <code>delete --archive</code>, then <code>add</code> again with the same id and a pinned <code>--image</code>. The archive is the source of truth, not the old container.</p>
+<h2 id="deleting-someones-work">Deleting someone's work</h2>
+<p><code>delete</code> removes the container <em>and</em> <code>mounts/tenants/&lt;id&gt;</code> — unrecoverable. <code>--archive</code> snapshots first. <code>-y</code> skips the confirmation prompt, so scripts should always pair the two.</p>
+<h2 id="cleanup-interactions">Cleanup interactions</h2>
+<p><code>clean.sh</code> cleans only the main machines. Tenants are removed one by one with <code>tenant.sh delete</code>. If you nuke Docker (<code>clean.sh --nuke</code>), tenant containers disappear but <code>mounts/tenants/*</code> and <code>config/tenants.json</code> survive; <code>tenant.sh list</code> will show stale entries, and <code>start &lt;id&gt;</code>/<code>delete &lt;id&gt;</code> re-create or prune them.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#isolation-guarantees">Isolation guarantees</a></li><li><a href="#provision">Provision</a></li><li><a href="#operate">Operate</a></li><li><a href="#registry">Registry</a></li><li><a href="#snapshots-and-upgrades">Snapshots and upgrades</a></li><li><a href="#deleting-someones-work">Deleting someone's work</a></li><li><a href="#cleanup-interactions">Cleanup interactions</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="architecture.html">← Architecture</a><a href="security.html">Security & Hardening →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/tenants.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

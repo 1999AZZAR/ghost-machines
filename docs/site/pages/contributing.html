@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contributing — Ghost Machines</title>
+<meta name="description" content="Repo layout, test suite, docs rules, release process and how to add an engine.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · CONTRIBUTING</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="contributing">Contributing</h1>
+<h2 id="repo-layout">Repo layout</h2>
+<pre><code class="language-text">start.sh            launch: engine, mode, image, lifecycle verbs
+clean.sh            four cleanup levels
+tenant.sh           multi-tenant provisioning
+snapshot.sh         backup with cache exclusions + SHA-256
+restore.sh          verified, atomic restore
+setup-host.sh       host prerequisites (LXCFS, Docker)
+entrypoint.sh       first boot inside the container
+harness-update.sh   installs/refreshes opencode, agy, rtk
+aliases.sh          ghost-* shell helpers
+Dockerfile*         four engines (ubuntu, debian, alpine, arch)
+docker-compose.yml  main topology; templates/ holds the tenant topology
+tests/              bash test suites, run_all.sh runner
+docs/               markdown source for the docs site
+docs/site/          generated pages (do not edit by hand)
+tools/build_site.py docs/*.md → docs/site/pages/*.html
+</code></pre>
+<h2 id="dev-loop">Dev loop</h2>
+<pre><code class="language-bash">make lint                    # shellcheck + bash -n + compose config
+make test                    # full suite (9 suites)
+make docs                    # regenerate the docs site
+./start.sh -e debian -m single --build
+</code></pre>
+<p>Rules of thumb:</p>
+<ul>
+<li>Everything must pass <code>bash -n</code> <strong>and</strong> <code>shellcheck -e SC1091 -e SC2034</code>.</li>
+<li>Scripts are <code>set -e</code> and fail loudly; no silent <code>|| true</code> around anything that matters.</li>
+<li>New shell behaviour needs a line in the matching test suite — the suites assert source properties, not just syntax.</li>
+<li>Container behaviour belongs in <code>entrypoint.sh</code> or a Dockerfile, never in manual instructions.</li>
+</ul>
+<h2 id="test-suites">Test suites</h2>
+<p><code>tests/run_all.sh</code> runs, in order:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Suite</th>
+<th style="text-align: left;">Asserts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>test_lint.sh</code></td>
+<td style="text-align: left;">shellcheck, <code>bash -n</code> on every script, Dockerfile structure, compose schema</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m1_security.sh</code></td>
+<td style="text-align: left;">UID/GID sync, key permissions, entrypoint auth handling</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m2_engine_optimization.sh</code></td>
+<td style="text-align: left;">layer cleanup and parity across the four Dockerfiles</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m3_cli_orchestration.sh</code></td>
+<td style="text-align: left;">flag matrix, image resolution (prebuilt vs build), lifecycle verbs</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m4_snapshot_restore.sh</code></td>
+<td style="text-align: left;">cache exclusions, SHA-256 verification, atomic rollback</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m5_hela_mcp.sh</code></td>
+<td style="text-align: left;">MCP wrappers, harness wiring, Conductor links</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m5_toolchain.sh</code></td>
+<td style="text-align: left;"><code>uv</code>, <code>pipx</code>, Rust, PATH setup</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_m6_multi_tenant.sh</code></td>
+<td style="text-align: left;">tenant provisioning, registry, isolation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>test_docs.sh</code></td>
+<td style="text-align: left;">links/anchors, doc facts vs code, fenced examples, site freshness</td>
+</tr>
+</tbody>
+</table>
+<p>CI (<code>.github/workflows/ci.yml</code>) runs the full suite on <code>ubuntu-latest</code> (<code>linux/amd64</code>), then a build smoke test per engine. Multi-arch images are built by <code>publish.yml</code> with QEMU targetting <code>linux/amd64</code> and <code>linux/arm64</code> — CI itself is not a multi-arch runner matrix.</p>
+<h2 id="documentation-rules">Documentation rules</h2>
+<p><code>docs/*.md</code> is the source; <code>docs/site/pages/*.html</code> is generated. Never edit generated pages.</p>
+<pre><code class="language-bash">make docs                       # regenerate
+python3 tools/build_site.py --check   # what CI runs; fails if stale
+</code></pre>
+<p>Requires the <code>markdown</code> package:</p>
+<pre><code class="language-bash">python3 -m pip install --user markdown
+# or
+nix shell nixpkgs#python3Packages.markdown -c python3 tools/build_site.py
+</code></pre>
+<p>Writing rules:</p>
+<ul>
+<li><strong>Command first, prose second.</strong> Every section opens with something runnable.</li>
+<li><strong>No undated claims.</strong> If you state a size, port, version or count, derive it from the code — <code>test_docs.sh</code> greps docs against <code>docker-compose.yml</code>, <code>.env.example</code>, <code>tests/run_all.sh</code> and the Dockerfiles, and will fail on drift.</li>
+<li><strong>No duplicate sources of truth.</strong> Reference another page instead of copying its table.</li>
+<li><strong>State the audience</strong> for anything that differs between a laptop and a shared host.</li>
+</ul>
+<h2 id="release-process">Release process</h2>
+<ol>
+<li>Merge to <code>master</code> with the suite green.</li>
+<li>Tag: <code>git tag v2.2.0 &amp;&amp; git push origin v2.2.0</code>.</li>
+<li><code>.github/workflows/publish.yml</code> builds all four engines for <code>linux/amd64</code> + <code>linux/arm64</code> and pushes to GHCR with three tags per package: <code>latest</code>, the release tag (<code>v2.2.0</code>), and <code>latest-&lt;short-sha&gt;</code>.</li>
+<li>Consumers upgrade with <code>--pull</code> and roll back by pinning the previous <code>vX.Y.Z</code>.</li>
+</ol>
+<p>Tagging is the only release step; there is no changelog file, the commit history is the changelog.</p>
+<h2 id="adding-an-engine">Adding an engine</h2>
+<ol>
+<li>Copy the closest Dockerfile (e.g. <code>Dockerfile.debian</code> → <code>Dockerfile.fedora</code>) and adapt the package manager.</li>
+<li><code>start.sh</code> — add the engine case (Dockerfile + <code>&lt;engine&gt;-template:latest</code>), and the GHCR mapping used by <code>--prebuilt</code>.</li>
+<li><code>clean.sh</code> — add the local tag to the Level 3/4 removal list.</li>
+<li><code>tenant.sh</code> — add the engine to the Dockerfile mapping.</li>
+<li><code>tests/</code> — add the Dockerfile to the loops in <code>test_m2_engine_optimization.sh</code> and <code>test_lint.sh</code>.</li>
+<li><code>.github/workflows/publish.yml</code> — add the matrix entry (image name + Dockerfile).</li>
+<li>Docs — <code>docs/engines.md</code> table, <code>docs/images.md</code> size/tag table.</li>
+</ol>
+<p><code>test_docs.sh</code> checks that every engine in the docs table has a Dockerfile, so a missed step fails CI.</p>
+<h2 id="style">Style</h2>
+<ul>
+<li>Shell: <code>set -e</code>, quoted expansions, <code>local</code> in functions, <code>printf</code> over <code>echo</code> for anything non-constant, explicit exit codes.</li>
+<li>Comments explain <em>why</em>, not <em>what</em>; no commented-out code.</li>
+<li>Commit messages: <code>type(scope): summary</code> with a body that says what breaks and why (<code>fix</code>, <code>feat</code>, <code>docs</code>, <code>refactor</code>, <code>chore</code>).</li>
+<li>Keep dependencies to what the base images already ship; this project avoids extra runtime services on the host.</li>
+</ul>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#repo-layout">Repo layout</a></li><li><a href="#dev-loop">Dev loop</a></li><li><a href="#test-suites">Test suites</a></li><li><a href="#documentation-rules">Documentation rules</a></li><li><a href="#release-process">Release process</a></li><li><a href="#adding-an-engine">Adding an engine</a></li><li><a href="#style">Style</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="comparison.html">← Ghost vs VM</a><a href="cheatsheet.html">Cheatsheet →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/contributing.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

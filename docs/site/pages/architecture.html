@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Architecture — Ghost Machines</title>
+<meta name="description" content="What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP wrappers.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · ARCHITECTURE</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="architecture">Architecture</h1>
+<p>Three files define everything: <code>docker-compose.yml</code> (topology), the four <code>Dockerfile*</code> (image content), and the shell scripts (orchestration and first boot). No external state, no control plane, no agents on the host.</p>
+<h2 id="components">Components</h2>
+<pre><code class="language-text">host                                    docker
+─────────────────────────────────────   ──────────────────────────────────────────
+start.sh / tenant.sh
+  ├─ resolve engine, mode, image   ──▶   docker compose (profile: dual?, remote?)
+  ├─ UID/GID sync, key discovery         ├─ ghost1        ← image, volume mounts
+  ├─ LXCFS detection                     ├─ ghost2        ← profile: dual
+  └─ port / name / quota selection       └─ cloudflared   ← profile: remote (TUNNEL_TOKEN)
+                                              │
+                                      container entrypoint.sh (PID 1 side)
+                                        ├─ sshd config + host keys
+                                        ├─ authorized_keys injection
+                                        ├─ developer user + sudoers + UID/GID sync
+                                        ├─ ~/ skeleton, aliases, fastfetch, oh-my-bash
+                                        ├─ MCP configs, Conductor links, RTK hooks
+                                        ├─ agy host-mount resolution
+                                        ├─ harness-update (background)
+                                        └─ exec sshd -D
+</code></pre>
+<h2 id="boot-sequence">Boot sequence</h2>
+<p>What actually happens between <code>./start.sh</code> and a prompt, in order:</p>
+<ol>
+<li><strong>Shell preflight</strong> (<code>start.sh</code>) — UID/GID detection, <code>.env</code> permission hardening, SSH key discovery, host <code>agy</code> discovery, LXCFS detection, CPU/RAM calculation.</li>
+<li><strong>Resolution</strong> — engine → Dockerfile + image tag, mode → container name/quotas/ports, registry vs local image (pull or build).</li>
+<li><strong>Compose</strong> — <code>docker compose up -d</code> with the right profiles; LXCFS files and <code>mounts/&lt;instance&gt;</code> are bind-mounted in.</li>
+<li><strong>Entrypoint</strong> (<code>/entrypoint.sh</code>, runs as root) — SSH host keys generated if missing, <code>PasswordAuthentication</code> set from <code>SSH_PASSWORD_AUTH</code>, <code>/root</code> and <code>/home/&lt;user&gt;</code> prepared.</li>
+<li><strong>User setup</strong> — <code>developer</code> UID/GID re-synced to <code>HOST_UID</code>/<code>HOST_GID</code>, password set, sudoers entry written, <code>authorized_keys</code> copied with <code>0600</code>.</li>
+<li><strong>Home skeleton</strong> — <code>.bashrc</code>/<code>.bash_aliases</code>/<code>.profile</code>, oh-my-bash, alias-hub, neofetch ASCII, fastfetch config, all written only when absent so your files survive.</li>
+<li><strong>Agent wiring</strong> — MCP configs copied if missing (<code>~/.mcp/config.json</code>, <code>~/.config/opencode/opencode.json</code>), Conductor symlinked, RTK rewrite hooks installed for Antigravity/Claude/OpenCode.</li>
+<li><strong>Harness refresh</strong> — <code>harness-update --if-due</code> starts in the background and logs to <code>/var/log/ghost-harness-update.log</code>; startup never waits on the network.</li>
+<li><strong>sshd</strong> — <code>exec /usr/sbin/sshd -D</code> becomes the container process.</li>
+</ol>
+<p>Because steps 4–8 touch the bind-mounted home, a restart is not instant on a large workspace the first time; subsequent starts skip existing files.</p>
+<h2 id="resource-footprint">Resource footprint</h2>
+<p>Measured on an 8 GB / 1 CPU sandbox (Ubuntu engine, LXCFS enabled):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">State</th>
+<th style="text-align: left;">Processes</th>
+<th style="text-align: center;">CPU</th>
+<th style="text-align: center;">Memory</th>
+<th style="text-align: center;">Memory % of 8 GB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Idle (sshd waiting)</td>
+<td style="text-align: left;">container standby</td>
+<td style="text-align: center;">0.00%</td>
+<td style="text-align: center;">~73.5 MiB</td>
+<td style="text-align: center;">0.90%</td>
+</tr>
+<tr>
+<td style="text-align: left;">Active agent (opencode + 7 MCP daemons)</td>
+<td style="text-align: left;">~65 PIDs</td>
+<td style="text-align: center;">~1.99%</td>
+<td style="text-align: center;">~1,002 MiB</td>
+<td style="text-align: center;">12.23%</td>
+</tr>
+</tbody>
+</table>
+<p>Even fully loaded, the agent stack leaves roughly 7 GB for compilers and builds. Numbers are a snapshot of a specific host and workload, not a guarantee — <code>docker stats</code> is the source of truth on yours.</p>
+<h2 id="mounts">Mounts</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Host path</th>
+<th style="text-align: left;">Container path</th>
+<th style="text-align: left;">Mode</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>mounts/ubuntu1</code> (or per mode)</td>
+<td style="text-align: left;"><code>/home/developer</code></td>
+<td style="text-align: left;">rw</td>
+<td style="text-align: left;">Your persistent work: dotfiles, projects, agent sessions.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>entrypoint.sh</code></td>
+<td style="text-align: left;"><code>/entrypoint.sh</code></td>
+<td style="text-align: left;">ro</td>
+<td style="text-align: left;">First-boot logic, editable without rebuilding the image.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>~/.ssh/*.pub</code></td>
+<td style="text-align: left;"><code>/root/.ssh/authorized_keys</code></td>
+<td style="text-align: left;">ro</td>
+<td style="text-align: left;">Key-based login.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hela-mcp-ecosystem</code> clone</td>
+<td style="text-align: left;"><code>/opt/mcp-ecosystem-local</code></td>
+<td style="text-align: left;">ro</td>
+<td style="text-align: left;">Optional local MCP development.</td>
+</tr>
+<tr>
+<td style="text-align: left;">host <code>agy</code></td>
+<td style="text-align: left;"><code>/usr/local/bin/agy-host</code></td>
+<td style="text-align: left;">ro</td>
+<td style="text-align: left;">Host binary wins when present.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/var/lib/lxcfs/proc/*</code></td>
+<td style="text-align: left;"><code>/proc/{cpuinfo,meminfo,stat,swaps,uptime}</code></td>
+<td style="text-align: left;">ro</td>
+<td style="text-align: left;">Accurate resource reporting.</td>
+</tr>
+</tbody>
+</table>
+<p>Nothing else crosses the boundary: no Docker socket, no privileged mode, no host PID namespace.</p>
+<h2 id="network">Network</h2>
+<p>One bridge network (<code>ghost_sandbox</code>), one published port per machine (22 → <code>G1_PORT</code>/<code>G2_PORT</code>), DNS pinned to <code>1.1.1.1</code>/<code>8.8.8.8</code>. Outbound traffic is unrestricted; inbound is SSH only (or <code>cloudflared</code> when the remote profile is active). Applications inside the sandbox are reached with SSH port-forwarding, not published ports (<a href="connecting.html#reaching-services-inside-the-sandbox">Connecting</a>).</p>
+<h2 id="inside-the-image">Inside the image</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Path</th>
+<th style="text-align: left;">Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>/usr/local/bin/opencode</code>, <code>agy</code>, <code>antigravity</code>, <code>rtk</code></td>
+<td style="text-align: left;">Agent harnesses, refreshed by <code>harness-update</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/usr/local/bin/mcp-*</code></td>
+<td style="text-align: left;">Wrapper scripts for the seven headless HeLa MCP servers.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/opt/mcp-ecosystem</code></td>
+<td style="text-align: left;">HeLa MCP ecosystem clone (symlinked as <code>~/MCPservers</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/opt/conductor</code></td>
+<td style="text-align: left;">Google Conductor plugin + skills.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/usr/local/bin/harness-update</code></td>
+<td style="text-align: left;">Version resolver (<a href="images.html#harnesses-are-never-pinned">Images</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>State that must survive belongs in <code>/home/developer</code> (the bind mount). Everything else is image or container state and is expected to be replaced.</p>
+<h2 id="extending">Extending</h2>
+<ul>
+<li><strong>New package</strong> → engine Dockerfile, rebuild (<a href="engines.html">Engines</a>).</li>
+<li><strong>New service</strong> → <code>docker-compose.yml</code>; keep it behind a profile if it is optional.</li>
+<li><strong>New first-boot step</strong> → <code>entrypoint.sh</code> (bind-mounted, so no rebuild needed) and add an assertion to <code>tests/test_m1_security.sh</code>.</li>
+<li><strong>New engine</strong> → copy a Dockerfile, update <code>start.sh</code>, <code>clean.sh</code>, <code>tenant.sh</code>, the publish matrix, and the docs table (<a href="contributing.html">Contributing</a>).</li>
+</ul>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#components">Components</a></li><li><a href="#boot-sequence">Boot sequence</a></li><li><a href="#resource-footprint">Resource footprint</a></li><li><a href="#mounts">Mounts</a></li><li><a href="#network">Network</a></li><li><a href="#inside-the-image">Inside the image</a></li><li><a href="#extending">Extending</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="configuration.html">← Configuration</a><a href="tenant.html">Multi-Tenant (WaaS) →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/architecture.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

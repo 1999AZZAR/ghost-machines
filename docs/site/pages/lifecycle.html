@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lifecycle & Cleanup — Ghost Machines</title>
+<meta name="description" content="Start, stop, pause, restart, inspect and remove sandboxes without losing work.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · LIFECYCLE & CLEANUP</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="lifecycle-cleanup">Lifecycle &amp; Cleanup</h1>
+<p>A Ghost Machine is disposable by design: the container is cattle, <code>mounts/</code> is the pet. Every command below is about <em>how much</em> you throw away.</p>
+<h2 id="state-model">State model</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Layer</th>
+<th style="text-align: left;">Lives in</th>
+<th style="text-align: left;">Dies when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Image</td>
+<td style="text-align: left;">Docker's image store</td>
+<td style="text-align: left;"><code>clean.sh -a</code>, <code>--nuke</code>, or <code>--build</code> replaces the tag</td>
+</tr>
+<tr>
+<td style="text-align: left;">Container</td>
+<td style="text-align: left;">Docker (ephemeral filesystem)</td>
+<td style="text-align: left;"><code>stop</code>, <code>restart</code> recreates, any rebuild</td>
+</tr>
+<tr>
+<td style="text-align: left;">Home / projects / dotfiles</td>
+<td style="text-align: left;"><code>mounts/ubuntu1</code>, <code>mounts/ubuntu2</code>, <code>mounts/tenants/&lt;id&gt;</code> on the host</td>
+<td style="text-align: left;">only <code>clean.sh --nuke --hard</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Config</td>
+<td style="text-align: left;"><code>.env</code>, <code>docker-compose.yml</code></td>
+<td style="text-align: left;">your git checkout</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-matrix">Command matrix</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Goal</th>
+<th style="text-align: left;">Command</th>
+<th style="text-align: left;">Keeps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Start / create containers</td>
+<td style="text-align: left;"><code>./start.sh [flags]</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images, <code>.env</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Show state, image, SSH port</td>
+<td style="text-align: left;"><code>./start.sh status</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Restart in place (no recreate)</td>
+<td style="text-align: left;"><code>./start.sh restart</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Pause (container kept, stopped)</td>
+<td style="text-align: left;"><code>docker compose --profile dual stop</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Resume a pause</td>
+<td style="text-align: left;"><code>docker compose --profile dual start</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Stop and delete containers + network</td>
+<td style="text-align: left;"><code>./start.sh stop</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images, <code>.env</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete containers + volumes</td>
+<td style="text-align: left;"><code>./clean.sh -v -y</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete everything including images</td>
+<td style="text-align: left;"><code>./clean.sh -a -y</code></td>
+<td style="text-align: left;"><code>mounts/</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Purge images and work</td>
+<td style="text-align: left;"><code>./clean.sh --nuke --hard -y</code></td>
+<td style="text-align: left;">nothing</td>
+</tr>
+<tr>
+<td style="text-align: left;">Follow logs</td>
+<td style="text-align: left;"><code>./start.sh logs</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Shell without SSH</td>
+<td style="text-align: left;"><code>docker exec -it ghost-machine-single bash</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Refresh agent harnesses</td>
+<td style="text-align: left;"><code>./start.sh --update-harness</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p>Makefile shortcuts: <code>make start</code>, <code>make status</code>, <code>make logs</code>, <code>make restart</code>, <code>make stop</code>, <code>make prebuilt ENGINE=debian MODE=single</code>.</p>
+<h2 id="start-and-recreate">Start and recreate</h2>
+<p><code>./start.sh</code> is idempotent: it creates what is missing and reuses what is running. Add <code>--build</code> (local tag) or <code>--pull</code> (registry tag) to move to a newer image.</p>
+<p>Some settings only apply at container creation:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Setting</th>
+<th style="text-align: left;">Applies on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Ports (<code>-p</code>), container names, tunnel token</td>
+<td style="text-align: left;">new container → <code>./start.sh stop &amp;&amp; ./start.sh …</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Image (<code>--image</code>, <code>--prebuilt</code>, <code>--pull</code>, <code>--build</code>)</td>
+<td style="text-align: left;">new container</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_HARNESS_UPDATE</code>, interval</td>
+<td style="text-align: left;">next container start (entrypoint reads it)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH</code>, keys</td>
+<td style="text-align: left;">new container (entrypoint rewrites <code>sshd_config</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPU/RAM limits (mode or <code>.env</code>)</td>
+<td style="text-align: left;">new container</td>
+</tr>
+</tbody>
+</table>
+<p>Changing mode (<code>single</code> → <code>power</code>) also creates a <em>different</em> container name; the old one keeps running until you stop it. Use <code>./start.sh status</code> to see what is actually up.</p>
+<h2 id="restart-pause-resume">Restart, pause, resume</h2>
+<ul>
+<li><code>./start.sh restart</code> = <code>docker compose restart</code>: same container, processes restarted, filesystem and IP kept. Cheapest fix for a wedged sshd.</li>
+<li>Pause/resume keeps the container object (and its ephemeral filesystem) between runs:</li>
+</ul>
+<pre><code class="language-bash">docker compose --profile dual stop      # both profiles, safe even if unused
+docker compose --profile dual start
+</code></pre>
+<ul>
+<li><code>./start.sh stop</code> deletes containers and the compose network. Anything installed with <code>apt</code> inside them is gone; <code>mounts/</code> is untouched.</li>
+</ul>
+<h2 id="logs-and-diagnostics">Logs and diagnostics</h2>
+<pre><code class="language-bash">./start.sh logs                                              # compose logs, follows
+docker logs -f ghost-machine-single                          # same, raw
+docker exec ghost-machine-single cat /var/log/ghost-harness-update.log
+docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
+</code></pre>
+<p>The entrypoint is chatty on purpose: SSH key injection, user sync, harness config generation and the background harness refresh all log there. Most "it didn't start" reports are answered by the first 50 lines.</p>
+<h2 id="cleanup-levels">Cleanup levels</h2>
+<p><code>clean.sh</code> has four levels; only the last two touch images, only <code>--hard</code> touches your work.</p>
+<pre><code class="language-bash">./clean.sh              # interactive menu
+./clean.sh -s           # L1: stop + remove containers and network
+./clean.sh -v -y        # L2: L1 + volumes
+./clean.sh -a -y        # L3: L2 + local *-template images
+./clean.sh --nuke -y    # L4: L3 + GHCR prebuilts + builder cache
+./clean.sh --nuke --hard -y   # L4 + wipe mounts/
+</code></pre>
+<p><code>clean.sh</code> covers the main machines only. Tenants are removed individually with <code>./tenant.sh delete &lt;id&gt; --archive -y</code> (<a href="tenant.html">Multi-Tenant</a>).</p>
+<h2 id="backup-and-restore">Backup and restore</h2>
+<p>Snapshots archive <code>mounts/</code> while skipping caches (<code>node_modules/.cache</code>, <code>.npm/_cacache</code>, <code>target/</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, logs):</p>
+<pre><code class="language-bash">make snapshot                                   # snapshots/ghost_snapshot_&lt;ts&gt;.tar.gz
+./snapshot.sh -o my_backup.tar.gz               # named archive
+./snapshot.sh --all                             # include caches too
+
+make restore
+./restore.sh my_backup.tar.gz                   # verifies SHA-256, atomic rollback on failure
+./restore.sh -y my_backup.tar.gz                # non-interactive
+./restore.sh -k my_backup.tar.gz                # keep the pre-restore backup
+</code></pre>
+<p>Every snapshot writes three files: the archive, <code>&lt;archive&gt;.sha256</code>, and <code>&lt;archive&gt;.meta.json</code> (timestamp, architecture, file counts, hash). Restore validates the checksum, backs up the current mounts, and rolls back automatically if extraction fails. Tenants have their own snapshot/restore commands.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#state-model">State model</a></li><li><a href="#command-matrix">Command matrix</a></li><li><a href="#start-and-recreate">Start and recreate</a></li><li><a href="#restart-pause-resume">Restart, pause, resume</a></li><li><a href="#logs-and-diagnostics">Logs and diagnostics</a></li><li><a href="#cleanup-levels">Cleanup levels</a></li><li><a href="#backup-and-restore">Backup and restore</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="engines.html">← Engines & Toolchain</a><a href="connecting.html">Connecting →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/lifecycle.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

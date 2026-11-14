@@ -1,30 +1,107 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Scripts — Ghost Machines</title><meta name="description" content="Reference: start.sh, tenant.sh, snapshot/restore, clean.sh, setup-host.sh, entrypoint.sh, aliases.sh — when and how."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.term{background:#fff;color:var(--ink);border:1px solid var(--border);padding:12px 36px 12px 12px;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;margin:8px 0}.term .c{color:var(--muted)}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.card{border:1px solid var(--border);padding:12px;margin:8px 0;background:#fff}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
-<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · SCRIPTS</div>
-<h1 class="serif">Scripts — Hotel Staff Reference</h1>
-<p>Think hotel: each script is a staff member with a clear job. The docs below mirror <span class="mono">docs/scripts.md</span> but on the web.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scripts Guide — Ghost Machines</title>
+<meta name="description" content="Plain-English guide to what each shell script does.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · SCRIPTS GUIDE</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="scripts-guide-beginner-friendly">Scripts Guide (Beginner Friendly)</h1>
+<p>Think of Ghost Machines as a hotel for developers. Each script is a staff member.</p>
+<h2 id="startsh-front-desk">start.sh — Front Desk</h2>
+<p><strong>What:</strong> Starts, stops and inspects your workspace (a container). Handles login keys, picks which Linux flavour to use, and decides whether to download a prebuilt image or build one.</p>
+<p><strong>Plain:</strong> Like choosing a hotel room type — Ubuntu (standard), Debian (small), Alpine (tiny), Arch (newest) — and whether to take the ready-made room (prebuilt) or build it yourself (local build).</p>
+<p><strong>How to start:</strong></p>
+<pre><code class="language-bash">./start.sh                                  # asks: which room? how many?
+./start.sh --prebuilt ubuntu -m single      # ready-made image from GHCR (fast, no build)
+./start.sh -e debian -m single --build      # build the image from this repo (slow, first time only)
+</code></pre>
+<p>The <code>[IMAGE]</code> line it prints tells you which path you are on:</p>
+<pre><code>[IMAGE] ghcr.io/1999azzar/ghost-machine-debian:latest (GHCR prebuilt, no local build)
+[IMAGE] debian-template:latest (local build from Dockerfile.debian)
+</code></pre>
+<p>Then connect: <code>ssh -p 2223 developer@localhost</code> (password <code>ghost</code>).</p>
+<p><strong>How to stop / check / resume:</strong></p>
+<pre><code class="language-bash">./start.sh status     # what is running, which image, which SSH port
+./start.sh logs       # follow the container log
+./start.sh restart    # restart in place (keeps containers)
+./start.sh stop       # remove containers + network — mounts/, images, .env stay
+</code></pre>
+<p>Your files live in <code>mounts/</code>, not inside the container, so <code>stop</code> never deletes work.
+<code>./clean.sh</code> is the destructive one (see below).</p>
+<h2 id="tenantsh-hotel-manager">tenant.sh — Hotel Manager</h2>
+<p><strong>What:</strong> Creates separate rooms for different people on the same server. Each person gets own storage (<code>mounts/tenants/alice</code>), own door (SSH port), own CPU/RAM.</p>
+<p><strong>Plain:</strong> Alice and Bob can work at same time without seeing each other's files.</p>
+<p><strong>How:</strong></p>
+<pre><code class="language-bash"># Fast way (ready-made image from GHCR):
+./tenant.sh add alice --engine ubuntu --prebuilt
 
-<div class="card"><b>start.sh</b> — Front Desk. <span class="mono">-e ENGINE -m MODE [-p PORT] [-b BUILD] [--no-lxcfs] [-t TOKEN]</span>. Auto UID/GID sync (<span class="mono">id -u/g</span>), LXCFS auto-mount, SSH key auto-detect, GHCR reuse via <span class="mono">GHOST_IMAGE</span>. Interactive if no flags; headless for CI.</div>
-<div class="card"><b>tenant.sh</b> — Manager (WaaS). <span class="mono">add/list/stats/start/stop/restart/exec/snapshot/restore/delete &lt;id&gt;</span>. Per-tenant port (auto from 2225), CPU/RAM, <span class="mono">mounts/tenants/&lt;id&gt;</span>, <span class="mono">config/tenants.json</span> registry. Honors <span class="mono">GHOST_IMAGE/TENANT_IMAGE</span>.</div>
-<div class="card"><b>snapshot.sh</b> — Archival Backup. <span class="mono">-o FILE</span> or auto-name <span class="mono">snapshots/ghost_snapshot_*.tar.gz</span>. Excludes caches (<span class="mono">node_modules/.cache, target/, __pycache__, .pytest_cache, logs</span>). Writes companion <span class="mono">.sha256</span> + <span class="mono">.meta.json</span> (host arch, timestamp, file count, hash).</div>
-<div class="card"><b>restore.sh</b> — Verified Undo. Verifies SHA-256, backs up current <span class="mono">mounts/</span> atomically, rolls back on failure. <span class="mono">--force</span> non-interactive.</div>
-<div class="card"><b>clean.sh</b> — Housekeeping. <span class="mono">-s</span> stop (L1), <span class="mono">-v</span> + volumes (L2), <span class="mono">-a</span> + local images (L3), <span class="mono">--nuke</span> + GHCR + builder (L4). <span class="mono">-y</span> skips prompts. Note: only handles main <span class="mono">docker-compose.yml</span>; tenants need <span class="mono">tenant.sh delete</span>.</div>
-<div class="card"><b>setup-host.sh</b> — Building Setup (once, Linux). Installs LXCFS + checks Docker. Auto-detects PM (<span class="mono">apt/pacman/dnf/zypper/apk</span>). Sets up systemd unit. Skips on macOS/WSL. Run <span class="mono">make setup-host</span>.</div>
-<div class="card"><b>entrypoint.sh</b> — Butlers (inside container). Runs at container boot. Generates <span class="mono">sshd_host_keys</span> if missing, switches <span class="mono">PasswordAuthentication</span> via <span class="mono">SSH_PASSWORD_AUTH</span>, fixes <span class="mono">700/600</span> perms, syncs UID/GID to host, copies dotfiles + Conductor links, wires RTK <span class="mono">PreToolUse</span> hooks, then <span class="mono">exec sshd -D</span>. Not run manually.</div>
-<div class="card"><b>aliases.sh</b> — Shortcuts. <span class="mono">source aliases.sh</span> → <span class="mono">ghost-status, ghost-exec, ghost-logs, ghost-ssh, start-ghost</span>. Add <span class="mono">source /path/to/ghost-machines/aliases.sh</span> to <span class="mono">~/.bashrc</span>.</div>
+# Build from scratch (slower):
+./tenant.sh add bob --engine arch --build
 
-<h3>Examples — Copy-Paste</h3>
-<div class="term"><span class="c"># minimal start (interactive)</span><br>./start.sh<br><br><span class="c"># non-interactive + GHCR + remote</span><br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single<br>./start.sh -e debian -m single -t $TUNNEL_TOKEN  <span class="c"># Cloudflare</span><br><br><span class="c"># tenant lifecycle</span><br>./tenant.sh add alice --engine debian --port 2225<br>./tenant.sh list<br>./tenant.sh snapshot alice<br>./tenant.sh delete alice -y</div>
-
-<h3>When to Use Which</h3>
-<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0"><tr style="font-size:10px;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border)"><td style="padding:6px"><b>You want to…</b></td><td style="padding:6px"><b>Run…</b></td></tr>
-<tr><td style="padding:6px;border-bottom:1px solid #ebebe7">Start your own workspace</td><td class="mono" style="padding:6px">./start.sh -e ubuntu -m single</td></tr>
-<tr><td style="padding:6px;border-bottom:1px solid #ebebe7">Vend a room to someone</td><td class="mono" style="padding:6px">./tenant.sh add alice ...</td></tr>
-<tr><td style="padding:6px;border-bottom:1px solid #ebebe7">Save work before an experiment</td><td class="mono" style="padding:6px">./snapshot.sh -o before.tar.gz</td></tr>
-<tr><td style="padding:6px;border-bottom:1px solid #ebebe7">Undo a bad experiment</td><td class="mono" style="padding:6px">./restore.sh before.tar.gz</td></tr>
-<tr><td style="padding:6px">Clean everything</td><td class="mono" style="padding:6px">./clean.sh --nuke -y</td></tr>
-</table>
-
-<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
-<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
-<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
-</body></html>
+# Manage:
+./tenant.sh list
+./tenant.sh stats        # see CPU/RAM use
+./tenant.sh stop alice   # free CPU/RAM, keep the workspace
+./tenant.sh start alice
+./tenant.sh delete bob -y
+</code></pre>
+<h2 id="snapshotsh-restoresh-backup-undo">snapshot.sh &amp; restore.sh — Backup &amp; Undo</h2>
+<p><strong>What:</strong> <code>snapshot.sh</code> zips your work, skipping junk like <code>node_modules</code>. Makes a checksum so you know it's not broken. <code>restore.sh</code> brings it back and keeps a safety copy.</p>
+<p><strong>How:</strong></p>
+<pre><code class="language-bash">./snapshot.sh                      # creates snapshots/ghost_snapshot_*.tar.gz
+./restore.sh                       # picks a backup and restores
+</code></pre>
+<h2 id="cleansh-housekeeping">clean.sh — Housekeeping</h2>
+<p><strong>What:</strong> Shuts down and cleans up. 4 levels: just stop, clear rooms, throw away images, nuke GHCR + builder. Add <code>--hard</code> with <code>--nuke</code> to also wipe <code>mounts/</code> (true 1st-user).</p>
+<pre><code class="language-bash">./clean.sh           # menu — choose level (5 options)
+./clean.sh -a -y     # deep clean, no questions
+./clean.sh --nuke --hard -y  # full nuke + mounts/
+</code></pre>
+<h2 id="setup-hostsh-building-setup-once">setup-host.sh — Building Setup (once)</h2>
+<p><strong>What:</strong> Prepares your computer to show correct RAM/CPU inside containers (via LXCFS). Only needed once on Linux.</p>
+<pre><code class="language-bash">./setup-host.sh
+</code></pre>
+<h2 id="entrypointsh-room-butler-automatic">entrypoint.sh — Room Butler (automatic)</h2>
+<p><strong>What:</strong> Runs <em>inside</em> the container when it starts. Sets up keys, passwords, shell themes. You never run it yourself — Docker calls it.</p>
+<h2 id="aliasessh-shortcuts">aliases.sh — Shortcuts</h2>
+<p><strong>What:</strong> Adds nicknames for long commands.</p>
+<pre><code class="language-bash">source aliases.sh
+ghost-status         # see what's running
+ghost-ssh single     # quick SSH
+</code></pre>
+<p>Put <code>source /path/to/ghost-machines/aliases.sh</code> in <code>~/.bashrc</code> to keep them.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#startsh-front-desk">start.sh — Front Desk</a></li><li><a href="#tenantsh-hotel-manager">tenant.sh — Hotel Manager</a></li><li><a href="#snapshotsh-restoresh-backup-undo">snapshot.sh &amp; restore.sh — Backup &amp; Undo</a></li><li><a href="#cleansh-housekeeping">clean.sh — Housekeeping</a></li><li><a href="#setup-hostsh-building-setup-once">setup-host.sh — Building Setup (once)</a></li><li><a href="#entrypointsh-room-butler-automatic">entrypoint.sh — Room Butler (automatic)</a></li><li><a href="#aliasessh-shortcuts">aliases.sh — Shortcuts</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="troubleshooting.html">← Troubleshooting</a><a href="glossary.html">Glossary →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/scripts.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

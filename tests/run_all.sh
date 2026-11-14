@@ -26,6 +26,7 @@ TEST_SUITES=(
     "$SCRIPT_DIR/test_m5_hela_mcp.sh"
     "$SCRIPT_DIR/test_m5_toolchain.sh"
     "$SCRIPT_DIR/test_m6_multi_tenant.sh"
+    "$SCRIPT_DIR/test_docs.sh"
 )
 
 TOTAL=${#TEST_SUITES[@]}

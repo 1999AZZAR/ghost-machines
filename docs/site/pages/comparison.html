@@ -1,38 +1,166 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ghost vs VM — Ghost Machines</title><meta name="description" content="Ghost Machines (Docker container, shared kernel, 1–2s boot) vs Regular VM (hypervisor, own kernel, 30–120s). When to use which."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.card{border:1px solid var(--border);padding:12px;margin:8px 0;background:#fff}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
-<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · GHOST vs VM</div>
-<h1 class="serif">Ghost Machines vs Regular VM</h1>
-<p>Ghost is a <b>Docker container</b> (shares host kernel). A VM is a <b>hypervisor guest</b> (own kernel). They are complementary — Ghost for disposable dev, VM for hostile/Windows work.</p>
-
-<h3>Architecture</h3>
-<table class="tbl mono"><tr><th>Axis</th><th>Ghost Machines</th><th>Regular VM</th></tr>
-<tr><td>Engine</td><td>Docker + <span class="mono">docker-compose.yml</span> (namespaces + cgroups)</td><td>KVM / QEMU / VirtualBox / VMware / Hyper-V</td></tr>
-<tr><td>Kernel</td><td>shared with host</td><td>own kernel — can be Windows/BSD, different version</td></tr>
-<tr><td>Base images</td><td>ubuntu / debian / alpine / arch (Linux userlands)</td><td>any OS incl. Windows</td></tr>
-<tr><td>Boot time</td><td>~1–2s (<span class="mono">docker compose up -d</span>)</td><td>30–120s (full kernel boot)</td></tr>
-<tr><td>Idle overhead</td><td>~73.5 MB / 0% CPU / 1 PID (measured)</td><td>0.5–2 GB + vCPU pinned</td></tr>
-<tr><td>Active agent</td><td>~1.0 GB / 1.99% CPU (opencode + 7 MCP)</td><td>+ 1–2 GB hypervisor overhead</td></tr>
-<tr><td>Reproducibility</td><td>IaC pure — Dockerfile + compose versioned in git</td><td>manual; Packer/Vagrant needed</td></tr>
-<tr><td>Multi-tenancy</td><td>10+ tenants on 32 GB host (WaaS)</td><td>1 VM = 1 user — heavy</td></tr>
-<tr><td>Isolation</td><td>weak — container escape = host compromise</td><td>strong — hypervisor boundary</td></tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ghost vs VM — Ghost Machines</title>
+<meta name="description" content="When a container sandbox beats a full virtual machine, and when it does not.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · GHOST VS VM</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="ghost-machines-vs-regular-vm">Ghost Machines vs Regular VM</h1>
+<blockquote>
+<p>When to use container sandboxes vs hardware VMs.</p>
+</blockquote>
+<h2 id="tldr">TL;DR</h2>
+<ul>
+<li><strong>Ghost Machines</strong>: Disposable Linux <em>container</em> sandbox on your host kernel. Fast, cheap, reproducible. One <code>make start</code>.</li>
+<li><strong>Regular VM</strong>: Full hardware virtualization with its own kernel. Slow, heavy, strongly isolated. Boots an OS image.</li>
+</ul>
+<p>They solve different problems. Not replacements.</p>
+<h2 id="architecture">Architecture</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Ghost Machines</th>
+<th>Regular VM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine</td>
+<td>Docker + <code>docker-compose.yml</code></td>
+<td>Hypervisor (KVM/QEMU/VirtualBox/VMware/Hyper-V)</td>
+</tr>
+<tr>
+<td>Kernel</td>
+<td>Shared with host</td>
+<td>Own kernel</td>
+</tr>
+<tr>
+<td>Base images</td>
+<td><code>ubuntu/debian/alpine/arch</code> <code>Dockerfile*</code></td>
+<td>Any OS incl. Windows/BSD</td>
+</tr>
+<tr>
+<td>Boot time</td>
+<td>~1-2s</td>
+<td>30-120s</td>
+</tr>
+<tr>
+<td>Idle overhead</td>
+<td><code>~73.5 MiB / 0% CPU</code> (<a href="architecture.html#resource-footprint">measured</a>)</td>
+<td>500MB-2GB + vCPU reservation</td>
+</tr>
+</tbody>
 </table>
-
-<h3>When Ghost Wins — Disposable Dev</h3>
-<ul><li>5 identical workstations in 10s — <span class="mono">GHOST_IMAGE=... ./start.sh</span> on any linux/macOS/WSL host.</li><li>Classroom / VPS WaaS for 20 students on one host — <span class="mono">./tenant.sh add</span> per student.</li><li>CI parity with prod Linux userland — same image as CI runner.</li><li>Cost &amp; speed over hard isolation — GHCR pull (~1.2 GB) faster than 10-min apt build.</li></ul>
-
-<h3>When VM Wins — Strong Isolation &amp; Kernel Work</h3>
-<ul><li>Run Windows / BSD / different kernel version — Ghost is Linux userland only.</li><li>Detonate untrusted binary / malware analysis — Ghost shares kernel; VM boundary is stronger.</li><li>Kernel module / driver / <span class="mono">iptables/nftables</span> / <span class="mono">systemd</span> low-level testing.</li><li>Full hardware virtualization (nested virt, PCI passthrough, GUI desktop).</li></ul>
-
-<h3>Cost Example (16 GB Host)</h3>
-<div class="card mono">Ghost dual — 2 × (1c / 8G): ~73 MB idle each → ~15 GB free for builds.<br>2 VMs (2 vCPU / 4G each): ~9 GB pinned (hypervisor + guest OS) before you open an editor. Ghost leaves ~88% headroom for compilers.</div>
-
-<h3>Middle Ground — MicroVMs</h3>
-<p>Need both speed <b>and</b> isolation? Use <b>Firecracker microVMs</b> — bare-metal performance with VM boundary (boot ~125ms). Use Ghost for dev, Firecracker for hostile code.</p>
-
-<h3>Practical Rule</h3>
-<div class="card"><b>If the task is Linux userland coding or agent work → Ghost.</b><br><b>If it's Windows, hostile, or kernel → VM.</b><br><b>If you need Windows <i>and</i> speed → Firecracker.</b></div>
-
-<p>Full narrative: <a href="https://github.com/1999AZZAR/ghost-machines/blob/master/docs/comparison-vs-vm.md">docs/comparison-vs-vm.md</a> on GitHub.</p>
-<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
-<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
-<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
-</body></html>
+<h2 id="pros-cons">Pros / Cons</h2>
+<h3 id="ghost-machines">Ghost Machines ✔️</h3>
+<ul>
+<li><strong>IaC &amp; reproducibility</strong>: <code>Dockerfile</code> + <code>entrypoint.sh</code> + <code>start.sh</code> UID/GID sync = no "works on my machine"</li>
+<li><strong>Near-zero cost</strong>: 10 tenants on one 32GB box via <code>tenant.sh</code> + <code>deploy.resources.limits</code></li>
+<li><strong>Batteries included</strong>: Go/Rust/Node/Bun/Helix + HeLa 7 MCP + <code>agy/opencode/rtk</code> pre-wired</li>
+<li><strong>Snapshots</strong>: <code>snapshot.sh</code> tar + <code>sha256</code> + atomic <code>restore.sh</code> rollback, caches excluded</li>
+<li><strong>LXCFS</strong>: LXCFS mounts make <code>free/htop</code> show container limits, not host</li>
+<li><strong>Remote</strong>: <code>cloudflared</code> tunnel profile without opening ports</li>
+</ul>
+<h3 id="ghost-machines_1">Ghost Machines ❌</h3>
+<ul>
+<li><strong>Weak isolation</strong>: container escape = host compromise. Not for hostile/malware</li>
+<li><strong>Linux-only userland</strong>: can't test Windows drivers, custom kernels, <code>systemd</code> edge cases</li>
+<li><strong>Shared kernel syscalls</strong>: <code>seccomp/apparmor</code> still host-dependent</li>
+</ul>
+<h3 id="regular-vm">Regular VM ✔️</h3>
+<ul>
+<li><strong>Strong isolation</strong>: hypervisor boundary, safe for untrusted code</li>
+<li><strong>Kernel fidelity</strong>: test kernel modules, <code>iptables/nftables</code>, different distros/kernels</li>
+<li><strong>OS flexibility</strong>: Windows, BSD, etc.</li>
+</ul>
+<h3 id="regular-vm_1">Regular VM ❌</h3>
+<ul>
+<li><strong>Heavy</strong>: disk images 5-20GB, RAM pinned, slow snapshot/clone</li>
+<li><strong>Drift</strong>: manual setup unless you add Packer/Vagrant/Ansible</li>
+<li><strong>No density</strong>: 1 VM per user = expensive for teams/classrooms</li>
+<li><strong>Toolchain is DIY</strong>: you install compilers/agents yourself</li>
+</ul>
+<h2 id="decision-matrix">Decision Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Pick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Disposable dev env for coding/agents, need 5 identical workstations in 10s</td>
+<td>Ghost</td>
+</tr>
+<tr>
+<td>Classroom / VPS WaaS for 20 students on one host</td>
+<td>Ghost (<code>tenant.sh add alice --engine debian --cpu 2 --mem 4G</code>)</td>
+</tr>
+<tr>
+<td>CI parity with prod Linux userland</td>
+<td>Ghost</td>
+</tr>
+<tr>
+<td>Run Windows app / test BSD / kernel driver</td>
+<td>VM</td>
+</tr>
+<tr>
+<td>Detonate untrusted binary / malware analysis</td>
+<td>VM (or Firecracker)</td>
+</tr>
+<tr>
+<td>Need bare-metal perf but isolated kernel</td>
+<td>MicroVM (Firecracker) — middle ground</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cost-example-16gb-host">Cost Example (16GB host)</h2>
+<ul>
+<li>Ghost <code>dual</code> mode: 2 x <code>1 CPU / 8GB</code> containers idle ~147 MiB total = ~15GB left for builds</li>
+<li>2 VMs <code>2 vCPU / 4GB</code> each: ~9GB pinned before you open an editor</li>
+</ul>
+<h2 id="security-note">Security Note</h2>
+<p>Defaults <code>root:ghost</code> / <code>developer:ghost</code> <code>Dockerfile:94</code> + <code>PermitRootLogin yes</code> are dev-only. For multi-tenant prod: set <code>SSH_PASSWORD_AUTH=false</code> in <code>.env</code>, rotate passwords, mount <code>authorized_keys</code> only (<code>entrypoint.sh:25</code>).</p>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><code>README.md</code> — quick start, engines, modes</li>
+<li><code>docs/architecture.md</code> (planned) — C4 + LXCFS details</li>
+<li><code>conductor/</code> — internal track docs (gitignored, local only)</li>
+</ul>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#tldr">TL;DR</a></li><li><a href="#architecture">Architecture</a></li><li><a href="#pros-cons">Pros / Cons</a></li><li><a href="#decision-matrix">Decision Matrix</a></li><li><a href="#cost-example-16gb-host">Cost Example (16GB host)</a></li><li><a href="#security-note">Security Note</a></li><li><a href="#further-reading">Further Reading</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="glossary.html">← Glossary</a><a href="contributing.html">Contributing →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/comparison-vs-vm.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

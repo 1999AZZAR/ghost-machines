@@ -1,63 +1,155 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Start — Ghost Machines</title><meta name="description" content="Step-by-step: clone, pull GHCR, start.sh engines/modes, SSH, custom port/build/tunnel."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:#0f6f6f}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.term{background:#fff;color:var(--ink);border:1px solid var(--border);padding:12px 36px 12px 12px;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;margin:8px 0}.term .c{color:var(--muted)}.card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
-<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · START</div>
-<h1 class="serif">Start — From Zero to SSH</h1>
-<p>Six steps from clone to shell. Works on Linux, macOS (OrbStack/Docker Desktop), Windows + WSL2. GHCR prebuilts mean no 10-minute first build.</p>
-
-<h3>1. Clone</h3>
-<p>Grab the IaC repo — all definitions are in <span class="mono">docker-compose.yml</span> + Dockerfiles + <span class="mono">*.sh</span>.</p>
-<div class="term">git clone https://github.com/1999AZZAR/ghost-machines.git<br>cd ghost-machines</div>
-
-<h3>2. Host Setup (Linux only — once)</h3>
-<p>Installs LXCFS so <span class="mono">htop/free</span> inside the container reports cgroup limits, not host totals.</p>
-<p>Auto-detects your package manager (<span class="mono">apt/pacman/dnf/zypper/apk</span>).</p>
-<p>Skip on macOS/WSL — <span class="mono">start.sh</span> auto-skips LXCFS via <span class="mono">--no-lxcfs</span>.</p>
-<div class="term">make setup-host  <span class="c"># or ./setup-host.sh</span><br><span class="c"># checks Docker, installs LXCFS if on Linux, prepares systemd unit</span></div>
-
-<h3>3. Choose an image source</h3>
-<div class="card">
-<b>A. Prebuilt (GHCR) — recommended, ~1 minute</b>
-<p style="margin:6px 0 0 0">One package per engine, multi-arch (amd64 + arm64). <span class="mono">start.sh</span> pulls it automatically if missing.</p>
-<div class="term">./start.sh --prebuilt ubuntu -m single<br><span class="c"># explicit ref / refresh / pin</span><br>./start.sh --image ghcr.io/1999azzar/ghost-machine-debian:v2.1.0 -m single<br>./start.sh --prebuilt debian -m single --pull</div>
-<b>B. Local build — 5–15 min, first time only</b>
-<p style="margin:6px 0 0 0">Compiles the Dockerfile in the repo and tags <span class="mono">&lt;engine&gt;-template:latest</span>.</p>
-<div class="term">./start.sh -e ubuntu -m single --build<br>make build-debian   <span class="c"># build only, start later without --build</span></div>
-<p style="margin:8px 0 0 0">Mixed up? <span class="mono">start.sh</span> always prints the resolved image:</p>
-<div class="term"><span class="c">[IMAGE] ghcr.io/1999azzar/ghost-machine-ubuntu:latest (GHCR prebuilt, no local build)</span><br><span class="c">[IMAGE] ubuntu-template:latest (local build from Dockerfile)</span></div>
-<p style="margin:8px 0 0 0"><b>Rule:</b> a reference containing <span class="mono">/</span> is pulled, a plain tag is built. <span class="mono">--build</span> is ignored for registry refs.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Getting Started — Ghost Machines</title>
+<meta name="description" content="Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · GETTING STARTED</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="getting-started">Getting Started</h1>
+<p>From zero to a shell in about five minutes. Everything below is copy-paste.</p>
+<p><strong>You need:</strong> Docker Engine 20.10+ with Compose v2, on Linux, macOS (Docker Desktop/OrbStack) or Windows (WSL2), <code>x86_64</code> or <code>arm64</code>. LXCFS is optional and Linux-only.</p>
+<h2 id="step-1-clone">Step 1 — Clone</h2>
+<pre><code class="language-bash">git clone https://github.com/1999AZZAR/ghost-machines.git
+cd ghost-machines
+</code></pre>
+<h2 id="step-2-prepare-the-host-linux-once">Step 2 — Prepare the host (Linux, once)</h2>
+<p>Installs LXCFS so <code>htop</code>/<code>free</code> inside the sandbox show the container's limits instead of the host's totals. On macOS and WSL this step is skipped automatically, because those hosts cannot mount LXCFS.</p>
+<pre><code class="language-bash">make setup-host      # or ./setup-host.sh
+</code></pre>
+<h2 id="step-3-pick-an-image-source">Step 3 — Pick an image source</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Prebuilt (GHCR)</th>
+<th style="text-align: left;">Local build</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">First run</td>
+<td style="text-align: left;">~1 minute (pull)</td>
+<td style="text-align: left;">5–15 minutes (build)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Size</td>
+<td style="text-align: left;">1.2–1.6 GB per engine</td>
+<td style="text-align: left;">same, plus build cache</td>
+</tr>
+<tr>
+<td style="text-align: left;">Needs this repo's Dockerfiles</td>
+<td style="text-align: left;">No</td>
+<td style="text-align: left;">Yes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Best for</td>
+<td style="text-align: left;">trying it, CI, production</td>
+<td style="text-align: left;">hacking on the image</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash">./start.sh --prebuilt ubuntu -m single      # pull the published image
+./start.sh -e ubuntu -m single --build      # build it locally
+</code></pre>
+<p><code>start.sh</code> prints which one it resolved before starting:</p>
+<pre><code class="language-text">[IMAGE] ghcr.io/1999azzar/ghost-machine-ubuntu:latest (GHCR prebuilt, no local build)
+[IMAGE] ubuntu-template:latest (local build from Dockerfile)
+</code></pre>
+<p>Details, tags and pinning: <a href="images.html">Images</a>.</p>
+<h2 id="step-4-start">Step 4 — Start</h2>
+<pre><code class="language-bash">./start.sh                                  # interactive: asks engine + mode
+./start.sh --prebuilt ubuntu -m single      # 1 machine  — 1 CPU / 8 GB
+./start.sh -e debian -m dual --build        # 2 machines — 1 CPU / 8 GB each
+./start.sh -e alpine -m power -p 2225       # 1 machine  — 2 CPU / 16 GB
+</code></pre>
+<p><code>start.sh</code> syncs your host UID/GID into the <code>developer</code> account, authorizes your SSH key, wires LXCFS, and prints the resulting container name, image and SSH port.</p>
+<h2 id="step-5-connect">Step 5 — Connect</h2>
+<pre><code class="language-bash">ssh -p 2223 developer@localhost     # password: ghost   (sudo password: ghost)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Mode</th>
+<th style="text-align: left;">Container</th>
+<th style="text-align: center;">Port</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Dual (1st)</td>
+<td style="text-align: left;"><code>ghost-machine1</code></td>
+<td style="text-align: center;">2223</td>
+</tr>
+<tr>
+<td style="text-align: left;">Dual (2nd)</td>
+<td style="text-align: left;"><code>ghost-machine2</code></td>
+<td style="text-align: center;">2224</td>
+</tr>
+<tr>
+<td style="text-align: left;">Single</td>
+<td style="text-align: left;"><code>ghost-machine-single</code></td>
+<td style="text-align: center;">2223</td>
+</tr>
+<tr>
+<td style="text-align: left;">Power</td>
+<td style="text-align: left;"><code>ghost-machine-power</code></td>
+<td style="text-align: center;">2223</td>
+</tr>
+<tr>
+<td style="text-align: left;">Half</td>
+<td style="text-align: left;"><code>ghost-machine-half</code></td>
+<td style="text-align: center;">2223</td>
+</tr>
+</tbody>
+</table>
+<p>Not sure which port? <code>./start.sh status</code> prints the container, image and a ready-to-paste <code>ssh</code> line. Other access paths (keys only, editors, port-forwarding a dev server, Cloudflare Tunnel): <a href="connecting.html">Connecting</a>.</p>
+<h2 id="step-6-stop-resume-remove">Step 6 — Stop, resume, remove</h2>
+<pre><code class="language-bash">./start.sh status     # state, image, SSH port
+./start.sh logs       # follow entrypoint/sshd output
+./start.sh restart    # restart in place
+./start.sh stop       # remove containers + network — mounts/, images, .env stay
+</code></pre>
+<p>Your work lives in <code>mounts/</code> on the host, never inside the container. <code>stop</code>, image rebuilds and even <code>clean.sh</code> leave it intact; only <code>./clean.sh --nuke --hard</code> wipes it. Full matrix: <a href="lifecycle.html">Lifecycle</a>.</p>
+<h2 id="where-next">Where next</h2>
+<ul>
+<li><strong>Hacking on the image, package list, engine differences</strong> → <a href="engines.html">Engines &amp; Toolchain</a></li>
+<li><strong>Every <code>.env</code> knob</strong> → <a href="configuration.html">Configuration</a></li>
+<li><strong>Multiple users on one host</strong> → <a href="tenant.html">Multi-Tenant</a></li>
+<li><strong>Before exposing it to the internet</strong> → <a href="security.html">Security</a></li>
+<li><strong>Something broke</strong> → <a href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#step-1-clone">Step 1 — Clone</a></li><li><a href="#step-2-prepare-the-host-linux-once">Step 2 — Prepare the host (Linux, once)</a></li><li><a href="#step-3-pick-an-image-source">Step 3 — Pick an image source</a></li><li><a href="#step-4-start">Step 4 — Start</a></li><li><a href="#step-5-connect">Step 5 — Connect</a></li><li><a href="#step-6-stop-resume-remove">Step 6 — Stop, resume, remove</a></li><li><a href="#where-next">Where next</a></li></ul>
+  </aside>
 </div>
-
-<h3>4. Launch</h3>
-<div class="card">
-<b>Interactive (asks engine + mode):</b>
-<div class="term" style="margin-top:8px">./start.sh</div>
-<b>Non-interactive:</b>
-<div class="term">./start.sh --prebuilt ubuntu -m single<br>./start.sh -e debian -m dual --build<br>./start.sh -e arch -m power -p 3333</div>
-<b>Modes:</b>
-<div class="term">-m single   <span class="c"># 1c / 8G — standard</span><br>-m dual     <span class="c"># 2 × 1c / 8G — ports 2223 + 2224</span><br>-m power    <span class="c"># 1 × 2c / 16G — heavy builds</span><br>-m half     <span class="c"># 50% host CPUs/RAM</span></div>
-</div>
-
-<h3>5. Connect + Work</h3>
-<div class="term"><span class="c"># single / power / half mode (container: ghost-machine-single|power|half)</span><br>ssh -p 2223 developer@localhost<br><span class="c"># dual mode, second machine (container: ghost-machine2)</span><br>ssh -p 2224 developer@localhost<br><span class="c"># pass: ghost   (sudo: ghost)   root: ssh -p 2223 root@localhost</span><br><span class="c"># or, if ~/.ssh/id_ed25519.pub exists on host — auto-mounted, no password</span><br><span class="c"># no SSH at all: docker exec -it ghost-machine-single bash</span></div>
-<p>Your home is <span class="mono">mounts/ubuntu1</span> (or <span class="mono">mounts/tenants/&lt;id&gt;</span> in WaaS). Delete the container — work stays on host.</p>
-<p><b>Ports:</b> only 22 is published. To reach a dev server inside the sandbox:</p>
-<div class="term">ssh -p 2223 -L 3000:localhost:3000 developer@localhost   <span class="c"># then http://localhost:3000</span></div>
-<p><b>Editor:</b> VS Code Remote-SSH / JetBrains Gateway / Zed → <span class="mono">ssh -p 2223 developer@localhost</span>.</p>
-<p><b>Not sure of the port?</b></p>
-<div class="term">./start.sh status<br><span class="c"># SSH endpoints:</span><br><span class="c">#   ghost-machine-single     ssh -p 2223 developer@localhost</span></div>
-<p><b>Host key changed after a rebuild?</b></p>
-<div class="term">ssh-keygen -R "[localhost]:2223"   <span class="c"># or use ghost-ssh from aliases.sh</span></div>
-
-<h3>6. Stop / restart / remove</h3>
-<div class="term">./start.sh status     <span class="c"># state, image, SSH port</span><br>./start.sh logs       <span class="c"># follow entrypoint/sshd output</span><br>./start.sh restart    <span class="c"># restart in place</span><br>./start.sh stop       <span class="c"># remove containers + network — mounts/, images, .env stay</span><br>docker compose --profile dual stop    <span class="c"># pause instead (container kept)</span><br>docker compose --profile dual start   <span class="c"># resume</span><br>./clean.sh -a -y      <span class="c"># also delete images</span><br>./clean.sh --nuke --hard -y  <span class="c"># images AND mounts/ (destructive)</span></div>
-<p><span class="mono">stop</span> never touches your work: the home directory is a bind mount on the host. Only <span class="mono">--hard</span> wipes it.</p>
-
-<h3>Customization</h3>
-<div class="term">./start.sh -e ubuntu -m single -p 2225     <span class="c"># custom SSH port (useful when 2223 taken)</span><br>./start.sh -e debian -m single -t $TUNNEL_TOKEN <span class="c"># Cloudflare Tunnel — no port-forward needed</span><br>./start.sh --no-lxcfs                       <span class="c"># skip LXCFS (macOS/WSL default)</span><br>SSH_PASSWORD_AUTH=false ./start.sh          <span class="c"># key-only, disable password (via .env)</span><br>./start.sh dual --update-harness            <span class="c"># refresh opencode/agy/rtk to latest</span></div>
-
-<h3>Troubleshooting</h3>
-<ul><li><b>Port 2223 in use</b> — pass <span class="mono">-p 2225</span> (dual then uses 2225+2226) or <span class="mono">./start.sh stop</span> first.</li><li><b>Connection refused</b> — <span class="mono">./start.sh status</span>, then <span class="mono">./start.sh logs</span>: the entrypoint may still be running.</li><li><b>Permission denied (publickey)</b> — <span class="mono">SSH_PASSWORD_AUTH=false</span> with no authorized key; set it back to <span class="mono">true</span> and recreate.</li><li><b>Host key verification failed</b> — new container, new key: <span class="mono">ssh-keygen -R "[localhost]:2223"</span>.</li><li><b>Permission denied on mounts/</b> — re-run <span class="mono">./start.sh</span> (re-syncs UID/GID from <span class="mono">id -u/g</span>).</li><li><b>It rebuilt when I wanted the prebuilt image</b> — no local tag existed; use <span class="mono">--prebuilt</span>.</li><li><b>--build does nothing</b> — the reference is a registry image; drop <span class="mono">GHOST_IMAGE</span> or use the local tag.</li><li><b>htop shows host RAM</b> — install LXCFS: <span class="mono">make setup-host</span> on Linux.</li><li><b>GHCR pull denied</b> — <span class="mono">echo $GH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin</span>.</li></ul>
-
-<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · <a href="tenant.html">Tenant WaaS →</a> · GHOST_MACHINES · MIT</div>
-<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
-<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
-</body></html>
+<footer class="foot mono">
+  <nav><a href="images.html">Images: Prebuilt vs Build →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/getting-started.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

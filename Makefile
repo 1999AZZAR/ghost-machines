@@ -5,7 +5,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help test lint build-ubuntu build-debian build-alpine build-arch build-all start stop status logs restart prebuilt clean snapshot restore setup-host
+.PHONY: help test lint docs docs-check build-ubuntu build-debian build-alpine build-arch build-all start stop status logs restart prebuilt clean snapshot restore setup-host
 
 help: ## Show this help message
 	@echo "=================================================="
@@ -18,6 +18,12 @@ test: ## Run master automated test suite (all milestones)
 
 lint: ## Run static analysis & ShellCheck linting
 	@./tests/test_lint.sh
+
+docs: ## Regenerate the static documentation site from docs/*.md
+	@python3 tools/build_site.py
+
+docs-check: ## Verify docs links, examples, facts and generated site
+	@./tests/test_docs.sh
 
 build-ubuntu: ## Build Ubuntu Master Template
 	docker build -t ubuntu-template:latest -f Dockerfile .

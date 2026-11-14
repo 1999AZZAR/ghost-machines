@@ -15,8 +15,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install ShellCheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Install ShellCheck and docs toolchain
+        run: sudo apt-get update && sudo apt-get install -y shellcheck python3-markdown
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

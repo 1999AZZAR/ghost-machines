@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Images: Prebuilt vs Build — Ghost Machines</title>
+<meta name="description" content="GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · IMAGES: PREBUILT VS BUILD</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="images-prebuilt-vs-local-build">Images: Prebuilt vs Local Build</h1>
+<p>Every run uses exactly one image. <code>start.sh</code> resolves it in this order:</p>
+<ol>
+<li><code>--image &lt;ref&gt;</code> — explicit, wins over everything.</li>
+<li><code>--prebuilt [engine]</code> — <code>ghcr.io/1999azzar/ghost-machine-&lt;engine&gt;:latest</code>.</li>
+<li><code>GHOST_IMAGE</code> from your environment or <code>.env</code>.</li>
+<li>The local build tag for the chosen engine: <code>ubuntu-template:latest</code>, <code>debian-template:latest</code>, <code>alpine-template:latest</code>, <code>arch-template:latest</code>.</li>
+</ol>
+<p><strong>The rule that answers most confusion:</strong> a reference containing <code>/</code> is a registry image and is <strong>pulled</strong>; a plain tag is a local build target and is <strong>built</strong>. <code>--build</code> is ignored (with a notice) whenever the reference is a registry image.</p>
+<h2 id="prebuilt-images-ghcr">Prebuilt images (GHCR)</h2>
+<p>Published by <code>.github/workflows/publish.yml</code> on release tags (<code>v*</code>) and on manual dispatch. Multi-arch: <code>linux/amd64</code> and <code>linux/arm64</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Engine</th>
+<th style="text-align: left;">Reference</th>
+<th style="text-align: left;">Approx. size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Ubuntu</td>
+<td style="text-align: left;"><code>ghcr.io/1999azzar/ghost-machine-ubuntu:latest</code></td>
+<td style="text-align: left;">~1.38 GB amd64 / 1.21 GB arm64</td>
+</tr>
+<tr>
+<td style="text-align: left;">Debian</td>
+<td style="text-align: left;"><code>ghcr.io/1999azzar/ghost-machine-debian:latest</code></td>
+<td style="text-align: left;">~1.36 GB / 1.20 GB</td>
+</tr>
+<tr>
+<td style="text-align: left;">Alpine</td>
+<td style="text-align: left;"><code>ghcr.io/1999azzar/ghost-machine-alpine:latest</code></td>
+<td style="text-align: left;">~1.59 GB / 1.32 GB</td>
+</tr>
+<tr>
+<td style="text-align: left;">Arch</td>
+<td style="text-align: left;"><code>ghcr.io/1999azzar/ghost-machine-arch:latest</code></td>
+<td style="text-align: left;">~1.63 GB both</td>
+</tr>
+</tbody>
+</table>
+<p>Each package carries three kinds of tag:</p>
+<ul>
+<li><code>latest</code> — newest release, moves on every publish.</li>
+<li><code>vX.Y.Z</code> — immutable release tag, use this for reproducibility.</li>
+<li><code>latest-&lt;short-sha&gt;</code> — commit-pinned, for bisecting a regression.</li>
+</ul>
+<pre><code class="language-bash"># pulled automatically when missing
+./start.sh --prebuilt debian -m single
+
+# explicit reference (pull first if you want control)
+docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
+./start.sh --image ghcr.io/1999azzar/ghost-machine-debian:latest -m single
+
+# refresh an image you already have
+./start.sh --prebuilt debian -m single --pull
+
+# make prebuilt the default
+echo 'GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest' &gt;&gt; .env
+./start.sh -e ubuntu -m single
+</code></pre>
+<p>Prebuilt images are built with <code>HOST_UID=1000</code> / <code>HOST_GID=1000</code>; the entrypoint re-syncs the <code>developer</code> account to your host IDs at start, so bind mounts still match your user.</p>
+<h2 id="local-build">Local build</h2>
+<pre><code class="language-bash">./start.sh -e ubuntu -m single --build     # build then start
+make build-ubuntu                          # build only
+make build-all                             # all four engines
+</code></pre>
+<p><code>make build-*</code> produces <code>&lt;engine&gt;-template:latest</code>. Start later without <code>--build</code> — Compose reuses the tag, and builds automatically only if the tag is missing.</p>
+<h2 id="pinning-upgrading-rolling-back">Pinning, upgrading, rolling back</h2>
+<p>Because the container is disposable and your data is on the host, upgrades are mechanical.</p>
+<p><strong>Pin a version (reproducible):</strong></p>
+<pre><code class="language-bash">./start.sh --image ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0 -m single
+# or persist it
+echo 'GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0' &gt;&gt; .env
+</code></pre>
+<p><strong>Upgrade:</strong></p>
+<pre><code class="language-bash">./start.sh stop
+./start.sh --prebuilt ubuntu -m single --pull
+</code></pre>
+<p><strong>Roll back:</strong> start with the previous tag — <code>./start.sh stop &amp;&amp; ./start.sh --image ghcr.io/1999azzar/ghost-machine-ubuntu:v2.0.0 -m single</code>.</p>
+<p><strong>What survives an upgrade:</strong> everything in <code>mounts/</code> (home, projects, dotfiles, agent sessions). <strong>What changes:</strong> the container, its SSH host key (expect <code>Host key verification failed</code> once — see <a href="connecting.html">Connecting</a>), and anything you installed outside <code>mounts/</code> with <code>apt</code>/<code>apk</code>/<code>pacman</code>, which is intentionally discarded. Bake permanent packages into a Dockerfile instead (<a href="contributing.html">Contributing</a>).</p>
+<p><strong>Local-build upgrade:</strong> <code>./start.sh -e ubuntu -m single --build</code> rebuilds and recreates the container.</p>
+<h2 id="harnesses-are-never-pinned">Harnesses are never pinned</h2>
+<p><code>opencode</code>, <code>agy</code> and <code>rtk</code> ship inside the image, but their versions float by design. The <code>harness-update</code> helper resolves each from its official upstream and installs it into <code>/usr/local/bin</code>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Harness</th>
+<th style="text-align: left;">Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>opencode</code></td>
+<td style="text-align: left;"><code>https://opencode.ai/v2/install</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>agy</code></td>
+<td style="text-align: left;"><code>https://antigravity.google/cli/install.sh</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rtk</code></td>
+<td style="text-align: left;"><code>https://github.com/rtk-ai/rtk/releases/latest/download</code></td>
+</tr>
+</tbody>
+</table>
+<p>It runs at image build, then at container start when the stamp is stale, then on demand:</p>
+<pre><code class="language-bash">./start.sh --update-harness   # from the host, into the running container
+harness-update                # inside the sandbox: refresh everything
+harness-update opencode       # one harness
+harness-update --if-due       # only when the stamp is stale
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GHOST_HARNESS_UPDATE</code></td>
+<td style="text-align: left;"><code>latest</code></td>
+<td style="text-align: left;"><code>latest</code> (refresh when stale), <code>always</code> (every start), <code>off</code> (never).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HARNESS_UPDATE_INTERVAL_HOURS</code></td>
+<td style="text-align: left;"><code>24</code></td>
+<td style="text-align: left;">Staleness window for <code>latest</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Concurrent runs serialise on a lock, refresh output goes to <code>/var/log/ghost-harness-update.log</code>, and a host-provided <code>agy</code> (mounted read-only at <code>/usr/local/bin/agy-host</code>) takes precedence when present. Pinning a harness defeats the point; if you need a frozen toolchain, pin the image tag instead.</p>
+<h2 id="which-image-am-i-actually-running">Which image am I actually running?</h2>
+<pre><code class="language-bash">./start.sh status                                          # IMAGE column
+docker inspect -f '{{.Config.Image}}' ghost-machine-single  # exact reference
+docker images | grep -E 'ghost-machine|template'           # what exists locally
+</code></pre>
+<p><code>start.sh</code> also announces it on every launch with the <code>[IMAGE]</code> line shown above.</p>
+<h2 id="offline-air-gapped-hosts">Offline / air-gapped hosts</h2>
+<pre><code class="language-bash"># on a connected machine
+docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
+docker save ghcr.io/1999azzar/ghost-machine-debian:latest | gzip &gt; ghost-debian.tar.gz
+
+# on the target
+docker load &lt; ghost-debian.tar.gz
+./start.sh --image ghcr.io/1999azzar/ghost-machine-debian:latest -m single
+</code></pre>
+<p>Set <code>GHOST_HARNESS_UPDATE=off</code> there, otherwise each start spends a few seconds failing to reach upstream (harmless, but noisy in <code>docker logs</code>).</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#prebuilt-images-ghcr">Prebuilt images (GHCR)</a></li><li><a href="#local-build">Local build</a></li><li><a href="#pinning-upgrading-rolling-back">Pinning, upgrading, rolling back</a></li><li><a href="#harnesses-are-never-pinned">Harnesses are never pinned</a></li><li><a href="#which-image-am-i-actually-running">Which image am I actually running?</a></li><li><a href="#offline-air-gapped-hosts">Offline / air-gapped hosts</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="start.html">← Getting Started</a><a href="engines.html">Engines & Toolchain →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/images.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

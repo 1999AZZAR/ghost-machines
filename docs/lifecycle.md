@@ -1,0 +1,102 @@
+# Lifecycle & Cleanup
+
+A Ghost Machine is disposable by design: the container is cattle, `mounts/` is the pet. Every command below is about *how much* you throw away.
+
+## State model
+
+| Layer | Lives in | Dies when |
+| :--- | :--- | :--- |
+| Image | Docker's image store | `clean.sh -a`, `--nuke`, or `--build` replaces the tag |
+| Container | Docker (ephemeral filesystem) | `stop`, `restart` recreates, any rebuild |
+| Home / projects / dotfiles | `mounts/ubuntu1`, `mounts/ubuntu2`, `mounts/tenants/<id>` on the host | only `clean.sh --nuke --hard` |
+| Config | `.env`, `docker-compose.yml` | your git checkout |
+
+## Command matrix
+
+| Goal | Command | Keeps |
+| :--- | :--- | :--- |
+| Start / create containers | `./start.sh [flags]` | `mounts/`, images, `.env` |
+| Show state, image, SSH port | `./start.sh status` | — |
+| Restart in place (no recreate) | `./start.sh restart` | container, everything |
+| Pause (container kept, stopped) | `docker compose --profile dual stop` | container, everything |
+| Resume a pause | `docker compose --profile dual start` | container, everything |
+| Stop and delete containers + network | `./start.sh stop` | `mounts/`, images, `.env` |
+| Delete containers + volumes | `./clean.sh -v -y` | `mounts/`, images |
+| Delete everything including images | `./clean.sh -a -y` | `mounts/` |
+| Purge images and work | `./clean.sh --nuke --hard -y` | nothing |
+| Follow logs | `./start.sh logs` | — |
+| Shell without SSH | `docker exec -it ghost-machine-single bash` | — |
+| Refresh agent harnesses | `./start.sh --update-harness` | — |
+
+Makefile shortcuts: `make start`, `make status`, `make logs`, `make restart`, `make stop`, `make prebuilt ENGINE=debian MODE=single`.
+
+## Start and recreate
+
+`./start.sh` is idempotent: it creates what is missing and reuses what is running. Add `--build` (local tag) or `--pull` (registry tag) to move to a newer image.
+
+Some settings only apply at container creation:
+
+| Setting | Applies on |
+| :--- | :--- |
+| Ports (`-p`), container names, tunnel token | new container → `./start.sh stop && ./start.sh …` |
+| Image (`--image`, `--prebuilt`, `--pull`, `--build`) | new container |
+| `GHOST_HARNESS_UPDATE`, interval | next container start (entrypoint reads it) |
+| `SSH_PASSWORD_AUTH`, keys | new container (entrypoint rewrites `sshd_config`) |
+| CPU/RAM limits (mode or `.env`) | new container |
+
+Changing mode (`single` → `power`) also creates a *different* container name; the old one keeps running until you stop it. Use `./start.sh status` to see what is actually up.
+
+## Restart, pause, resume
+
+- `./start.sh restart` = `docker compose restart`: same container, processes restarted, filesystem and IP kept. Cheapest fix for a wedged sshd.
+- Pause/resume keeps the container object (and its ephemeral filesystem) between runs:
+
+```bash
+docker compose --profile dual stop      # both profiles, safe even if unused
+docker compose --profile dual start
+```
+
+- `./start.sh stop` deletes containers and the compose network. Anything installed with `apt` inside them is gone; `mounts/` is untouched.
+
+## Logs and diagnostics
+
+```bash
+./start.sh logs                                              # compose logs, follows
+docker logs -f ghost-machine-single                          # same, raw
+docker exec ghost-machine-single cat /var/log/ghost-harness-update.log
+docker exec ghost-machine-single journalctl -u ssh 2>/dev/null || true
+```
+
+The entrypoint is chatty on purpose: SSH key injection, user sync, harness config generation and the background harness refresh all log there. Most "it didn't start" reports are answered by the first 50 lines.
+
+## Cleanup levels
+
+`clean.sh` has four levels; only the last two touch images, only `--hard` touches your work.
+
+```bash
+./clean.sh              # interactive menu
+./clean.sh -s           # L1: stop + remove containers and network
+./clean.sh -v -y        # L2: L1 + volumes
+./clean.sh -a -y        # L3: L2 + local *-template images
+./clean.sh --nuke -y    # L4: L3 + GHCR prebuilts + builder cache
+./clean.sh --nuke --hard -y   # L4 + wipe mounts/
+```
+
+`clean.sh` covers the main machines only. Tenants are removed individually with `./tenant.sh delete <id> --archive -y` ([Multi-Tenant](tenants.md)).
+
+## Backup and restore
+
+Snapshots archive `mounts/` while skipping caches (`node_modules/.cache`, `.npm/_cacache`, `target/`, `__pycache__`, `.pytest_cache`, logs):
+
+```bash
+make snapshot                                   # snapshots/ghost_snapshot_<ts>.tar.gz
+./snapshot.sh -o my_backup.tar.gz               # named archive
+./snapshot.sh --all                             # include caches too
+
+make restore
+./restore.sh my_backup.tar.gz                   # verifies SHA-256, atomic rollback on failure
+./restore.sh -y my_backup.tar.gz                # non-interactive
+./restore.sh -k my_backup.tar.gz                # keep the pre-restore backup
+```
+
+Every snapshot writes three files: the archive, `<archive>.sha256`, and `<archive>.meta.json` (timestamp, architecture, file counts, hash). Restore validates the checksum, backs up the current mounts, and rolls back automatically if extraction fails. Tenants have their own snapshot/restore commands.

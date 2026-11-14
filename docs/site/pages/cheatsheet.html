@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cheatsheet — Ghost Machines</title>
+<meta name="description" content="One page: every command you need day to day.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · CHEATSHEET</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="cheatsheet">Cheatsheet</h1>
+<p>One page, every command you need day to day.</p>
+<h2 id="start">Start</h2>
+<pre><code class="language-bash">./start.sh                                   # interactive
+./start.sh --prebuilt ubuntu -m single       # GHCR image, no build
+./start.sh -e debian -m dual --build         # local build, 2 machines
+./start.sh -e alpine -m power -p 2225        # custom port, heavy profile
+make prebuilt ENGINE=debian MODE=single
+</code></pre>
+<h2 id="connect">Connect</h2>
+<pre><code class="language-bash">ssh -p 2223 developer@localhost              # password: ghost
+ssh -p 2224 developer@localhost              # dual, second machine
+docker exec -it ghost-machine-single bash     # no SSH
+source aliases.sh &amp;&amp; ghost-ssh single         # helper
+ssh -p 2223 -L 3000:localhost:3000 developer@localhost   # reach a dev server
+</code></pre>
+<h2 id="inspect">Inspect</h2>
+<pre><code class="language-bash">./start.sh status
+./start.sh logs
+docker inspect -f '{{.Config.Image}}' ghost-machine-single
+docker stats --no-stream
+docker compose --profile dual config
+</code></pre>
+<h2 id="stop-restart-remove">Stop / restart / remove</h2>
+<pre><code class="language-bash">./start.sh restart                            # in place
+docker compose --profile dual stop            # pause, container kept
+docker compose --profile dual start           # resume
+./start.sh stop                               # remove containers + network
+./clean.sh -a -y                              # + images, keeps mounts/
+./clean.sh --nuke --hard -y                   # + mounts/ (destructive)
+</code></pre>
+<h2 id="backup-restore">Backup / restore</h2>
+<pre><code class="language-bash">make snapshot
+./snapshot.sh -o backup.tar.gz
+./restore.sh backup.tar.gz
+./restore.sh -y backup.tar.gz
+</code></pre>
+<h2 id="agents">Agents</h2>
+<pre><code class="language-bash">harness-update                                # inside sandbox: refresh all
+harness-update opencode                       # one harness
+./start.sh --update-harness                   # from host
+opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
+</code></pre>
+<h2 id="tenants">Tenants</h2>
+<pre><code class="language-bash">./tenant.sh add alice --prebuilt --engine debian --cpu 2 --mem 4G
+./tenant.sh list
+./tenant.sh stats
+./tenant.sh stop alice &amp;&amp; ./tenant.sh start alice
+./tenant.sh snapshot alice
+./tenant.sh delete alice --archive -y
+</code></pre>
+<h2 id="images">Images</h2>
+<pre><code class="language-bash">./start.sh --prebuilt debian -m single --pull           # newest
+./start.sh --image ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0 -m single   # pinned
+make build-debian &amp;&amp; ./start.sh -e debian -m single
+docker images | grep -E 'ghost-machine|template'
+</code></pre>
+<h2 id="config">Config</h2>
+<pre><code class="language-bash">cp .env.example .env       # then edit
+$EDITOR .env
+./start.sh stop &amp;&amp; ./start.sh    # recreate after changing ports/tokens/image
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>G1_PORT</code> / <code>G2_PORT</code></td>
+<td style="text-align: left;">2223 / 2224</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_USER</code></td>
+<td style="text-align: left;"><code>developer</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH</code></td>
+<td style="text-align: left;"><code>true</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_IMAGE</code></td>
+<td style="text-align: left;">engine default</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_HARNESS_UPDATE</code></td>
+<td style="text-align: left;"><code>latest</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HARNESS_UPDATE_INTERVAL_HOURS</code></td>
+<td style="text-align: left;">24</td>
+</tr>
+</tbody>
+</table>
+<h2 id="develop">Develop</h2>
+<pre><code class="language-bash">make lint      # shellcheck + bash -n + compose
+make test      # 8 suites, includes docs checks
+make docs      # regenerate the docs site
+</code></pre>
+<h2 id="fixes-for-the-usual-three">Fixes for the usual three</h2>
+<pre><code class="language-bash"># port busy
+./start.sh -p 2225
+# host key changed
+ssh-keygen -R &quot;[localhost]:2223&quot;
+# mounts owned by the wrong user
+./start.sh stop &amp;&amp; ./start.sh
+</code></pre>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#start">Start</a></li><li><a href="#connect">Connect</a></li><li><a href="#inspect">Inspect</a></li><li><a href="#stop-restart-remove">Stop / restart / remove</a></li><li><a href="#backup-restore">Backup / restore</a></li><li><a href="#agents">Agents</a></li><li><a href="#tenants">Tenants</a></li><li><a href="#images">Images</a></li><li><a href="#config">Config</a></li><li><a href="#develop">Develop</a></li><li><a href="#fixes-for-the-usual-three">Fixes for the usual three</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="contributing.html">← Contributing</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/cheatsheet.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

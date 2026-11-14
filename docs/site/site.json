@@ -1,0 +1,94 @@
+{
+  "pages": [
+    {
+      "slug": "start",
+      "source": "getting-started.md",
+      "title": "Getting Started",
+      "description": "Ghost Machines in five minutes: prerequisites, clone, pick an image, start, connect, stop."
+    },
+    {
+      "slug": "images",
+      "source": "images.md",
+      "title": "Images: Prebuilt vs Build",
+      "description": "GHCR prebuilt images, local builds, tags, pinning, upgrading and rollback."
+    },
+    {
+      "slug": "engines",
+      "source": "engines.md",
+      "title": "Engines & Toolchain",
+      "description": "The four Linux engines, what is inside them, and how they differ."
+    },
+    {
+      "slug": "lifecycle",
+      "source": "lifecycle.md",
+      "title": "Lifecycle & Cleanup",
+      "description": "Start, stop, pause, restart, inspect and remove sandboxes without losing work."
+    },
+    {
+      "slug": "connecting",
+      "source": "connecting.md",
+      "title": "Connecting",
+      "description": "SSH, keys, ports, port-forwarding, editors and Cloudflare Tunnel access."
+    },
+    {
+      "slug": "configuration",
+      "source": "configuration.md",
+      "title": "Configuration",
+      "description": "Every environment variable, its default, and when it takes effect."
+    },
+    {
+      "slug": "architecture",
+      "source": "architecture.md",
+      "title": "Architecture",
+      "description": "What runs where: compose services, entrypoint boot sequence, mounts, ports and MCP wrappers."
+    },
+    {
+      "slug": "tenant",
+      "source": "tenants.md",
+      "title": "Multi-Tenant (WaaS)",
+      "description": "Provision, monitor, snapshot and delete isolated per-user workspaces."
+    },
+    {
+      "slug": "security",
+      "source": "security.md",
+      "title": "Security & Hardening",
+      "description": "Dev defaults, their risks, and the exact changes needed before exposing a sandbox."
+    },
+    {
+      "slug": "troubleshooting",
+      "source": "troubleshooting.md",
+      "title": "Troubleshooting",
+      "description": "Symptom-to-fix table plus the diagnostics that answer most questions."
+    },
+    {
+      "slug": "scripts",
+      "source": "scripts.md",
+      "title": "Scripts Guide",
+      "description": "Plain-English guide to what each shell script does."
+    },
+    {
+      "slug": "glossary",
+      "source": "glossary.md",
+      "title": "Glossary",
+      "description": "Container, cgroup, LXCFS, bind mount and other terms used in these docs."
+    },
+    {
+      "slug": "comparison",
+      "source": "comparison-vs-vm.md",
+      "title": "Ghost vs VM",
+      "description": "When a container sandbox beats a full virtual machine, and when it does not."
+    },
+    {
+      "slug": "contributing",
+      "source": "contributing.md",
+      "title": "Contributing",
+      "description": "Repo layout, test suite, docs rules, release process and how to add an engine."
+    },
+    {
+      "slug": "cheatsheet",
+      "source": "cheatsheet.md",
+      "title": "Cheatsheet",
+      "description": "One page: every command you need day to day."
+    }
+  ]
+}

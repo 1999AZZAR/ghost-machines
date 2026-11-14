@@ -1,53 +1,145 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Engines — Ghost Machines</title><meta name="description" content="Four Ghost Machines engines: Ubuntu, Debian, Alpine, Arch. GHCR multi-arch prebuilts with sizes and how to pick."><link rel="icon" href="../favicon.png" type="image/png"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet"><style>:root{--paper:#f6f5f1;--ink:#111110;--muted:#6b6b68;--border:#dbdbd6;--accent:#0f6f6f}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--paper);color:var(--ink);max-width:860px;margin:0 auto;padding:32px;line-height:1.65}.mono{font-family:'JetBrains Mono',monospace}.serif{font-family:'Newsreader',serif}a{color:var(--accent)}.top{border-bottom:1px solid var(--border);padding:8px 0;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px}.term{background:#fff;color:var(--ink);border:1px solid var(--border);padding:12px 36px 12px 12px;font-size:11px;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;margin:8px 0}.term .c{color:var(--muted)}.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}.tbl th{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--border)}.tbl td{padding:8px;border-bottom:1px solid #ebebe7;vertical-align:top}.card{border:1px solid var(--border);background:#fff;padding:12px;margin:8px 0}h1.serif{font-size:1.8rem;margin:0 0 8px 0}h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px 0}.foot{border-top:1px solid var(--border);padding:16px;margin-top:32px;text-align:center;font-size:11px;color:var(--muted)}</style></head><body>
-<div class="top mono"><a href="../index.html">← GHOST_MACHINES</a> · ENGINES</div>
-<h1 class="serif">Engines — Ubuntu / Debian / Alpine / Arch</h1>
-<p>Each engine ships an <b>identical toolchain</b> so your workflow is portable.</p>
-<p>Only the <b>base image</b> and <b>package manager</b> change.</p>
-<p>All 4 are published as <b>GHCR multi-arch</b> (<span class="mono">linux/amd64 + arm64</span>) on <span class="mono">v* tags</span> — pull <b>one</b> that matches your needs.</p>
-
-<h3>At a Glance</h3>
-<table class="tbl mono"><tr><th>Engine</th><th>Base</th><th>PM</th><th>GHCR Package</th><th>Size amd64 / arm64</th><th>Best for</th></tr>
-<tr><td>ubuntu</td><td>ubuntu:latest</td><td>apt-get</td><td>ghost-machine-ubuntu:latest</td><td>1.38 / 1.21 GB</td><td>AI agents, PPA, daily dev</td></tr>
-<tr><td>debian</td><td>debian:stable-slim</td><td>apt-get</td><td>ghost-machine-debian:latest</td><td>1.36 / 1.20 GB</td><td>Slim &amp; stable, prod-like</td></tr>
-<tr><td>alpine</td><td>alpine:latest</td><td>apk</td><td>ghost-machine-alpine:latest</td><td>1.59 / 1.32 GB</td><td>Ultra-light, musl</td></tr>
-<tr><td>arch</td><td>archlinux:latest</td><td>pacman</td><td>ghost-machine-arch:latest</td><td>1.63 / 1.63 GB</td><td>Rolling, latest upstream</td></tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Engines & Toolchain — Ghost Machines</title>
+<meta name="description" content="The four Linux engines, what is inside them, and how they differ.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · ENGINES & TOOLCHAIN</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="engines-toolchain">Engines &amp; Toolchain</h1>
+<p>Four base distros, one identical developer surface. Pick by package manager and libc, not by features — the toolchain is the same everywhere.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Engine</th>
+<th style="text-align: left;">Base image</th>
+<th style="text-align: left;">Package manager</th>
+<th style="text-align: left;">Flag</th>
+<th style="text-align: left;">Dockerfile</th>
+<th style="text-align: left;">Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Ubuntu</td>
+<td style="text-align: left;"><code>ubuntu:latest</code></td>
+<td style="text-align: left;"><code>apt-get</code></td>
+<td style="text-align: left;"><code>-e ubuntu</code></td>
+<td style="text-align: left;"><code>Dockerfile</code></td>
+<td style="text-align: left;">Default. PPA support, widest binary compatibility.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Debian</td>
+<td style="text-align: left;"><code>debian:stable-slim</code></td>
+<td style="text-align: left;"><code>apt-get</code></td>
+<td style="text-align: left;"><code>-e debian</code></td>
+<td style="text-align: left;"><code>Dockerfile.debian</code></td>
+<td style="text-align: left;">Same ecosystem, smaller and slower-moving.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Alpine</td>
+<td style="text-align: left;"><code>alpine:latest</code></td>
+<td style="text-align: left;"><code>apk</code></td>
+<td style="text-align: left;"><code>-e alpine</code></td>
+<td style="text-align: left;"><code>Dockerfile.alpine</code></td>
+<td style="text-align: left;">Smallest footprint; musl libc caveat below.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Arch</td>
+<td style="text-align: left;"><code>archlinux:latest</code></td>
+<td style="text-align: left;"><code>pacman</code></td>
+<td style="text-align: left;"><code>-e arch</code></td>
+<td style="text-align: left;"><code>Dockerfile.arch</code></td>
+<td style="text-align: left;">Rolling releases, newest upstream packages.</td>
+</tr>
+</tbody>
 </table>
-<p class="mono" style="font-size:11px;color:var(--muted)">Host distro does not matter — Debian host can run Arch image. Only CPU arch matters (amd64 vs arm64 auto-picked).</p>
-
-<h3>Identical Toolchain (all engines)</h3>
-<table class="tbl mono"><tr><th>Layer</th><th>What</th></tr>
-<tr><td>Runtimes</td><td>Go 1.24, Rust rustup minimal (cargo/rustc), Node current + Bun, Python uv + pipx + venv</td></tr>
-<tr><td>Editors & Git</td><td>Helix 25.01.1, Micro, Lazygit, Tmux</td></tr>
-<tr><td>AI Harnesses</td><td>agy/antigravity, opencode + rtk (60–90% token save)</td></tr>
-<tr><td>MCP & Conductor</td><td>7 HeLa headless servers (mitosis/genome/membrane/nucleus/ribosome/enzyme/phenotype) + Conductor /opt/conductor</td></tr>
-<tr><td>Shell UX</td><td>Oh-My-Bash, Alias-Hub, Fastfetch/Neofetch, fortunes, openssh-server, LXCFS</td></tr>
-</table>
-
-<h3>When to Pick Which</h3>
-<div class="card"><b>Ubuntu</b> — <span class="mono">Recommended</span>. PPA support (`add-apt-repository`) for drivers and newer toolchains. Largest apt footprint but most compatible with AI agent scripts that expect Ubuntu. Use when unsure.</div>
-<div class="card"><b>Debian</b> — <span class="mono">slim</span> base, fewer packages out-of-the-box, closest to production Debian stable. Choose for smaller images and longer stability; good for WaaS classrooms where you want minimal bloat.</div>
-<div class="card"><b>Alpine</b> — <span class="mono">apk + musl</span>. Smallest base but musl can break some npm/native addons (needs glibc shim). Pick when you explicitly want a tiny image; avoid if you rely on many binary wheels.</div>
-<div class="card"><b>Arch</b> — <span class="mono">pacman + rolling</span>. Always latest upstream packages; biggest and slowest to build; good for bleeding-edge testing.</div>
-
-<h3>How Images Are Built</h3>
-<p>All 4 Dockerfiles share the same stages:</p>
-<p><span class="mono">base → system tools → Go/Rust → Node/Bun/uv → Micro/Helix/Lazygit → AI harnesses → HeLa MCP → Conductor → non-root user (developer)</span>.</p>
-<p>The only differences are <span class="mono">apk add</span> vs <span class="mono">apt-get install</span> and package names (e.g. <span class="mono">build-base</span> vs <span class="mono">build-essential</span>).</p>
-<p>Build args <span class="mono">HOST_UID/HOST_GID</span> sync the <span class="mono">developer</span> user to your host.</p>
-
-<h3>Copy-Paste</h3>
-<p class="mono" style="font-size:11px;color:var(--muted)">Pull one — not four.</p>
-<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single<br>ssh -p 2223 developer@localhost <span class="c"># pass ghost</span></div>
-<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-debian:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single</div>
-<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single</div>
-<div class="term">docker pull ghcr.io/1999azzar/ghost-machine-arch:latest<br>GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single</div>
-
-<h3>Host Compatibility</h3>
-<p>Any Linux (x86_64/aarch64), macOS with OrbStack or Docker Desktop, or Windows with WSL2.</p>
-<p>Image arch is auto-selected: Intel/AMD → <span class="mono">amd64</span>, Apple Silicon/ARM VPS → <span class="mono">arm64</span>.</p>
-<p>Debian host can run Arch image — only the kernel (host) and userland (image) are split.</p>
-
-<div class="foot mono"><a href="../index.html">← Back to Archival Procedures</a> · GHOST_MACHINES · MIT</div>
-<style>.term{position:relative}.copy-btn{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--border);background:var(--paper);color:var(--ink);cursor:pointer}.copy-btn:active{transform:translateY(1px)}</style>
-<script>document.querySelectorAll(".term").forEach(el=>{const b=document.createElement("button");b.className="mono copy-btn";b.textContent="copy";b.setAttribute("aria-label","Copy code");b.onclick=()=>{navigator.clipboard.writeText(el.innerText.replace(/^copy\s*/,"")).then(()=>{b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)})};el.appendChild(b)});</script>
-</body></html>
+<p>Each engine has a published prebuilt image and can be built locally — see <a href="images.html">Images</a>.</p>
+<h2 id="what-is-installed">What is installed</h2>
+<p><strong>Runtimes and compilers</strong></p>
+<ul>
+<li>Python: <code>uv</code>/<code>uvx</code>, <code>pipx</code>, <code>python3-venv</code></li>
+<li>Rust: <code>rustup</code> minimal profile (<code>cargo</code>, <code>rustc</code>)</li>
+<li>Go: Go 1.24 toolchain (<code>GO_VERSION=1.24.2</code> build arg)</li>
+<li>JavaScript: Node.js from the NodeSource <strong>current</strong> channel, plus Bun</li>
+<li>C/C++: <code>build-essential</code> (Debian/Ubuntu), <code>base-devel</code> (Arch), <code>build-base</code> (Alpine), with <code>cmake</code>, <code>make</code>, <code>gdb</code></li>
+</ul>
+<p><strong>Editors and Git</strong></p>
+<ul>
+<li><code>helix</code> (with runtime assets), <code>micro</code>, <code>lazygit</code>, <code>tmux</code></li>
+</ul>
+<p><strong>CLI</strong></p>
+<ul>
+<li><code>bat</code>, <code>eza</code>, <code>zoxide</code>, <code>fd</code>, <code>ripgrep</code>, <code>jq</code>, <code>fzf</code>, <code>nnn</code>, <code>htop</code>, <code>btop</code>, <code>fastfetch</code>, <code>figlet</code>, <code>fortune</code></li>
+<li><code>nmap</code>, <code>lsof</code>, <code>ncdu</code>, <code>tree</code>, <code>sysstat</code>, <code>inxi</code>, <code>zip</code>/<code>7z</code></li>
+</ul>
+<p><strong>Agent stack</strong></p>
+<ul>
+<li><code>opencode</code> (v2), <code>agy</code>/<code>antigravity</code>, <code>rtk</code> — all kept current by <code>harness-update</code> (<a href="images.html#harnesses-are-never-pinned">Images</a>)</li>
+<li>HeLa MCP wrappers in <code>/usr/local/bin</code>: <code>mcp-mitosis</code>, <code>mcp-genome</code>, <code>mcp-membrane</code>, <code>mcp-nucleus</code>, <code>mcp-ribosome</code>, <code>mcp-enzyme</code>, <code>mcp-phenotype</code></li>
+<li>Google Conductor at <code>/opt/conductor</code>, linked into <code>~/.agents/plugins</code> and <code>~/.gemini/config/plugins</code></li>
+</ul>
+<p><strong>Shell experience</strong></p>
+<ul>
+<li>Oh-My-Bash with theme and Git prompt</li>
+<li>Alias-Hub (<code>~/alias-hub</code>) with categorized aliases</li>
+<li>fastfetch config plus <code>fetch</code>, <code>rfetch</code>, <code>ascii</code> helpers (random ASCII banners)</li>
+</ul>
+<h2 id="version-policy">Version policy</h2>
+<p>Two kinds of version, deliberately different:</p>
+<ul>
+<li><strong>Image toolchain</strong> — pinned where it matters (Go 1.24.2, Helix 25.01.1, lazygit 0.61.1 as build args), floating where upstream's "current" is the sane default (Node.js). Rebuild the image to move those pins.</li>
+<li><strong>Agent harnesses</strong> — never pinned. <code>harness-update</code> installs the latest release of <code>opencode</code>, <code>agy</code> and <code>rtk</code> at build, at container start when stale, and on demand.</li>
+</ul>
+<p>Ask an engine what it actually has:</p>
+<pre><code class="language-bash">cat /etc/os-release
+node -v &amp;&amp; go version &amp;&amp; rustc --version &amp;&amp; python3 -V
+opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
+</code></pre>
+<h2 id="engine-caveats">Engine caveats</h2>
+<ul>
+<li><strong>Alpine uses musl.</strong> Some prebuilt Linux binaries (including glibc-only release assets from upstream projects) will not run inside it. If a tool fails with "not found" despite being executable, that is almost always the cause — use Debian or Ubuntu for that workload.</li>
+<li><strong>Arch moves.</strong> A rebuild can pull different package versions than yesterday. That is the point, but it makes it the worst choice for reproducible CI.</li>
+<li><strong>PPAs exist only on Ubuntu.</strong> <code>add-apt-repository</code> in other engines fails; use the distro's repositories or a Dockerfile.</li>
+<li><strong>All engines share the host kernel.</strong> No engine gives you a different kernel; see <a href="comparison.html">Ghost vs VM</a>.</li>
+</ul>
+<h2 id="adding-a-package-or-changing-an-engine">Adding a package or changing an engine</h2>
+<p>Permanent changes belong in the engine's Dockerfile, then rebuild:</p>
+<pre><code class="language-bash"># edit Dockerfile.debian, then
+./start.sh -e debian -m single --build
+</code></pre>
+<p>Ad-hoc changes inside a running sandbox (<code>apt install …</code>) disappear when the container is recreated. That is intentional: the image stays reproducible, and your data stays in <code>mounts/</code>. See <a href="contributing.html">Contributing</a> for the full loop and the test list.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#what-is-installed">What is installed</a></li><li><a href="#version-policy">Version policy</a></li><li><a href="#engine-caveats">Engine caveats</a></li><li><a href="#adding-a-package-or-changing-an-engine">Adding a package or changing an engine</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="images.html">← Images: Prebuilt vs Build</a><a href="lifecycle.html">Lifecycle & Cleanup →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/engines.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Troubleshooting — Ghost Machines</title>
+<meta name="description" content="Symptom-to-fix table plus the diagnostics that answer most questions.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · TROUBLESHOOTING</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p>Start with the two commands that answer most questions:</p>
+<pre><code class="language-bash">./start.sh status     # container state, image, SSH port
+./start.sh logs       # entrypoint + sshd output, follows
+</code></pre>
+<h2 id="symptom-fix">Symptom → fix</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Symptom</th>
+<th style="text-align: left;">Cause</th>
+<th style="text-align: left;">Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>Bind for 0.0.0.0:2223 failed: port is already allocated</code></td>
+<td style="text-align: left;">another container or process holds the port</td>
+<td style="text-align: left;"><code>./start.sh … -p 2225</code> (dual then uses 2225/2226), or <code>./start.sh stop</code> first</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ssh: connect to host localhost port 2223: Connection refused</code></td>
+<td style="text-align: left;">container not running, still booting, or a different port</td>
+<td style="text-align: left;"><code>./start.sh status</code>; then <code>./start.sh logs</code> while it initializes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Permission denied (publickey,password)</code></td>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH=false</code> and no authorized key</td>
+<td style="text-align: left;">set it back to <code>true</code> in <code>.env</code> and recreate (<code>./start.sh stop &amp;&amp; ./start.sh …</code>), or fix the key</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Host key verification failed</code></td>
+<td style="text-align: left;">new container = new SSH host key</td>
+<td style="text-align: left;"><code>ssh-keygen -R "[localhost]:2223"</code> or use <code>ghost-ssh</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Permission denied</code> writing inside <code>~</code></td>
+<td style="text-align: left;">container UID ≠ host UID</td>
+<td style="text-align: left;">re-run <code>./start.sh</code> (re-syncs <code>HOST_UID</code>/<code>HOST_GID</code>); last resort <code>sudo chown -R "$(id -u):$(id -g)" mounts/</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--build</code> seems to do nothing</td>
+<td style="text-align: left;">the image reference is a registry tag</td>
+<td style="text-align: left;">drop <code>GHOST_IMAGE</code>, or use the local tag (<code>-e ubuntu</code> with no prebuilt)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Image rebuilt when you wanted the prebuilt</td>
+<td style="text-align: left;">no local tag existed</td>
+<td style="text-align: left;">use <code>--prebuilt</code>, or pull the GHCR tag first</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>denied</code> / <code>401</code> pulling from GHCR</td>
+<td style="text-align: left;">private package or anonymous rate limit</td>
+<td style="text-align: left;"><code>echo $GH_TOKEN \| docker login ghcr.io -u &lt;user&gt; --password-stdin</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>htop</code>/<code>free</code> show host RAM</td>
+<td style="text-align: left;">LXCFS not installed or disabled</td>
+<td style="text-align: left;"><code>make setup-host</code> on Linux; expected on macOS/WSL (<code>--no-lxcfs</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>permission denied … /var/run/docker.sock</code></td>
+<td style="text-align: left;">user not in the <code>docker</code> group</td>
+<td style="text-align: left;"><code>sudo usermod -aG docker $USER</code>, then re-login</td>
+</tr>
+<tr>
+<td style="text-align: left;">Agent CLI missing or stale inside</td>
+<td style="text-align: left;">build-time download failed (offline host)</td>
+<td style="text-align: left;"><code>harness-update</code> inside the sandbox, <code>./start.sh --update-harness</code>, or check <code>/var/log/ghost-harness-update.log</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Container restarts in a loop</td>
+<td style="text-align: left;">entrypoint or <code>sshd_config</code> error</td>
+<td style="text-align: left;"><code>./start.sh logs</code>, fix, <code>./start.sh stop &amp;&amp; ./start.sh …</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>apt</code>/<code>apk</code> install vanished</td>
+<td style="text-align: left;">container was recreated</td>
+<td style="text-align: left;">expected: bake it into a Dockerfile (<a href="engines.html">Engines</a>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Mount is root-owned</td>
+<td style="text-align: left;">stale container created with a different UID</td>
+<td style="text-align: left;"><code>./start.sh stop</code>, re-run <code>./start.sh</code>, or <code>sudo chown -R "$(id -u):$(id -g)" mounts/</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Dual mode second machine unreachable</td>
+<td style="text-align: left;">port/name assumptions</td>
+<td style="text-align: left;">it is <code>ghost-machine2</code> on <code>G2_PORT</code> (default 2224)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Tenant <code>add</code> fails with "already exists"</td>
+<td style="text-align: left;">registry still has the id</td>
+<td style="text-align: left;"><code>./tenant.sh list</code>, then <code>./tenant.sh delete &lt;id&gt; -y</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="diagnostics">Diagnostics</h2>
+<pre><code class="language-bash">./start.sh status
+docker compose --profile dual --profile remote config     # fully resolved compose file
+docker inspect -f '{{.State.Status}} {{.Config.Image}}' ghost-machine-single
+docker exec ghost-machine-single ss -tlnp
+docker exec ghost-machine-single tail -n 100 /var/log/ghost-harness-update.log
+docker port ghost-machine-single
+</code></pre>
+<p>Log locations:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">What</th>
+<th style="text-align: left;">Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Entrypoint, sshd, container stdout</td>
+<td style="text-align: left;"><code>./start.sh logs</code> / <code>docker logs &lt;name&gt;</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Harness refresh</td>
+<td style="text-align: left;"><code>docker exec &lt;name&gt; cat /var/log/ghost-harness-update.log</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">SSH auth failures</td>
+<td style="text-align: left;"><code>docker exec &lt;name&gt; cat /var/log/auth.log</code> (Debian/Ubuntu)</td>
+</tr>
+<tr>
+<td style="text-align: left;">OpenCode sessions</td>
+<td style="text-align: left;"><code>~/.local/share/opencode/log</code> inside the sandbox</td>
+</tr>
+</tbody>
+</table>
+<h2 id="first-boot-is-slow">First boot is slow</h2>
+<p>The entrypoint re-syncs UID/GID, writes the home skeleton if missing, and starts a background harness refresh. On a large <code>mounts/</code> the <code>chown -R</code> pass can take a while; the container is up but sshd is not accepting yet. Watch progress with <code>./start.sh logs</code>, wait, or reduce the workspace size.</p>
+<h2 id="flaky-docker-desktop-orbstack-on-macos">Flaky Docker Desktop / OrbStack on macOS</h2>
+<p>Mounts over the VM filesystem are slower and can report odd ownership. If ownership problems repeat, keep sources under <code>~/</code> (not <code>/Volumes</code>), and prefer OrbStack or a Linux host for heavy builds. LXCFS is unavailable there by design.</p>
+<h2 id="when-all-else-fails">When all else fails</h2>
+<pre><code class="language-bash">./start.sh stop
+./clean.sh -a -y            # containers + images, keeps mounts/
+./start.sh --prebuilt debian -m single
+</code></pre>
+<p>If a rebuild reproduces the problem, capture <code>./start.sh logs</code> output and open an issue with the engine, mode, image reference and the first 50 log lines.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#symptom-fix">Symptom → fix</a></li><li><a href="#diagnostics">Diagnostics</a></li><li><a href="#first-boot-is-slow">First boot is slow</a></li><li><a href="#flaky-docker-desktop-orbstack-on-macos">Flaky Docker Desktop / OrbStack on macOS</a></li><li><a href="#when-all-else-fails">When all else fails</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="security.html">← Security & Hardening</a><a href="scripts.html">Scripts Guide →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/troubleshooting.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

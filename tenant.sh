@@ -35,7 +35,7 @@ Commands:
   exec <tenant_id> <cmd> Execute a command inside a tenant container
   snapshot <tenant_id>  Create point-in-time backup for a tenant
   restore <tenant_id>   Restore a tenant from a snapshot archive
-  delete <tenant_id>    Tear down and remove a tenant workspace
+  delete <tenant_id>    Tear down and remove a tenant workspace (--archive first)
   help, -h, --help      Show this help message
 
 Options for 'add':
@@ -59,7 +59,7 @@ Examples:
   ./tenant.sh stats
   ./tenant.sh stop alice
   ./tenant.sh start alice
-  ./tenant.sh delete bob -y
+  ./tenant.sh delete bob -y            # permanent\n  ./tenant.sh delete bob --archive -y  # snapshot first, then delete
 HELP
 }
 
@@ -625,6 +625,12 @@ cmd_delete() {
 
     local cname
     cname=$(get_tenant_field "$TENANT_ID" "container_name")
+
+    if [ "$DO_ARCHIVE" = true ]; then
+        echo "[INFO] Archiving tenant '$TENANT_ID' workspace before deletion..."
+        ( cmd_snapshot "$TENANT_ID" ) || { echo "[ERROR] Snapshot failed; tenant left untouched."; exit 1; }
+    fi
+
     echo "[INFO] Tearing down tenant container $cname..."
     docker rm -f "$cname" 2>/dev/null || true
 

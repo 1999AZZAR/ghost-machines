@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security & Hardening — Ghost Machines</title>
+<meta name="description" content="Dev defaults, their risks, and the exact changes needed before exposing a sandbox.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <span class="crumbs mono">GHOST_MACHINES · SECURITY & HARDENING</span>
+  <a class="home mono" href="../index.html">← index</a>
+</header>
+<div class="wrap">
+  <main>
+<h1 id="security-hardening">Security &amp; Hardening</h1>
+<p>Ghost Machines defaults to a <strong>trusted-developer laptop</strong> posture, not a multi-tenant production posture. This page states the defaults plainly, then gives the exact changes needed before you expose a sandbox to other people or the internet.</p>
+<blockquote>
+<p><strong>Threat model:</strong> a container is not a VM. All sandboxes share the host kernel, and the container user has passwordless-path <code>sudo</code> inside it. Treat the sandbox as a strong process boundary, not a security boundary against hostile code.</p>
+</blockquote>
+<h2 id="defaults-and-their-risk">Defaults and their risk</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Value</th>
+<th style="text-align: left;">Risk if exposed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>developer</code> password</td>
+<td style="text-align: left;"><code>ghost</code></td>
+<td style="text-align: left;">Anyone who can reach port 22 gets a shell with sudo.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>root</code> password</td>
+<td style="text-align: left;"><code>ghost</code></td>
+<td style="text-align: left;">Same, as root.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>PermitRootLogin</code></td>
+<td style="text-align: left;"><code>yes</code></td>
+<td style="text-align: left;">Direct root SSH; no accountability trail.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;">Brute-forceable.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sudo</code></td>
+<td style="text-align: left;"><code>ALL=(ALL)</code> with password</td>
+<td style="text-align: left;">Fine locally; the password is public knowledge.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Docker socket</td>
+<td style="text-align: left;">not mounted</td>
+<td style="text-align: left;">Good: no host escape via Docker API.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Privileged mode</td>
+<td style="text-align: left;">not used</td>
+<td style="text-align: left;">Good: default capability set only.</td>
+</tr>
+</tbody>
+</table>
+<p>These are deliberate so first run works without configuration. They are not a claim of production readiness.</p>
+<h2 id="hardening-checklist">Hardening checklist</h2>
+<h3 id="p0-before-exposing-to-tenants-or-the-internet">P0 — before exposing to tenants or the internet</h3>
+<ol>
+<li><strong>Kill the default passwords.</strong> Generate per-instance secrets instead of baking <code>ghost</code> into the image:</li>
+</ol>
+<p><code>bash
+   # .env
+   GHOST_USER=developer
+   SSH_PASSWORD_AUTH=false</code></p>
+<p>Key-only login plus per-tenant keys removes the shared secret entirely. If you must keep passwords, rotate them at boot from a host-side file (<code>mounts/.secrets/&lt;instance&gt;</code>, permissions <code>600</code>) rather than using a constant.</p>
+<ol start="2">
+<li>
+<p><strong>Require a key when a tunnel is active.</strong> <code>start.sh</code> already warns on a placeholder token; additionally ensure <code>SSH_AUTH_KEY_PATH</code> resolves to a real key before enabling <code>remote</code>.</p>
+</li>
+<li>
+<p><strong>Disable root SSH.</strong> In the engine Dockerfile set <code>PermitRootLogin prohibit-password</code> (or <code>no</code>), then rebuild or patch via a bind-mounted <code>sshd_config</code>:</p>
+</li>
+</ol>
+<p><code>bash
+   ./start.sh -e debian -m single --build</code></p>
+<p><code>docker exec -it &lt;container&gt; sed -i 's/^#*PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config &amp;&amp; docker restart &lt;container&gt;</code></p>
+<ol start="4">
+<li>
+<p><strong>Scope mounts.</strong> <code>mounts/&lt;instance&gt;</code> is read-write by design. For untrusted tenants, mount only the project subdirectory they need, and keep secrets outside the workspace.</p>
+</li>
+<li>
+<p><strong>Vet what you install.</strong> <code>sudo</code> inside the sandbox is real: a malicious <code>npm install --unsafe-perm</code> or <code>curl | bash</code> runs with your container privileges and can read every file in the mounted home.</p>
+</li>
+</ol>
+<h3 id="p1-container-hardening">P1 — container hardening</h3>
+<p><code>docker-compose.yml</code> currently ships the permissive defaults. For untrusted workloads add:</p>
+<pre><code class="language-yaml">    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
+    security_opt:
+      - no-new-privileges:true
+</code></pre>
+<p>Keep <code>restart: unless-stopped</code> and the read-only LXCFS mounts (<code>:ro</code>) as they are. Never add <code>/var/run/docker.sock</code>, <code>--privileged</code>, or the host PID namespace.</p>
+<h3 id="p2-ssh-hardening">P2 — SSH hardening</h3>
+<p>Beyond <code>SSH_PASSWORD_AUTH=false</code>:</p>
+<pre><code class="language-text">PermitEmptyPasswords no
+X11Forwarding no
+AllowAgentForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+MaxAuthTries 3
+</code></pre>
+<p>Set these in the Dockerfile (persistent) or via <code>entrypoint.sh</code> (applied on every boot). Keep <code>AllowTcpForwarding yes</code> if you rely on <code>ssh -L</code> for dev servers.</p>
+<h2 id="network-exposure">Network exposure</h2>
+<ul>
+<li><strong>No tunnel:</strong> only the published SSH port is reachable, and only from the host unless you bind <code>0.0.0.0</code> (Compose already publishes on all interfaces — put the host behind a firewall if it has a public IP).</li>
+<li><strong>Tunnel:</strong> Cloudflare terminates TLS and enforces Access policies; do not additionally open the SSH port to the internet.</li>
+<li><strong>Outbound:</strong> unrestricted by design (agents need the network). Egress filtering is a host/network concern, not something this repo does for you.</li>
+</ul>
+<h2 id="secrets">Secrets</h2>
+<ul>
+<li><code>.env</code> is auto-chmod <code>600</code> by <code>start.sh</code>; it is git-ignored.</li>
+<li>Never bake tokens into a Dockerfile — build args and layers are readable from the image.</li>
+<li>Cloudflare tokens belong in <code>.env</code> or your secret manager, not in <code>docker-compose.yml</code>.</li>
+<li>SSH keys: only public keys are mounted into sandboxes.</li>
+</ul>
+<h2 id="audit">Audit</h2>
+<pre><code class="language-bash">./start.sh status                                  # what is running, on which ports
+docker port ghost-machine-single                   # published ports only
+docker inspect --format '{{.HostConfig.Privileged}} {{.HostConfig.CapAdd}}' ghost-machine-single
+docker exec ghost-machine-single ss -tlnp          # listening sockets inside
+docker exec ghost-machine-single sudo -l -U developer
+</code></pre>
+<p><code>tests/test_m1_security.sh</code> asserts the UID/GID sync, key permissions and entrypoint behaviour on every CI run; extend it when you tighten a default.</p>
+  </main>
+  <aside class="toc mono">
+    <b>On this page</b>
+    <ul><li><a href="#defaults-and-their-risk">Defaults and their risk</a></li><li><a href="#hardening-checklist">Hardening checklist</a></li><li><a href="#network-exposure">Network exposure</a></li><li><a href="#secrets">Secrets</a></li><li><a href="#audit">Audit</a></li></ul>
+  </aside>
+</div>
+<footer class="foot mono">
+  <nav><a href="tenant.html">← Multi-Tenant (WaaS)</a><a href="troubleshooting.html">Troubleshooting →</a><a href="../index.html">index</a></nav>
+  Generated from <code>docs/security.md</code> · edit the markdown, not this file · MIT
+</footer>
+<script>
+document.querySelectorAll("main pre").forEach(function(el){
+  var b=document.createElement("button");
+  b.className="mono copy-btn";b.textContent="copy";
+  b.setAttribute("aria-label","Copy code");
+  b.onclick=function(){
+    navigator.clipboard.writeText(el.querySelector("code")?el.querySelector("code").innerText:el.innerText)
+      .then(function(){b.textContent="copied";setTimeout(function(){b.textContent="copy";},1200);});
+  };
+  el.appendChild(b);
+});
+</script>
+</body>
+</html>

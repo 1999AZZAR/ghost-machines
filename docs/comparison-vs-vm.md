@@ -1,6 +1,6 @@
 # Ghost Machines vs Regular VM
 
-> When to use container sandboxes vs hardware VMs. Extended from `README.md` to avoid bloat.
+> When to use container sandboxes vs hardware VMs.
 
 ## TL;DR
 
@@ -13,22 +13,22 @@ They solve different problems. Not replacements.
 
 | | Ghost Machines | Regular VM |
 |---|---|---|
-| Engine | Docker + `docker-compose.yml:1` | Hypervisor (KVM/QEMU/VirtualBox/VMware/Hyper-V) |
+| Engine | Docker + `docker-compose.yml` | Hypervisor (KVM/QEMU/VirtualBox/VMware/Hyper-V) |
 | Kernel | Shared with host | Own kernel |
 | Base images | `ubuntu/debian/alpine/arch` `Dockerfile*` | Any OS incl. Windows/BSD |
 | Boot time | ~1-2s | 30-120s |
-| Idle overhead | `~73.5 MiB / 0% CPU` (README benchmark) | 500MB-2GB + vCPU reservation |
+| Idle overhead | `~73.5 MiB / 0% CPU` ([measured](architecture.md#resource-footprint)) | 500MB-2GB + vCPU reservation |
 
 ## Pros / Cons
 
 ### Ghost Machines ✔️
 
-- **IaC & reproducibility**: `Dockerfile` + `entrypoint.sh:1` + `start.sh:9` UID/GID sync = no "works on my machine"
+- **IaC & reproducibility**: `Dockerfile` + `entrypoint.sh` + `start.sh` UID/GID sync = no "works on my machine"
 - **Near-zero cost**: 10 tenants on one 32GB box via `tenant.sh` + `deploy.resources.limits`
 - **Batteries included**: Go/Rust/Node/Bun/Helix + HeLa 7 MCP + `agy/opencode/rtk` pre-wired
 - **Snapshots**: `snapshot.sh` tar + `sha256` + atomic `restore.sh` rollback, caches excluded
-- **LXCFS**: `docker-compose.yml:26` mounts make `free/htop` show container limits, not host
-- **Remote**: `cloudflared` tunnel `docker-compose.yml:88` without opening ports
+- **LXCFS**: LXCFS mounts make `free/htop` show container limits, not host
+- **Remote**: `cloudflared` tunnel profile without opening ports
 
 ### Ghost Machines ❌
 
