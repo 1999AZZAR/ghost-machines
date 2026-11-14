@@ -258,8 +258,15 @@ EOF
     fi
 }
 
-if [ -f /usr/local/bin/agy ]; then
-    ln -sf /usr/local/bin/agy /usr/local/bin/antigravity 2>/dev/null || true
+# AI harness binaries: prefer the host-mounted agy when one was provided,
+# otherwise keep the built-in one that harness-update refreshes.
+AGY_BUILTIN=/usr/local/bin/agy
+AGY_HOST=/usr/local/bin/agy-host
+if [ -f "$AGY_HOST" ] && [ -x "$AGY_HOST" ]; then
+    ln -sfn "$AGY_HOST" "$AGY_BUILTIN" 2>/dev/null || true
+fi
+if [ -f "$AGY_BUILTIN" ] && [ -x "$AGY_BUILTIN" ]; then
+    ln -sfn "$AGY_BUILTIN" /usr/local/bin/antigravity 2>/dev/null || true
 fi
 if [ -f /root/.bun/bin/bun ]; then
     ln -sf /root/.bun/bin/bun /usr/local/bin/bun 2>/dev/null || true
@@ -286,5 +293,27 @@ if [ -n "$TARGET_USER" ] && [ "$TARGET_USER" != "root" ] && [ -d "/home/$TARGET_
     setup_user_ssh "/home/$TARGET_USER" "$TARGET_USER"
     setup_user_harnesses_and_conductor "/home/$TARGET_USER" "$TARGET_USER"
 fi
+
+# Refresh the built-in harness CLIs (OpenCode v2, Antigravity agy, RTK).
+# GHOST_HARNESS_UPDATE: latest (default, once per interval) | always | off
+# Runs in the background so sshd never waits on the network; harness-update
+# serialises itself with a lock, so manual runs simply queue behind it.
+refresh_builtin_harnesses() {
+    local MODE="${GHOST_HARNESS_UPDATE:-latest}"
+    local REFRESHER=/usr/local/bin/harness-update
+    local LOG=/var/log/ghost-harness-update.log
+    local ARGS=(--if-due --quiet)
+    case "$MODE" in
+        off|false|0|no) return 0 ;;
+        always) ARGS=(--no-stamp --quiet) ;;
+    esac
+    [ -x "$REFRESHER" ] || return 0
+    (
+        timeout 600 "$REFRESHER" "${ARGS[@]}" >>"$LOG" 2>&1 \
+            || echo "[$(date -u +%FT%TZ)] refresh exited non-zero" >>"$LOG"
+    ) &
+}
+
+refresh_builtin_harnesses
 
 exec "$@"

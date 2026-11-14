@@ -262,9 +262,39 @@ Arch (build):
 
 Each Ghost Machine environment includes two dedicated CLI harnesses alongside the RTK token optimization runner:
 
-- **[Antigravity CLI](https://github.com/google/antigravity)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
+- **[Antigravity CLI](https://github.com/google-antigravity/antigravity-cli)** (`agy` / `antigravity`): Agentic automation and multi-step reasoning.
 - **[OpenCode v2](https://github.com/anomalyco/opencode)** (`opencode`): Codebase analysis and autonomous file patching.
 - **[RTK](https://github.com/rtk-ai/rtk)** (`rtk`): Token-optimized terminal execution runner.
+
+#### Versioning: Always Latest, Never Pinned
+
+No harness version is baked into the images. A single in-image helper, `harness-update`, resolves each tool from its official upstream source and installs the result into `/usr/local/bin`:
+
+| Harness | Source |
+| :--- | :--- |
+| `opencode` | `https://opencode.ai/v2/install` |
+| `agy` | `https://antigravity.google/cli/install.sh` |
+| `rtk` | `https://github.com/rtk-ai/rtk/releases/latest/download` |
+
+It runs at three points:
+
+1. **Image build** — every rebuild pulls the current upstream release.
+2. **Container start** — the entrypoint refreshes stale binaries (default once per 24h, cached by a stamp file).
+3. **On demand** — `./start.sh --update-harness`, or inside a sandbox:
+
+```bash
+harness-update                 # refresh everything now
+harness-update opencode        # refresh one harness
+harness-update --if-due        # refresh only when the stamp is stale
+harness-update --interval 6    # change the 24h staleness window
+```
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `GHOST_HARNESS_UPDATE` | `latest` | `latest` (refresh when stale), `always` (every start), `off` (never). |
+| `HARNESS_UPDATE_INTERVAL_HOURS` | `24` | Staleness window used by `latest`. |
+
+A host `agy` binary is still exposed read-only at `/usr/local/bin/agy-host`; when present it wins, otherwise the refreshed in-image build is used.
 
 #### RTK Universal Auto-Rewrite Hook
 

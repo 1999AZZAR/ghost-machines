@@ -73,6 +73,7 @@ MODE_ARG=""
 PORT_ARG=""
 TUNNEL_ARG=""
 BUILD_FLAG=""
+UPDATE_HARNESS=false
 EXTRA_COMPOSE_ARGS=()
 
 while [[ $# -gt 0 ]]; do
@@ -97,6 +98,10 @@ while [[ $# -gt 0 ]]; do
             BUILD_FLAG="--build"
             shift
             ;;
+        -u|--update-harness)
+            UPDATE_HARNESS=true
+            shift
+            ;;
         --no-lxcfs)
             SKIP_LXCFS=true
             unset LXCFS_CPUINFO LXCFS_MEMINFO LXCFS_STAT LXCFS_SWAPS LXCFS_UPTIME
@@ -113,12 +118,14 @@ while [[ $# -gt 0 ]]; do
             echo "  -p, --port <port>                         Set base SSH port (default: 2223)"
             echo "  -t, --tunnel <token>                      Set Cloudflare Tunnel token"
             echo "  -b, --build                               Force rebuild images before starting"
+            echo "  -u, --update-harness                      Refresh opencode/agy/rtk to latest after start"
             echo "      --no-lxcfs                            Disable LXCFS volume mounts"
             echo "  -h, --help                                Show this help message"
             echo ""
             echo "Examples:"
             echo "  ./start.sh -e debian -m single"
             echo "  ./start.sh --engine arch --mode power -p 3333"
+            echo "  ./start.sh dual --update-harness"
             echo "  ./start.sh dual"
             exit 0
             ;;
@@ -251,3 +258,16 @@ case $MODE in
 esac
 
 docker compose "${COMPOSE_FINAL_ARGS[@]}" "${EXTRA_COMPOSE_ARGS[@]}"
+
+# 6. Optional: refresh the built-in harness binaries (opencode/agy/rtk) to latest
+if [ "$UPDATE_HARNESS" = true ]; then
+    for CONTAINER in "${G1_NAME:-}" "${G2_NAME:-}"; do
+        [ -n "$CONTAINER" ] || continue
+        if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null || echo false)" != "true" ]; then
+            continue
+        fi
+        echo "[UPDATE] Refreshing built-in harnesses in $CONTAINER ..."
+        docker exec -u root "$CONTAINER" /usr/local/bin/harness-update \
+            || echo "[WARNING] Harness refresh failed in $CONTAINER"
+    done
+fi

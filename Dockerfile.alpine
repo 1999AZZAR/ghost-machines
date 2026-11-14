@@ -66,17 +66,12 @@ RUN apk add --no-cache micro \
     && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
 
 # 7. AI Harness CLIs (Antigravity CLI, OpenCode v2, RTK)
-RUN curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path \
-    && mv /root/.opencode/bin/opencode /usr/local/bin/opencode \
-    && rm -rf /root/.opencode \
-    && ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then RTK_ARCH="x86_64-unknown-linux-musl"; \
-    elif [ "$ARCH" = "aarch64" ]; then RTK_ARCH="aarch64-unknown-linux-gnu"; \
-    fi && \
-    curl -fsSL "https://github.com/rtk-ai/rtk/releases/latest/download/rtk-${RTK_ARCH}.tar.gz" | tar xz && \
-    install rtk /usr/local/bin/rtk && rm -f rtk \
-    && (curl -fsSL https://antigravity.ai/install.sh | bash 2>/dev/null || true) \
-    && if [ -f /root/.local/bin/agy ]; then ln -sf /root/.local/bin/agy /usr/local/bin/agy && ln -sf /root/.local/bin/agy /usr/local/bin/antigravity; fi \
+# No version is pinned: harness-update.sh resolves upstream "latest" on every
+# build and stamps the result, then refreshes again at container start when the
+# stamp is older than HARNESS_UPDATE_INTERVAL_HOURS (default 24).
+COPY harness-update.sh /usr/local/bin/harness-update
+RUN chmod +x /usr/local/bin/harness-update \
+    && /usr/local/bin/harness-update \
     && npm cache clean --force
 
 # 8. UI/UX STACK (1. Oh-My-Bash, 2. Alias-Hub, 3. Neofetch-ASCII)

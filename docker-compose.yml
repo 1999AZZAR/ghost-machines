@@ -17,6 +17,8 @@ services:
       - HOST_GID=${HOST_GID:-1000}
       - GHOST_USER=${GHOST_USER:-developer}
       - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
+      - GHOST_HARNESS_UPDATE=${GHOST_HARNESS_UPDATE:-latest}
+      - HARNESS_UPDATE_INTERVAL_HOURS=${HARNESS_UPDATE_INTERVAL_HOURS:-24}
     ports:
       - "${G1_PORT:-2223}:22"
     dns:
@@ -32,7 +34,7 @@ services:
       - ./entrypoint.sh:/entrypoint.sh:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
-      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy:ro
+      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy-host:ro
     deploy:
       resources:
         limits:
@@ -59,6 +61,8 @@ services:
       - HOST_GID=${HOST_GID:-1000}
       - GHOST_USER=${GHOST_USER:-developer}
       - SSH_PASSWORD_AUTH=${SSH_PASSWORD_AUTH:-true}
+      - GHOST_HARNESS_UPDATE=${GHOST_HARNESS_UPDATE:-latest}
+      - HARNESS_UPDATE_INTERVAL_HOURS=${HARNESS_UPDATE_INTERVAL_HOURS:-24}
     ports:
       - "${G2_PORT:-2224}:22"
     dns:
@@ -74,7 +78,7 @@ services:
       - ./entrypoint.sh:/entrypoint.sh:ro
       - ${SSH_AUTH_KEY_PATH:-/dev/null}:/root/.ssh/authorized_keys:ro
       - ${MCP_ECOSYSTEM_LOCAL_PATH:-/dev/null}:/opt/mcp-ecosystem-local:ro
-      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy:ro
+      - ${HOST_AGY_BIN:-/dev/null}:/usr/local/bin/agy-host:ro
     deploy:
       resources:
         limits:

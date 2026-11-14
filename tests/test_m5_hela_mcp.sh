@@ -49,14 +49,26 @@ done
 echo "PASSED"
 
 # Test 3: Verify AI harnesses (OpenCode v2, Antigravity) and absence of codex/gemini/kilo
-echo -n "[TEST 3] Dockerfile AI harness packages (opencode v2, agy - no codex/gemini/kilo)... "
+echo -n "[TEST 3] Harness installer (opencode v2, agy) is unpinned and refreshable... "
+if ! grep -q "opencode.ai/v2/install" harness-update.sh; then
+    echo "FAILED: harness-update.sh missing OpenCode v2 installer"
+    exit 1
+fi
+if ! grep -q "antigravity.google/cli/install.sh" harness-update.sh; then
+    echo "FAILED: harness-update.sh missing Antigravity CLI installer"
+    exit 1
+fi
+if grep -qE "@[0-9]+\.[0-9]+\.[0-9]+|=[\"']?v?[0-9]+\.[0-9]+\.[0-9]+" harness-update.sh; then
+    echo "FAILED: harness-update.sh pins a version"
+    exit 1
+fi
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
-    if ! grep -q "opencode.ai/v2/install" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing OpenCode v2 installer"
+    if ! grep -q "COPY harness-update.sh" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE does not ship harness-update.sh"
         exit 1
     fi
-    if ! grep -q "agy" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing agy CLI setup"
+    if ! grep -q "/usr/local/bin/harness-update" "$DOCKERFILE"; then
+        echo "FAILED: $DOCKERFILE does not run harness-update"
         exit 1
     fi
     if grep -q "@google/gemini-cli" "$DOCKERFILE"; then
@@ -111,6 +123,16 @@ echo "PASSED"
 echo -n "[TEST 7] RTK Universal Auto-Rewrite Hook verification... "
 grep -q "rtk-rewrite.sh" entrypoint.sh
 grep -q "PreToolUse" entrypoint.sh
+echo "PASSED"
+
+# Test 8: Runtime harness refresh wiring (entrypoint + compose un-shadowing)
+echo -n "[TEST 8] Runtime harness refresh wiring... "
+grep -q "refresh_builtin_harnesses" entrypoint.sh || { echo "FAILED: entrypoint lacks refresh hook"; exit 1; }
+grep -q "GHOST_HARNESS_UPDATE" entrypoint.sh || { echo "FAILED: entrypoint ignores GHOST_HARNESS_UPDATE"; exit 1; }
+grep -q "GHOST_HARNESS_UPDATE" docker-compose.yml || { echo "FAILED: compose does not pass GHOST_HARNESS_UPDATE"; exit 1; }
+grep -q "agy-host" docker-compose.yml || { echo "FAILED: compose still shadows built-in agy"; exit 1; }
+grep -q "update-harness" start.sh || { echo "FAILED: start.sh missing --update-harness"; exit 1; }
+bash -n harness-update.sh || { echo "FAILED: harness-update.sh has a syntax error"; exit 1; }
 echo "PASSED"
 
 # Cleanup temporary clone if created for CI
