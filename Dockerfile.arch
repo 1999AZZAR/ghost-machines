@@ -24,7 +24,7 @@ ENV LC_ALL=C.UTF-8
 
 # 2. Base System & Build Tools
 RUN pacman -Sy --noconfirm && pacman -S --noconfirm \
-    curl gnupg git wget unzip sudo \
+    curl gnupg git wget unzip xz sudo \
     base-devel gdb make cmake \
     python python-pip python-pipx \
     htop btop net-tools glances sysstat inxi ncdu tree \
@@ -36,9 +36,20 @@ RUN pacman -Sy --noconfirm && pacman -S --noconfirm \
     && mkdir -p /var/run/sshd \
     && pacman -Scc --noconfirm
 
-# 3. Node.js (Latest Current)
-RUN pacman -S --noconfirm nodejs npm \
-    && pacman -Scc --noconfirm
+# 3. Node.js (v22 LTS tarball)
+# Arch's rolling node is Node 26, which has no prebuilt native bindings for
+# sqlite3/node-pty yet; the HeLa installer verifies cells at build time and
+# fails on the missing ABI. Use the ecosystem's tested Node 22 LTS instead.
+RUN ARCH=$(uname -m) && \
+    case "$ARCH" in \
+        x86_64) NODE_ARCH="x64" ;; \
+        aarch64) NODE_ARCH="arm64" ;; \
+        *) NODE_ARCH="x64" ;; \
+    esac && \
+    NODE_TARBALL=$(curl -fsSL https://nodejs.org/dist/latest-v22.x/ | grep -o "node-v22\.[0-9.]*-linux-${NODE_ARCH}\.tar\.xz" | head -n 1) && \
+    [ -n "$NODE_TARBALL" ] && \
+    curl -fsSL "https://nodejs.org/dist/latest-v22.x/${NODE_TARBALL}" | tar -xJ -C /usr/local --strip-components=1 && \
+    node -v && npm -v
 
 # 4. Go & Rust Runtimes
 RUN ARCH=$(uname -m) && \
