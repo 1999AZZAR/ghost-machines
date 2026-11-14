@@ -62,6 +62,7 @@ harness-update                                # inside sandbox: refresh all
 harness-update opencode                       # one harness
 ./start.sh --update-harness                   # from host
 opencode --version && agy --version && rtk --version
+node /opt/hela-src/setup.mjs doctor --prefix /opt/hela   # HeLa cells + runtime
 ```
 
 ## Tenants

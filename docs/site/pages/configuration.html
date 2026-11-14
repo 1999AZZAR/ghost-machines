@@ -67,6 +67,12 @@
 <td style="text-align: left;">Dockerfile used when building. Set automatically by <code>-e</code>/<code>--prebuilt</code>.</td>
 <td style="text-align: left;">build</td>
 </tr>
+<tr>
+<td style="text-align: left;"><code>HELA_PROFILE</code></td>
+<td style="text-align: left;"><code>dev-workspace</code></td>
+<td style="text-align: left;">HeLa cells installed in runtime mode. <code>minimal</code>, <code>dev-workspace</code>, <code>headless-server</code>, <code>research</code>, <code>web-devops</code>, <code>android-testing</code>, <code>3d-modeling</code>, <code>all</code>.</td>
+<td style="text-align: left;">build</td>
+</tr>
 </tbody>
 </table>
 <h2 id="ports-and-names">Ports and names</h2>
@@ -231,7 +237,7 @@
 <tr>
 <td style="text-align: left;"><code>MCP_ECOSYSTEM_LOCAL_PATH</code></td>
 <td style="text-align: left;"><code>/dev/null</code></td>
-<td style="text-align: left;">Mount a local <code>hela-mcp-ecosystem</code> clone at <code>/opt/mcp-ecosystem-local</code> for development.</td>
+<td style="text-align: left;">Mount a local <code>hela-mcp-ecosystem</code> checkout at <code>/opt/mcp-ecosystem-local</code> for developing the ecosystem itself. The image's runtime lives in <code>/opt/hela</code>.</td>
 </tr>
 </tbody>
 </table>

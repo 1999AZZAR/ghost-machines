@@ -33,7 +33,7 @@ Each engine has a published prebuilt image and can be built locally — see [Ima
 **Agent stack**
 
 - `opencode` (v2), `agy`/`antigravity`, `rtk` — all kept current by `harness-update` ([Images](images.md#harnesses-are-never-pinned))
-- HeLa MCP wrappers in `/usr/local/bin`: `mcp-mitosis`, `mcp-genome`, `mcp-membrane`, `mcp-nucleus`, `mcp-ribosome`, `mcp-enzyme`, `mcp-phenotype`
+- HeLa MCP runtime: one `hela-runtime` endpoint exposing the selected profile (default `dev-workspace`, 8 cells / 234 tools), with per-cell launchers in `/usr/local/bin` (`mcp-mitosis` … `mcp-plastid`, `mcp-runtime`)
 - Google Conductor at `/opt/conductor`, linked into `~/.agents/plugins` and `~/.gemini/config/plugins`
 
 **Shell experience**
@@ -63,6 +63,21 @@ opencode --version && agy --version && rtk --version
 - **Arch moves.** A rebuild can pull different package versions than yesterday. That is the point, but it makes it the worst choice for reproducible CI.
 - **PPAs exist only on Ubuntu.** `add-apt-repository` in other engines fails; use the distro's repositories or a Dockerfile.
 - **All engines share the host kernel.** No engine gives you a different kernel; see [Ghost vs VM](comparison-vs-vm.md).
+
+## Choosing the HeLa profile
+
+The images install the HeLa runtime in runtime mode (`node setup.mjs --profile <id> --mode runtime`), which serves every cell of the profile through one MCP endpoint. The default is `dev-workspace`; switch it at build time:
+
+```bash
+HELA_PROFILE=headless-server ./start.sh -e debian -m single --build
+HELA_PROFILE=minimal ./start.sh -e alpine -m single --build
+```
+
+`minimal` (3 cells) is the lightest, `headless-server` (7, no browser) is the CI default elsewhere, `dev-workspace` (8, includes browser + design) is the sandbox default. Check the installed profile inside the sandbox:
+
+```bash
+node /opt/hela-src/setup.mjs doctor --prefix /opt/hela
+```
 
 ## Adding a package or changing an engine
 

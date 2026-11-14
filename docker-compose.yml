@@ -7,6 +7,7 @@ services:
         HOST_UID: "${HOST_UID:-1000}"
         HOST_GID: "${HOST_GID:-1000}"
         GHOST_USER: "${GHOST_USER:-developer}"
+        HELA_PROFILE: "${HELA_PROFILE:-dev-workspace}"
     image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G1_NAME:-ghost-machine1}"
     restart: unless-stopped
@@ -51,6 +52,7 @@ services:
         HOST_UID: "${HOST_UID:-1000}"
         HOST_GID: "${HOST_GID:-1000}"
         GHOST_USER: "${GHOST_USER:-developer}"
+        HELA_PROFILE: "${HELA_PROFILE:-dev-workspace}"
     image: "${GHOST_IMAGE:-ubuntu-template:latest}"
     container_name: "${G2_NAME:-ghost-machine2}"
     restart: unless-stopped

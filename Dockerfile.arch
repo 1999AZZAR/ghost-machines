@@ -89,22 +89,27 @@ RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/m
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && echo 'root:ghost' | chpasswd
 
-# 10. HeLa MCP Ecosystem (Profile: headless-server) & Google Conductor Plugin
-RUN git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git /opt/mcp-ecosystem \
-    && cd /opt/mcp-ecosystem \
-    && sed -i 's|1999AZZAR/research-mcp-server|1999AZZAR/research-assistant-mcp-server|g' config/inventory.json \
-    && ./setup.sh --profile headless-server --client antigravity --non-interactive \
+# 10. HeLa MCP Ecosystem (runtime mode) & Google Conductor Plugin
+# A single hela-runtime endpoint advertises the selected profile; cells start on demand.
+# Override with --build-arg HELA_PROFILE=<minimal|dev-workspace|headless-server|research|web-devops|android-testing|3d-modeling|all>
+ARG HELA_PROFILE=dev-workspace
+RUN git clone --depth=1 https://github.com/Hela-Ecosystem/hela-mcp-ecosystem.git /opt/hela-src \
+    && cd /opt/hela-src \
+    && node setup.mjs --profile "$HELA_PROFILE" --mode runtime --client skip \
+           --prefix /opt/hela --root /opt/hela-src --non-interactive --without-model \
+    && rm -rf /opt/hela/.build-home \
+    && chmod -R a+rX /opt/hela \
+    && chmod -R a+rwX /opt/hela/data /opt/hela/workspace \
     && mkdir -p /root/.mcp /root/.config/opencode \
-    && node scripts/generate-config.mjs headless-server --backend antigravity --root /opt/mcp-ecosystem --out /root/.mcp/config.json \
-    && node scripts/generate-config.mjs headless-server --backend opencode --root /opt/mcp-ecosystem --out /root/.config/opencode/opencode.json \
-    && ln -sf /opt/mcp-ecosystem /root/MCPservers \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/chaining-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-mitosis \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/Project-Guardian-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-genome \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/filesystem-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-membrane \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/terminal-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-nucleus \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/menager-mcp-server/build/index.js "$@"' > /usr/local/bin/mcp-ribosome \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/research-mcp-server/dist/index.js "$@"' > /usr/local/bin/mcp-enzyme \
-    && echo '#!/bin/bash\nnode /opt/mcp-ecosystem/the-designer/dist/index.js "$@"' > /usr/local/bin/mcp-phenotype \
+    && node scripts/generate-config.mjs "$HELA_PROFILE" --backend antigravity \
+           --mode runtime --prefix /opt/hela --root /opt/hela-src --out /root/.mcp/config.json \
+    && node scripts/generate-config.mjs "$HELA_PROFILE" --backend opencode \
+           --mode runtime --prefix /opt/hela --root /opt/hela-src --out /root/.config/opencode/opencode.json \
+    && ln -sfn /opt/hela/hela-mcp-ecosystem /root/MCPservers \
+    && for CELL in mitosis genome membrane nucleus ribosome enzyme cytosol phenotype receptor plastid; do \
+           printf '#!/bin/bash\nexec node /opt/hela/hela-mcp-ecosystem/scripts/launch.mjs hela-%s "$@"\n' "$CELL" > /usr/local/bin/mcp-$CELL; \
+       done \
+    && printf '#!/bin/bash\nexec node /opt/hela/hela-mcp-ecosystem/scripts/launch.mjs hela-runtime "$@"\n' > /usr/local/bin/mcp-runtime \
     && chmod +x /usr/local/bin/mcp-* \
     && git clone --depth=1 https://github.com/gemini-cli-extensions/conductor.git /opt/conductor \
     && mkdir -p /root/.agents/plugins /root/.agents/skills /root/.gemini/config/plugins \
@@ -141,7 +146,8 @@ RUN if getent group ${HOST_GID} >/dev/null; then \
     for skill in conductor-setup conductor-new-track conductor-implement conductor-status conductor-revert conductor-review; do \
         ln -sf /opt/conductor/skills/$skill /home/${GHOST_USER}/.agents/skills/$skill; \
     done && \
-    chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER}
+    chown -R ${GHOST_USER}:${EXISTING_GRP} /home/${GHOST_USER} && \
+    chown -R ${GHOST_USER}:${EXISTING_GRP} /opt/hela/data /opt/hela/workspace 2>/dev/null || true
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

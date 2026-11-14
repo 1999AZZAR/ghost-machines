@@ -31,7 +31,7 @@ Full walkthrough, including the local-build alternative: **[docs/getting-started
 | **Four engines** | Ubuntu, Debian, Alpine, Arch — same toolchain, published multi-arch (`amd64`/`arm64`) images. |
 | **Two image sources** | Prebuilt GHCR (pull, ~1 min) or local build (5–15 min). Same resolution rules, no surprises. |
 | **Real permissions** | `developer` account synced to your host UID/GID; work lives in `mounts/` on the host, never in the container. |
-| **Agent stack** | OpenCode v2, Antigravity CLI (`agy`), RTK, HeLa MCP wrappers, Google Conductor — refreshed to latest on every start. |
+| **Agent stack** | OpenCode v2, Antigravity CLI (`agy`), RTK and Google Conductor, plus one HeLa MCP runtime endpoint (default `dev-workspace`, 234 tools). Harnesses refresh to latest on every start. |
 | **Multi-tenant** | `tenant.sh` gives each user an isolated container, port, quota and workspace. |
 | **Disposable by design** | Stop, rebuild, re-pull — your files survive. Snapshots with SHA-256 verification and atomic restore. |
 | **Optional remote access** | Cloudflare Tunnel profile, no port-forwarding. |

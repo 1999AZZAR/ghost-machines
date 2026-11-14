@@ -61,6 +61,7 @@ docker compose --profile dual start           # resume
 harness-update opencode                       # one harness
 ./start.sh --update-harness                   # from host
 opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
+node /opt/hela-src/setup.mjs doctor --prefix /opt/hela   # HeLa cells + runtime
 </code></pre>
 <h2 id="tenants">Tenants</h2>
 <pre><code class="language-bash">./tenant.sh add alice --prebuilt --engine debian --cpu 2 --mem 4G

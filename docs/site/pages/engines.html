@@ -86,7 +86,7 @@
 <p><strong>Agent stack</strong></p>
 <ul>
 <li><code>opencode</code> (v2), <code>agy</code>/<code>antigravity</code>, <code>rtk</code> — all kept current by <code>harness-update</code> (<a href="images.html#harnesses-are-never-pinned">Images</a>)</li>
-<li>HeLa MCP wrappers in <code>/usr/local/bin</code>: <code>mcp-mitosis</code>, <code>mcp-genome</code>, <code>mcp-membrane</code>, <code>mcp-nucleus</code>, <code>mcp-ribosome</code>, <code>mcp-enzyme</code>, <code>mcp-phenotype</code></li>
+<li>HeLa MCP runtime: one <code>hela-runtime</code> endpoint exposing the selected profile (default <code>dev-workspace</code>, 8 cells / 234 tools), with per-cell launchers in <code>/usr/local/bin</code> (<code>mcp-mitosis</code> … <code>mcp-plastid</code>, <code>mcp-runtime</code>)</li>
 <li>Google Conductor at <code>/opt/conductor</code>, linked into <code>~/.agents/plugins</code> and <code>~/.gemini/config/plugins</code></li>
 </ul>
 <p><strong>Shell experience</strong></p>
@@ -113,6 +113,14 @@ opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
 <li><strong>PPAs exist only on Ubuntu.</strong> <code>add-apt-repository</code> in other engines fails; use the distro's repositories or a Dockerfile.</li>
 <li><strong>All engines share the host kernel.</strong> No engine gives you a different kernel; see <a href="comparison.html">Ghost vs VM</a>.</li>
 </ul>
+<h2 id="choosing-the-hela-profile">Choosing the HeLa profile</h2>
+<p>The images install the HeLa runtime in runtime mode (<code>node setup.mjs --profile &lt;id&gt; --mode runtime</code>), which serves every cell of the profile through one MCP endpoint. The default is <code>dev-workspace</code>; switch it at build time:</p>
+<pre><code class="language-bash">HELA_PROFILE=headless-server ./start.sh -e debian -m single --build
+HELA_PROFILE=minimal ./start.sh -e alpine -m single --build
+</code></pre>
+<p><code>minimal</code> (3 cells) is the lightest, <code>headless-server</code> (7, no browser) is the CI default elsewhere, <code>dev-workspace</code> (8, includes browser + design) is the sandbox default. Check the installed profile inside the sandbox:</p>
+<pre><code class="language-bash">node /opt/hela-src/setup.mjs doctor --prefix /opt/hela
+</code></pre>
 <h2 id="adding-a-package-or-changing-an-engine">Adding a package or changing an engine</h2>
 <p>Permanent changes belong in the engine's Dockerfile, then rebuild:</p>
 <pre><code class="language-bash"># edit Dockerfile.debian, then
@@ -122,7 +130,7 @@ opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
   </main>
   <aside class="toc mono">
     <b>On this page</b>
-    <ul><li><a href="#what-is-installed">What is installed</a></li><li><a href="#version-policy">Version policy</a></li><li><a href="#engine-caveats">Engine caveats</a></li><li><a href="#adding-a-package-or-changing-an-engine">Adding a package or changing an engine</a></li></ul>
+    <ul><li><a href="#what-is-installed">What is installed</a></li><li><a href="#version-policy">Version policy</a></li><li><a href="#engine-caveats">Engine caveats</a></li><li><a href="#choosing-the-hela-profile">Choosing the HeLa profile</a></li><li><a href="#adding-a-package-or-changing-an-engine">Adding a package or changing an engine</a></li></ul>
   </aside>
 </div>
 <footer class="foot mono">

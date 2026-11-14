@@ -15,7 +15,7 @@ CLEANUP_TEMP=false
 if [ ! -d "$ECOSYSTEM_DIR" ]; then
     ECOSYSTEM_DIR="/tmp/mcp-ecosystem"
     if [ ! -d "$ECOSYSTEM_DIR" ]; then
-        git clone --depth=1 https://github.com/1999AZZAR/hela-mcp-ecosystem.git "$ECOSYSTEM_DIR" > /dev/null 2>&1
+        git clone --depth=1 https://github.com/Hela-Ecosystem/hela-mcp-ecosystem.git "$ECOSYSTEM_DIR" > /dev/null 2>&1
         CLEANUP_TEMP=true
     fi
 fi
@@ -24,28 +24,30 @@ if [ ! -f "$ECOSYSTEM_DIR/config/profiles.json" ]; then
     echo "FAILED: profiles.json missing in $ECOSYSTEM_DIR"
     exit 1
 fi
-# Verify profile exists
+# Verify the profiles this repo wires exist
+grep -q '"id": "dev-workspace"' "$ECOSYSTEM_DIR/config/profiles.json"
 grep -q '"id": "headless-server"' "$ECOSYSTEM_DIR/config/profiles.json"
 echo "PASSED"
 
-# Test 2: Verify Dockerfiles clone and build headless-server profile
-echo -n "[TEST 2] Dockerfile HeLa MCP ecosystem directives... "
+# Test 2: Dockerfiles install the HeLa runtime (single endpoint, profile-aware)
+echo -n "[TEST 2] Dockerfile HeLa runtime directives... "
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
-    if ! grep -q "hela-mcp-ecosystem" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing hela-mcp-ecosystem clone"
-        exit 1
-    fi
-    if ! grep -q "\-\-profile headless-server" "$DOCKERFILE"; then
-        echo "FAILED: $DOCKERFILE missing --profile headless-server"
-        exit 1
-    fi
-    for MCP_BIN in mcp-mitosis mcp-genome mcp-membrane mcp-nucleus mcp-ribosome mcp-enzyme mcp-phenotype; do
-        if ! grep -q "$MCP_BIN" "$DOCKERFILE"; then
-            echo "FAILED: $DOCKERFILE missing binary wrapper for $MCP_BIN"
-            exit 1
-        fi
+    grep -q "Hela-Ecosystem/hela-mcp-ecosystem" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE clones the wrong repo"; exit 1; }
+    grep -q "ARG HELA_PROFILE=dev-workspace" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing HELA_PROFILE build arg"; exit 1; }
+    grep -q "setup.mjs --profile \"\$HELA_PROFILE\" --mode runtime" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE not installing in runtime mode"; exit 1; }
+    grep -q "\-\-prefix /opt/hela" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing managed prefix"; exit 1; }
+    grep -q "generate-config.mjs \"\$HELA_PROFILE\" --backend antigravity" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing antigravity fragment"; exit 1; }
+    grep -q "generate-config.mjs \"\$HELA_PROFILE\" --backend opencode" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing opencode fragment"; exit 1; }
+    grep -q "launch.mjs" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE wrappers do not use launch.mjs"; exit 1; }
+    grep -q "mcp-runtime" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing mcp-runtime wrapper"; exit 1; }
+    for CELL in mitosis genome membrane nucleus ribosome enzyme cytosol phenotype receptor plastid; do
+        grep -q "\b$CELL\b" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE does not provision cell $CELL"; exit 1; }
     done
 done
+if grep -q "setup.sh --profile" Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; then
+    echo "FAILED: legacy setup.sh invocation still present"
+    exit 1
+fi
 echo "PASSED"
 
 # Test 3: Verify AI harnesses (OpenCode v2, Antigravity) and absence of codex/gemini/kilo

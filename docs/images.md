@@ -20,6 +20,8 @@ Published by `.github/workflows/publish.yml` on release tags (`v*`) and on manua
 | Alpine | `ghcr.io/1999azzar/ghost-machine-alpine:latest` | ~1.59 GB / 1.32 GB |
 | Arch | `ghcr.io/1999azzar/ghost-machine-arch:latest` | ~1.63 GB both |
 
+Sizes above are for the historical build. Current images also carry the HeLa runtime for `HELA_PROFILE` (default `dev-workspace`, ~1.3 GB of cells), so expect roughly +0.4 GB compressed; build with a smaller profile to shrink it.
+
 Each package carries three kinds of tag:
 
 - `latest` — newest release, moves on every publish.

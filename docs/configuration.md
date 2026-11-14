@@ -20,6 +20,7 @@ All configuration is environment variables. `.env` in the repo root is the canon
 | `HOST_GID` | host `id -g` | Same for the group. | create |
 | `GHOST_IMAGE` | engine default | Image reference; anything containing `/` is pulled, a plain tag is built. | create |
 | `GHOST_DOCKERFILE` | engine default | Dockerfile used when building. Set automatically by `-e`/`--prebuilt`. | build |
+| `HELA_PROFILE` | `dev-workspace` | HeLa cells installed in runtime mode. `minimal`, `dev-workspace`, `headless-server`, `research`, `web-devops`, `android-testing`, `3d-modeling`, `all`. | build |
 
 ## Ports and names
 
@@ -66,7 +67,7 @@ To pin a custom value, start Compose yourself with the variables you want after 
 | :--- | :--- | :--- |
 | `GHOST_HARNESS_UPDATE` | `latest` | `latest` = refresh stale binaries at start, `always` = every start, `off` = never. |
 | `HARNESS_UPDATE_INTERVAL_HOURS` | `24` | Staleness window for `latest`. |
-| `MCP_ECOSYSTEM_LOCAL_PATH` | `/dev/null` | Mount a local `hela-mcp-ecosystem` clone at `/opt/mcp-ecosystem-local` for development. |
+| `MCP_ECOSYSTEM_LOCAL_PATH` | `/dev/null` | Mount a local `hela-mcp-ecosystem` checkout at `/opt/mcp-ecosystem-local` for developing the ecosystem itself. The image's runtime lives in `/opt/hela`. |
 
 ## Tenant variables
 

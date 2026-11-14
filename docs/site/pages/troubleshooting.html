@@ -87,6 +87,11 @@
 <td style="text-align: left;"><code>harness-update</code> inside the sandbox, <code>./start.sh --update-harness</code>, or check <code>/var/log/ghost-harness-update.log</code></td>
 </tr>
 <tr>
+<td style="text-align: left;">MCP tools missing or a cell fails to start</td>
+<td style="text-align: left;">profile cell not installed, or data dir not writable</td>
+<td style="text-align: left;"><code>node /opt/hela-src/setup.mjs doctor --prefix /opt/hela</code>; cells install per <code>HELA_PROFILE</code> at build time</td>
+</tr>
+<tr>
 <td style="text-align: left;">Container restarts in a loop</td>
 <td style="text-align: left;">entrypoint or <code>sshd_config</code> error</td>
 <td style="text-align: left;"><code>./start.sh logs</code>, fix, <code>./start.sh stop &amp;&amp; ./start.sh …</code></td>

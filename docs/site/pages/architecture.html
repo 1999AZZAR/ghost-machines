@@ -46,7 +46,7 @@ start.sh / tenant.sh
 <li><strong>Entrypoint</strong> (<code>/entrypoint.sh</code>, runs as root) — SSH host keys generated if missing, <code>PasswordAuthentication</code> set from <code>SSH_PASSWORD_AUTH</code>, <code>/root</code> and <code>/home/&lt;user&gt;</code> prepared.</li>
 <li><strong>User setup</strong> — <code>developer</code> UID/GID re-synced to <code>HOST_UID</code>/<code>HOST_GID</code>, password set, sudoers entry written, <code>authorized_keys</code> copied with <code>0600</code>.</li>
 <li><strong>Home skeleton</strong> — <code>.bashrc</code>/<code>.bash_aliases</code>/<code>.profile</code>, oh-my-bash, alias-hub, neofetch ASCII, fastfetch config, all written only when absent so your files survive.</li>
-<li><strong>Agent wiring</strong> — MCP configs copied if missing (<code>~/.mcp/config.json</code>, <code>~/.config/opencode/opencode.json</code>), Conductor symlinked, RTK rewrite hooks installed for Antigravity/Claude/OpenCode.</li>
+<li><strong>Agent wiring</strong> — the single <code>hela-runtime</code> MCP endpoint is copied into <code>~/.mcp/config.json</code> and <code>~/.config/opencode/opencode.json</code> if missing, Conductor is symlinked, and RTK rewrite hooks are installed for Antigravity/Claude/OpenCode. The runtime advertises the profile's cells and starts each only when a tool is called.</li>
 <li><strong>Harness refresh</strong> — <code>harness-update --if-due</code> starts in the background and logs to <code>/var/log/ghost-harness-update.log</code>; startup never waits on the network.</li>
 <li><strong>sshd</strong> — <code>exec /usr/sbin/sshd -D</code> becomes the container process.</li>
 </ol>
@@ -148,11 +148,15 @@ start.sh / tenant.sh
 </tr>
 <tr>
 <td style="text-align: left;"><code>/usr/local/bin/mcp-*</code></td>
-<td style="text-align: left;">Wrapper scripts for the seven headless HeLa MCP servers.</td>
+<td style="text-align: left;">Per-cell launchers (<code>mcp-mitosis</code> … <code>mcp-plastid</code>) plus <code>mcp-runtime</code>, all through <code>launch.mjs</code>.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>/opt/mcp-ecosystem</code></td>
-<td style="text-align: left;">HeLa MCP ecosystem clone (symlinked as <code>~/MCPservers</code>).</td>
+<td style="text-align: left;"><code>/opt/hela</code></td>
+<td style="text-align: left;">Managed HeLa installation: the selected profile's cells, runtime, data and workspace (writable by the sandbox user).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>/opt/hela-src</code></td>
+<td style="text-align: left;">Installer checkout, used by <code>setup.mjs doctor</code> and upgrades.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>/opt/conductor</code></td>

@@ -22,6 +22,7 @@ Start with the two commands that answer most questions:
 | `htop`/`free` show host RAM | LXCFS not installed or disabled | `make setup-host` on Linux; expected on macOS/WSL (`--no-lxcfs`) |
 | `permission denied … /var/run/docker.sock` | user not in the `docker` group | `sudo usermod -aG docker $USER`, then re-login |
 | Agent CLI missing or stale inside | build-time download failed (offline host) | `harness-update` inside the sandbox, `./start.sh --update-harness`, or check `/var/log/ghost-harness-update.log` |
+| MCP tools missing or a cell fails to start | profile cell not installed, or data dir not writable | `node /opt/hela-src/setup.mjs doctor --prefix /opt/hela`; cells install per `HELA_PROFILE` at build time |
 | Container restarts in a loop | entrypoint or `sshd_config` error | `./start.sh logs`, fix, `./start.sh stop && ./start.sh …` |
 | `apt`/`apk` install vanished | container was recreated | expected: bake it into a Dockerfile ([Engines](engines.md)) |
 | Mount is root-owned | stale container created with a different UID | `./start.sh stop`, re-run `./start.sh`, or `sudo chown -R "$(id -u):$(id -g)" mounts/` |

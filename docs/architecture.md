@@ -34,7 +34,7 @@ What actually happens between `./start.sh` and a prompt, in order:
 4. **Entrypoint** (`/entrypoint.sh`, runs as root) — SSH host keys generated if missing, `PasswordAuthentication` set from `SSH_PASSWORD_AUTH`, `/root` and `/home/<user>` prepared.
 5. **User setup** — `developer` UID/GID re-synced to `HOST_UID`/`HOST_GID`, password set, sudoers entry written, `authorized_keys` copied with `0600`.
 6. **Home skeleton** — `.bashrc`/`.bash_aliases`/`.profile`, oh-my-bash, alias-hub, neofetch ASCII, fastfetch config, all written only when absent so your files survive.
-7. **Agent wiring** — MCP configs copied if missing (`~/.mcp/config.json`, `~/.config/opencode/opencode.json`), Conductor symlinked, RTK rewrite hooks installed for Antigravity/Claude/OpenCode.
+7. **Agent wiring** — the single `hela-runtime` MCP endpoint is copied into `~/.mcp/config.json` and `~/.config/opencode/opencode.json` if missing, Conductor is symlinked, and RTK rewrite hooks are installed for Antigravity/Claude/OpenCode. The runtime advertises the profile's cells and starts each only when a tool is called.
 8. **Harness refresh** — `harness-update --if-due` starts in the background and logs to `/var/log/ghost-harness-update.log`; startup never waits on the network.
 9. **sshd** — `exec /usr/sbin/sshd -D` becomes the container process.
 
@@ -73,8 +73,9 @@ One bridge network (`ghost_sandbox`), one published port per machine (22 → `G1
 | Path | Content |
 | :--- | :--- |
 | `/usr/local/bin/opencode`, `agy`, `antigravity`, `rtk` | Agent harnesses, refreshed by `harness-update`. |
-| `/usr/local/bin/mcp-*` | Wrapper scripts for the seven headless HeLa MCP servers. |
-| `/opt/mcp-ecosystem` | HeLa MCP ecosystem clone (symlinked as `~/MCPservers`). |
+| `/usr/local/bin/mcp-*` | Per-cell launchers (`mcp-mitosis` … `mcp-plastid`) plus `mcp-runtime`, all through `launch.mjs`. |
+| `/opt/hela` | Managed HeLa installation: the selected profile's cells, runtime, data and workspace (writable by the sandbox user). |
+| `/opt/hela-src` | Installer checkout, used by `setup.mjs doctor` and upgrades. |
 | `/opt/conductor` | Google Conductor plugin + skills. |
 | `/usr/local/bin/harness-update` | Version resolver ([Images](images.md#harnesses-are-never-pinned)). |
 
