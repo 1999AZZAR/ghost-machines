@@ -125,16 +125,20 @@ def _to_html_link(match: re.Match[str]) -> str:
     return match.group(0)
 
 
-BASE_URL = "https://1999azzar.github.io/ghost-machines"
+DEFAULT_BASE_URL = "https://1999azzar.github.io/ghost-machines"
 
 
-def sitemap(pages: list[dict]) -> str:
-    urls = [f"{BASE_URL}/index.html"] + [f"{BASE_URL}/pages/{entry['slug']}.html" for entry in pages]
+def sitemap(pages: list[dict], base_url: str) -> str:
+    urls = [f"{base_url}/index.html"] + [f"{base_url}/pages/{entry['slug']}.html" for entry in pages]
     body = "".join(f"  <url><loc>{url}</loc></url>\n" for url in urls)
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 {body}</urlset>
 """
+
+
+def robots(base_url: str) -> str:
+    return f"User-agent: *\nAllow: /\nSitemap: {base_url}/sitemap.xml\n"
 
 
 def page_html(entry: dict, body: str, toc: list[tuple[str, str]], prev: dict | None, nxt: dict | None) -> str:
@@ -187,7 +191,14 @@ def main() -> int:
     PAGES.mkdir(parents=True, exist_ok=True)
 
     pages = manifest["pages"]
-    outputs: dict[Path, str] = {ASSETS / "site.css": CSS, SITE / "sitemap.xml": sitemap(pages)}
+    base_url = manifest.get("base_url", DEFAULT_BASE_URL).rstrip("/")
+    outputs: dict[Path, str] = {
+        ASSETS / "site.css": CSS,
+        SITE / "sitemap.xml": sitemap(pages, base_url),
+        SITE / "robots.txt": robots(base_url),
+    }
+    if manifest.get("cname"):
+        outputs[SITE / "CNAME"] = f"{manifest['cname']}\n"
     for index, entry in enumerate(pages):
         source = DOCS / entry["source"]
         if not source.exists():

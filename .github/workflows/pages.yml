@@ -1,0 +1,64 @@
+name: Publish Docs Site
+
+# The site is generated, never hand-edited. This workflow renders docs/*.md,
+# verifies the result, and force-pushes the output to the gh-pages branch that
+# GitHub Pages serves (custom domain: gh.glassgallery.my.id -> CNAME).
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'docs/**'
+      - 'tools/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Render, verify and publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install docs toolchain
+        run: python3 -m pip install --quiet markdown
+
+      - name: Render site
+        run: python3 tools/build_site.py
+
+      - name: Verify docs (links, examples, facts, freshness)
+        run: ./tests/test_docs.sh
+
+      - name: Publish to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Publish exactly what was rendered, with no repository metadata.
+          rm -rf "$RUNNER_TEMP/site"
+          cp -a docs/site "$RUNNER_TEMP/site"
+          rm -rf "$RUNNER_TEMP/site/.git"
+
+          cd "$RUNNER_TEMP/site"
+          git init -q -b gh-pages
+          git add -A
+          git commit -qm "docs: publish site from ${GITHUB_SHA::7}"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+
+          echo "Published $(git rev-parse --short HEAD) to gh-pages"

@@ -78,6 +78,25 @@ Writing rules:
 - **No duplicate sources of truth.** Reference another page instead of copying its table.
 - **State the audience** for anything that differs between a laptop and a shared host.
 
+## Documentation deployment
+
+Push to `master` touching `docs/**` or `tools/**`, and `.github/workflows/pages.yml`:
+
+1. installs `markdown`, runs `tools/build_site.py` (regenerates `docs/site`),
+2. runs `tests/test_docs.sh` (links, examples, facts, freshness) — a failure blocks deployment,
+3. force-pushes the rendered `docs/site` to the `gh-pages` branch.
+
+GitHub Pages serves that branch at <https://ghost.glassgallery.my.id>. Nothing is committed to `gh-pages` by hand, and the branch holds only the generated artifact.
+
+`docs/site/site.json` is the single source for the public identity:
+
+| Key | Effect |
+| :--- | :--- |
+| `base_url` | canonical URLs in `sitemap.xml` and the `Sitemap:` line in `robots.txt` |
+| `cname` | written to `docs/site/CNAME`, which GitHub Pages reads for the custom domain |
+
+Change the domain in one place and sitemap, robots and CNAME stay consistent.
+
 ## Release process
 
 1. Merge to `master` with the suite green.

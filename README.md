@@ -38,7 +38,7 @@ Full walkthrough, including the local-build alternative: **[docs/getting-started
 
 ## Documentation
 
-Start at the **[docs index](docs/README.md)** (or the [web version](https://ghost.glassgallery.my.id)) if you prefer HTML.
+Start at the **[docs index](docs/README.md)** (or the [web version](https://ghost.glassgallery.my.id), rebuilt automatically from `docs/` on every push to `master`).
 
 | If you want to… | Read |
 | :--- | :--- |

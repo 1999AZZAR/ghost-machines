@@ -150,8 +150,35 @@ else
 fi
 echo "PASSED"
 
-# Test 7: Site builder is syntactically valid
-echo -n "[DOCS 7] Site builder compiles... "
+# Test 7: Pages deployment wiring and generated metadata
+echo -n "[DOCS 7] Pages workflow and generated metadata... "
+[ -f .github/workflows/pages.yml ] || { echo "FAILED: no pages workflow"; exit 1; }
+grep -q "tools/build_site.py" .github/workflows/pages.yml || { echo "FAILED: workflow does not render the site"; exit 1; }
+grep -q "gh-pages" .github/workflows/pages.yml || { echo "FAILED: workflow does not publish to gh-pages"; exit 1; }
+grep -q "tests/test_docs.sh" .github/workflows/pages.yml || { echo "FAILED: workflow publishes without verification"; exit 1; }
+python3 - <<'CHECK'
+import json, pathlib, sys
+manifest = json.loads(pathlib.Path("docs/site/site.json").read_text())
+base = manifest.get("base_url", "").rstrip("/")
+cname = manifest.get("cname", "")
+problems = []
+if not base:
+    problems.append("site.json has no base_url")
+if cname and pathlib.Path("docs/site/CNAME").read_text().strip() != cname:
+    problems.append("docs/site/CNAME does not match site.json cname")
+if base and f"Sitemap: {base}/sitemap.xml" not in pathlib.Path("docs/site/robots.txt").read_text():
+    problems.append("robots.txt Sitemap does not use base_url")
+sitemap = pathlib.Path("docs/site/sitemap.xml").read_text()
+if base and f"<loc>{base}/index.html</loc>" not in sitemap:
+    problems.append("sitemap.xml does not use base_url")
+if problems:
+    print("\n".join(problems))
+    sys.exit(1)
+CHECK
+echo "PASSED"
+
+# Test 8: Site builder is syntactically valid
+echo -n "[DOCS 8] Site builder compiles... "
 PYTHONPYCACHEPREFIX="$(mktemp -d)" python3 -m py_compile tools/build_site.py || { echo "FAILED: tools/build_site.py"; exit 1; }
 echo "PASSED"
 
