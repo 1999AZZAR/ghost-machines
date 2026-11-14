@@ -78,3 +78,9 @@ conductor/
 .agents/
 .gemini/
 .antigravity/
+
+# Brag launch videos
+brag-output*/
+brag.mp4
+brag.jpg
+brag.poster.mp4
