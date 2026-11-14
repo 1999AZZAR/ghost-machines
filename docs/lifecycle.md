@@ -80,6 +80,7 @@ The entrypoint is chatty on purpose: SSH key injection, user sync, harness confi
 ./clean.sh -a -y              # L3: L2 + local template images (GHCR stays)
 ./clean.sh --nuke --dry-run   # L4 preview: prints every command, changes nothing
 ./clean.sh --nuke -y          # L4: full purge, keeps mounts/ and snapshots/
+./clean.sh --nuke --keep-cache -y   # L4 but keep the shared Docker build cache
 ./clean.sh --nuke --hard -y   # L4 + mounts/ and snapshots/ (data loss)
 ```
 
@@ -92,12 +93,12 @@ What L4 (`--nuke`) removes:
 | Dangling images | Only those carrying this project's OCI source label (images built from the current Dockerfiles) — other projects are untouched |
 | Volumes | Compose volumes belonging to `ghost-machines` / `ghost-tenant-*` only |
 | Networks | `ghost_sandbox` and any `ghost-machines_*` / `ghost-tenant-*` network |
-| Build cache | `docker builder prune -af` and `docker buildx prune -af`. Host-wide — Docker cannot scope build cache per project |
+| Build cache | `docker builder prune -af` and `docker buildx prune -af`. Host-wide — Docker cannot scope build cache per project. Add `--keep-cache` to skip this step |
 | Registry | `config/tenants.json` restored to its committed (empty) state — no spurious git diff |
 
 What it deliberately keeps: `mounts/` (your work) and `snapshots/` (your backups), unless `--hard` is passed. `--hard` deletes both and recreates the empty directories, returning the checkout to a first-run state.
 
-Every level supports `--dry-run`, which prints the exact Docker commands without executing them, and `-y` to skip the confirmation prompt. L1–L3 warn when tenant containers exist, because they only manage the main machines. `--hard` outside `--nuke` is rejected rather than silently ignored.
+Every level supports `--dry-run`, which prints the exact Docker commands without executing them, and `-y` to skip the confirmation prompt. `--keep-cache` (with `--nuke`) skips the build-cache purge, which is the only host-wide step. L1–L3 warn when tenant containers exist, because they only manage the main machines. `--hard` outside `--nuke` is rejected rather than silently ignored.
 
 ## Backup and restore
 

@@ -75,6 +75,7 @@ Your files live in `mounts/`, not inside the container, so `stop` never deletes 
 ./clean.sh -s -y              # stop containers + network
 ./clean.sh -a -y              # + volumes + local images
 ./clean.sh --nuke -y          # everything Docker-side, mounts/ kept
+./clean.sh --nuke --keep-cache -y   # same, but keep the shared build cache
 ./clean.sh --nuke --hard -y   # also delete mounts/ + snapshots/
 ```
 

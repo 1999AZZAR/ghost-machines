@@ -183,6 +183,7 @@ docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
 ./clean.sh -a -y              # L3: L2 + local template images (GHCR stays)
 ./clean.sh --nuke --dry-run   # L4 preview: prints every command, changes nothing
 ./clean.sh --nuke -y          # L4: full purge, keeps mounts/ and snapshots/
+./clean.sh --nuke --keep-cache -y   # L4 but keep the shared Docker build cache
 ./clean.sh --nuke --hard -y   # L4 + mounts/ and snapshots/ (data loss)
 </code></pre>
 <p>What L4 (<code>--nuke</code>) removes:</p>
@@ -216,7 +217,7 @@ docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
 </tr>
 <tr>
 <td style="text-align: left;">Build cache</td>
-<td style="text-align: left;"><code>docker builder prune -af</code> and <code>docker buildx prune -af</code>. Host-wide — Docker cannot scope build cache per project</td>
+<td style="text-align: left;"><code>docker builder prune -af</code> and <code>docker buildx prune -af</code>. Host-wide — Docker cannot scope build cache per project. Add <code>--keep-cache</code> to skip this step</td>
 </tr>
 <tr>
 <td style="text-align: left;">Registry</td>
@@ -225,7 +226,7 @@ docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
 </tbody>
 </table>
 <p>What it deliberately keeps: <code>mounts/</code> (your work) and <code>snapshots/</code> (your backups), unless <code>--hard</code> is passed. <code>--hard</code> deletes both and recreates the empty directories, returning the checkout to a first-run state.</p>
-<p>Every level supports <code>--dry-run</code>, which prints the exact Docker commands without executing them, and <code>-y</code> to skip the confirmation prompt. L1–L3 warn when tenant containers exist, because they only manage the main machines. <code>--hard</code> outside <code>--nuke</code> is rejected rather than silently ignored.</p>
+<p>Every level supports <code>--dry-run</code>, which prints the exact Docker commands without executing them, and <code>-y</code> to skip the confirmation prompt. <code>--keep-cache</code> (with <code>--nuke</code>) skips the build-cache purge, which is the only host-wide step. L1–L3 warn when tenant containers exist, because they only manage the main machines. <code>--hard</code> outside <code>--nuke</code> is rejected rather than silently ignored.</p>
 <h2 id="backup-and-restore">Backup and restore</h2>
 <p>Snapshots archive <code>mounts/</code> while skipping caches (<code>node_modules/.cache</code>, <code>.npm/_cacache</code>, <code>target/</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, logs):</p>
 <pre><code class="language-bash">make snapshot                                   # snapshots/ghost_snapshot_&lt;ts&gt;.tar.gz

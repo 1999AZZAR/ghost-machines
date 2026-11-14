@@ -88,6 +88,7 @@ echo "PASSED"
 # Test 7: Nuke really nukes (tenants, all tags, volumes, networks, cache, registry)
 echo -n "[TEST 7] clean.sh --nuke completeness... "
 grep -q -- "--dry-run" clean.sh || { echo "FAILED: no --dry-run"; exit 1; }
+grep -q -- "--keep-cache" clean.sh || { echo "FAILED: no --keep-cache"; exit 1; }
 grep -q "ghost-tenant-" clean.sh || { echo "FAILED: tenant projects not removed"; exit 1; }
 grep -qF 'ghcr\.io/1999azzar/ghost-machine-' clean.sh || { echo "FAILED: GHCR tags not matched"; exit 1; }
 grep -q "builder prune -af" clean.sh || { echo "FAILED: builder cache not fully pruned"; exit 1; }
@@ -101,6 +102,9 @@ for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch
 done
 ./clean.sh --nuke --dry-run > /tmp/ghost-nuke-dry.log 2>&1 || { echo "FAILED: --dry-run exited non-zero"; exit 1; }
 grep -q "nothing was removed" /tmp/ghost-nuke-dry.log || { echo "FAILED: --dry-run did not report a no-op"; exit 1; }
+./clean.sh --nuke --keep-cache --dry-run > /tmp/ghost-nuke-cache.log 2>&1 || { echo "FAILED: --keep-cache dry-run exited non-zero"; exit 1; }
+grep -q "build cache KEPT" /tmp/ghost-nuke-cache.log || { echo "FAILED: --keep-cache not reflected in the plan"; exit 1; }
+rm -f /tmp/ghost-nuke-cache.log
 grep -q "down --remove-orphans\|down -v --remove-orphans" /tmp/ghost-nuke-dry.log || { echo "FAILED: --dry-run did not show container teardown"; exit 1; }
 rm -f /tmp/ghost-nuke-dry.log
 if [ -n "$(git status --porcelain config/tenants.json)" ]; then
@@ -164,6 +168,18 @@ assert_log "network rm ghost_sandbox"
 assert_log "builder prune -af"
 assert_log "buildx prune -af"
 grep -q '"tenants": {}' config/tenants.json || { echo "FAILED: tenant registry not reset"; exit 1; }
+
+: > "$DOCKER_LOG"
+PATH="$STUB_DIR:$PATH" DOCKER_LOG="$DOCKER_LOG" ./clean.sh --nuke --keep-cache -y > /dev/null 2>&1 \
+    || { echo "FAILED: --keep-cache run exited non-zero"; exit 1; }
+if grep -q "builder prune" "$DOCKER_LOG"; then
+    echo "FAILED: --keep-cache still pruned the builder cache"
+    exit 1
+fi
+if grep -q "buildx prune" "$DOCKER_LOG"; then
+    echo "FAILED: --keep-cache still pruned the buildx cache"
+    exit 1
+fi
 
 cp "${DOCKER_LOG}.registry" config/tenants.json
 rm -rf "$STUB_DIR" "$DOCKER_LOG" "${DOCKER_LOG}.out" "${DOCKER_LOG}.registry"

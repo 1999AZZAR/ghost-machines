@@ -68,6 +68,7 @@
 ./clean.sh -s -y              # stop containers + network
 ./clean.sh -a -y              # + volumes + local images
 ./clean.sh --nuke -y          # everything Docker-side, mounts/ kept
+./clean.sh --nuke --keep-cache -y   # same, but keep the shared build cache
 ./clean.sh --nuke --hard -y   # also delete mounts/ + snapshots/
 </code></pre>
 <h2 id="setup-hostsh-building-setup-once">setup-host.sh — Building Setup (once)</h2>

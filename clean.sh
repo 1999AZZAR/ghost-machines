@@ -10,6 +10,7 @@ LEVEL=""
 FORCE=false
 HARD=false
 DRY_RUN=false
+KEEP_CACHE=false
 TENANT_TEMPLATE="templates/docker-compose.tenant.yml"
 
 # --- helpers ------------------------------------------------------------------
@@ -122,6 +123,10 @@ while [[ $# -gt 0 ]]; do
             DRY_RUN=true
             shift
             ;;
+        --keep-cache)
+            KEEP_CACHE=true
+            shift
+            ;;
         -y|--yes|--force)
             FORCE=true
             shift
@@ -141,6 +146,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "      --hard           With --nuke: also delete mounts/ and snapshots/ (data loss)"
+            echo "      --keep-cache     With --nuke: leave the host's Docker build cache alone"
             echo "      --dry-run        Print exactly what would be removed; change nothing"
             echo "  -y, --yes, --force   Skip confirmation prompts"
             echo "  -h, --help           Show this help message"
@@ -149,6 +155,7 @@ while [[ $# -gt 0 ]]; do
             echo "  ./clean.sh -s -y"
             echo "  ./clean.sh --nuke --dry-run"
             echo "  ./clean.sh --nuke -y"
+            echo "  ./clean.sh --nuke --keep-cache -y"
             echo "  ./clean.sh --nuke --hard -y"
             exit 0
             ;;
@@ -207,7 +214,11 @@ case $LEVEL in
         echo "       - every Ghost container (main, tunnel, and tenant projects)"
         echo "       - every Ghost network and Ghost-owned volume"
         echo "       - every local template image AND every GHCR ghost-machine tag"
-        echo "       - all builder/buildx cache (host-wide), and dangling images built from this project"
+        if [ "$KEEP_CACHE" = true ]; then
+            echo "       - dangling images built from this project (build cache KEPT: --keep-cache)"
+        else
+            echo "       - all builder/buildx cache (host-wide), and dangling images built from this project"
+        fi
         echo "       - the tenant registry (config/tenants.json reset)"
         if [ "$HARD" = true ]; then
             echo "       - mounts/ and snapshots/ (--hard: WORK AND BACKUPS ARE DELETED)"
@@ -249,10 +260,14 @@ case $LEVEL in
             run docker network rm "$NETWORK" >/dev/null 2>&1 || true
         done
 
-        echo "[INFO] Clearing build cache (host-wide: Docker cannot scope build cache per project)..."
-        run docker builder prune -af >/dev/null 2>&1 || true
-        if docker buildx version >/dev/null 2>&1; then
-            run docker buildx prune -af >/dev/null 2>&1 || true
+        if [ "$KEEP_CACHE" = true ]; then
+            echo "[INFO] Keeping the host Docker build cache (--keep-cache); next rebuild is fast."
+        else
+            echo "[INFO] Clearing build cache (host-wide: Docker cannot scope build cache per project)..."
+            run docker builder prune -af >/dev/null 2>&1 || true
+            if docker buildx version >/dev/null 2>&1; then
+                run docker buildx prune -af >/dev/null 2>&1 || true
+            fi
         fi
 
         echo "[INFO] Resetting tenant registry..."
@@ -269,7 +284,12 @@ case $LEVEL in
                 touch mounts/ubuntu1/.gitkeep mounts/ubuntu2/.gitkeep mounts/tenants/.gitkeep snapshots/.gitkeep 2>/dev/null || true
             fi
         else
-            echo "[NOTE] Build cache is shared by every Docker project on this host; --nuke clears it all."
+            if [ "$KEEP_CACHE" = true ]; then
+                echo "[NOTE] Build cache kept; rerun without --keep-cache to reclaim it."
+            else
+                echo "[NOTE] Build cache is shared by every Docker project on this host; --nuke clears it all."
+                echo "[NOTE] Use --keep-cache to purge Ghost without touching the shared cache."
+            fi
             echo "[TIP] Add --hard to also delete mounts/ and snapshots/ (true 1st-user nuke)."
         fi
 

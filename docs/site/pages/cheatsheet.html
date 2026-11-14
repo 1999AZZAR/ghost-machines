@@ -47,6 +47,7 @@ docker compose --profile dual start           # resume
 ./clean.sh -a -y                              # + volume + local images, keeps mounts/
 ./clean.sh --nuke --dry-run                   # preview a full purge
 ./clean.sh --nuke -y                          # tenants, all image tags, cache, registry
+./clean.sh --nuke --keep-cache -y             # same, but keep the shared build cache
 ./clean.sh --nuke --hard -y                   # + mounts/ and snapshots/ (destructive)
 </code></pre>
 <h2 id="backup-restore">Backup / restore</h2>

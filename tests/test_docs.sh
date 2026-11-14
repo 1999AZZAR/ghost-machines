@@ -97,7 +97,7 @@ grep -q "2224" docs/connecting.md || { echo "FAILED: docs lose the dual port"; e
 for SUITE in $(grep -oE 'test_[a-z0-9_]+\.sh' tests/run_all.sh | sort -u); do
     grep -q "$SUITE" docs/contributing.md || { echo "FAILED: contributing.md omits $SUITE"; exit 1; }
 done
-for FLAG in --nuke --hard --dry-run; do
+for FLAG in --nuke --hard --dry-run --keep-cache; do
     grep -q -- "$FLAG" clean.sh || { echo "FAILED: clean.sh lacks $FLAG"; exit 1; }
     grep -q -- "$FLAG" docs/lifecycle.md || { echo "FAILED: lifecycle.md does not document $FLAG"; exit 1; }
 done
