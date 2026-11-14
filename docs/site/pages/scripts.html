@@ -63,10 +63,12 @@
 ./restore.sh                       # picks a backup and restores
 </code></pre>
 <h2 id="cleansh-housekeeping">clean.sh — Housekeeping</h2>
-<p><strong>What:</strong> Shuts down and cleans up. 4 levels: just stop, clear rooms, throw away images, nuke GHCR + builder. Add <code>--hard</code> with <code>--nuke</code> to also wipe <code>mounts/</code> (true 1st-user).</p>
-<pre><code class="language-bash">./clean.sh           # menu — choose level (5 options)
-./clean.sh -a -y     # deep clean, no questions
-./clean.sh --nuke --hard -y  # full nuke + mounts/
+<p><strong>What:</strong> Shuts down and cleans up, in four escalating levels. L4 is a real nuke: tenants, every image tag, volumes, networks, build cache and the tenant registry — while keeping your work in <code>mounts/</code> unless you ask for <code>--hard</code>.</p>
+<pre><code class="language-bash">./clean.sh --nuke --dry-run   # what would be removed? (changes nothing)
+./clean.sh -s -y              # stop containers + network
+./clean.sh -a -y              # + volumes + local images
+./clean.sh --nuke -y          # everything Docker-side, mounts/ kept
+./clean.sh --nuke --hard -y   # also delete mounts/ + snapshots/
 </code></pre>
 <h2 id="setup-hostsh-building-setup-once">setup-host.sh — Building Setup (once)</h2>
 <p><strong>What:</strong> Prepares your computer to show correct RAM/CPU inside containers (via LXCFS). Only needed once on Linux.</p>

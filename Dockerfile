@@ -6,6 +6,12 @@
 
 FROM ubuntu:latest
 
+# Image metadata: lets clean.sh prune this project's images precisely.
+LABEL org.opencontainers.image.title="Ghost Machine (ubuntu)" \
+      org.opencontainers.image.source="https://github.com/1999AZZAR/ghost-machines" \
+      org.opencontainers.image.licenses="MIT"
+
+
 # Build Arguments & Versions
 ARG GHOST_USER=developer
 ARG HOST_UID=1000

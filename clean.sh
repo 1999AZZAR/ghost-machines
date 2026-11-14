@@ -1,13 +1,96 @@
 #!/bin/bash
 
 # Ghost Machines: Environment Pruning Utility
-# Standardizes the shutdown and cleanup of ghost environments.
-# Supports both interactive menu and headless CLI flags.
+# Four levels, from "stop the containers" to "return this checkout to pristine".
+# Supports interactive menu, headless flags, and a --dry-run preview.
 
 set -e
 
 LEVEL=""
 FORCE=false
+HARD=false
+DRY_RUN=false
+TENANT_TEMPLATE="templates/docker-compose.tenant.yml"
+
+# --- helpers ------------------------------------------------------------------
+
+run() {
+    if [ "$DRY_RUN" = true ]; then
+        echo "    [dry-run] $*"
+    else
+        "$@"
+    fi
+}
+
+# Local build tags: exactly the four engine images this repo produces.
+local_template_images() {
+    docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null \
+        | grep -E '^(ubuntu|debian|alpine|arch)-template:' || true
+}
+
+# Every image this project can produce or pull: local templates plus all GHCR
+# tags (latest, vX.Y.Z, latest-<sha>), regardless of how they were tagged.
+ghost_images() {
+    docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null \
+        | grep -E '^(ghcr\.io/1999azzar/ghost-machine-[a-z0-9-]+|(ubuntu|debian|alpine|arch)-template):' || true
+}
+
+ghost_containers() {
+    for FILTER in "name=ghost-machine" "name=ghost-tenant-" "name=ghost-tunnel"; do
+        docker ps -aq --filter "$FILTER" 2>/dev/null || true
+    done | sort -u
+}
+
+ghost_networks() {
+    docker network ls --format '{{.Name}}' 2>/dev/null \
+        | grep -E '^(ghost_sandbox|ghost-machines_|ghost-tenant-)' || true
+}
+
+# Only volumes owned by a compose project of ours — never the host's other volumes.
+ghost_volumes() {
+    local VOLUME PROJECT
+    for VOLUME in $(docker volume ls -q 2>/dev/null); do
+        PROJECT=$(docker volume inspect -f '{{ index .Labels "com.docker.compose.project" }}' "$VOLUME" 2>/dev/null || true)
+        case "$PROJECT" in
+            ghost-machines|ghost-tenant-*) echo "$VOLUME" ;;
+        esac
+    done
+}
+
+tenant_projects() {
+    docker ps -a --format '{{.Names}}' 2>/dev/null | grep -E '^ghost-tenant-' || true
+}
+
+reset_tenant_registry() {
+    [ -f config/tenants.json ] || return 0
+    if [ "$DRY_RUN" = true ]; then
+        echo "    [dry-run] reset config/tenants.json to an empty registry"
+        return 0
+    fi
+    printf '{"version": "1.0", "tenants": {}}\n' > config/tenants.json
+}
+
+warn_tenants_present() {
+    local TENANTS
+    TENANTS=$(tenant_projects)
+    if [ -n "$TENANTS" ]; then
+        echo "[NOTE] Tenant containers are still present:"
+        while IFS= read -r TENANT; do
+            [ -n "$TENANT" ] && echo "       - $TENANT"
+        done <<< "$TENANTS"
+        echo "       Remove them with ./tenant.sh delete <id> --archive, or use --nuke."
+    fi
+}
+
+confirm() {
+    [ "$FORCE" = true ] && return 0
+    [ "$DRY_RUN" = true ] && return 0
+    local ANSWER
+    read -r -p "[WARNING] $1 Continue? (y/N): " ANSWER
+    [[ "$ANSWER" =~ ^[Yy]$ ]] || { echo "Cancelled."; exit 0; }
+}
+
+# --- argument parsing ---------------------------------------------------------
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -31,6 +114,10 @@ while [[ $# -gt 0 ]]; do
             HARD=true
             shift
             ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
         -y|--yes|--force)
             FORCE=true
             shift
@@ -40,14 +127,25 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Usage: ./clean.sh [options]"
             echo ""
+            echo "Levels:"
+            echo "  -s, --stop           L1: stop + remove containers and network"
+            echo "  -v, --volumes        L2: L1 + volumes"
+            echo "  -a, --all, --reset   L3: L2 + local template images (keeps pulled GHCR images)"
+            echo "      --nuke, --purge  L4: L3 + tenant projects, every Ghost/GHCR image tag,"
+            echo "                            Ghost volumes and networks, all builder cache,"
+            echo "                            dangling images, and resets config/tenants.json"
+            echo ""
             echo "Options:"
-            echo "  -s, --stop           Stop and remove containers/network (Level 1)"
-            echo "  -v, --volumes, --deep Stop and remove containers, networks, AND volumes (Level 2)"
-            echo "  -a, --all, --reset   All of above, plus remove local images (Level 3)"
-            echo "      --nuke, --purge  Level 3 + remove GHCR prebuilt images + prune builder cache (Level 4)"
-            echo "      --hard           With --nuke: also wipe mounts/ (true 1st-user nuke)"
+            echo "      --hard           With --nuke: also delete mounts/ and snapshots/ (data loss)"
+            echo "      --dry-run        Print exactly what would be removed; change nothing"
             echo "  -y, --yes, --force   Skip confirmation prompts"
             echo "  -h, --help           Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  ./clean.sh -s -y"
+            echo "  ./clean.sh --nuke --dry-run"
+            echo "  ./clean.sh --nuke -y"
+            echo "  ./clean.sh --nuke --hard -y"
             exit 0
             ;;
         *)
@@ -61,10 +159,11 @@ if [ -z "$LEVEL" ]; then
     echo "------------------------------------------------"
     echo " GHOST MACHINES: CLEANUP"
     echo "------------------------------------------------"
-    echo "1) Standard Stop  - Stop and remove containers/network"
-    echo "2) Deep Clean     - Stop and remove containers, networks, AND volumes"
-    echo "3) Reset Template - All of the above, plus remove the base image"
-    echo "4) Nuke           - All of Level 3 + GHCR prebuilts + builder cache"
+    echo "1) Standard Stop  - Remove containers/network            (keeps images, work)"
+    echo "2) Deep Clean     - 1 + remove volumes                   (keeps images, work)"
+    echo "3) Reset Template - 2 + remove local template images     (keeps GHCR, work)"
+    echo "4) Nuke           - 3 + tenants, ALL Ghost/GHCR images,"
+    echo "                    volumes, networks, builder cache     (keeps mounts/)"
     echo "5) Cancel"
     echo "------------------------------------------------"
     read -r -p "Select cleanup level [1-5]: " LEVEL
@@ -72,43 +171,103 @@ fi
 
 case $LEVEL in
     1)
-        echo "[INFO] Performing standard stop..."
-        docker compose --profile dual --profile remote down
+        echo "[INFO] L1 — stopping containers and removing the network..."
+        run docker compose --profile dual --profile remote down --remove-orphans
+        warn_tenants_present
+        echo "[L1] Done. Images, volumes, mounts/ and .env are untouched."
         ;;
     2)
-        if [ "$FORCE" = false ]; then
-            read -r -p "[WARNING] This will remove container volumes. Continue? (y/n): " CONFIRM
-            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
-        fi
-        echo "[INFO] Performing deep clean (removing volumes)..."
-        docker compose --profile dual --profile remote down -v
+        confirm "This removes the containers' volumes (mounts/ on the host is untouched)."
+        echo "[INFO] L2 — removing containers, network and volumes..."
+        run docker compose --profile dual --profile remote down -v --remove-orphans
+        warn_tenants_present
+        echo "[L2] Done. Images and mounts/ are untouched."
         ;;
     3)
-        if [ "$FORCE" = false ]; then
-            read -r -p "[WARNING] This will remove containers, volumes, AND local images. Continue? (y/n): " CONFIRM
-            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
-        fi
-        echo "[INFO] Performing full reset (removing volumes and image)..."
-        docker compose --profile dual --profile remote down -v --rmi local 2>/dev/null || true
-        docker rmi -f debian-template:latest ubuntu-template:latest alpine-template:latest arch-template:latest 2>/dev/null || true
+        confirm "This removes containers, volumes and the local template images."
+        echo "[INFO] L3 — removing containers, volumes and local template images..."
+        run docker compose --profile dual --profile remote down -v --remove-orphans
+        for IMAGE in $(local_template_images); do
+            run docker rmi -f "$IMAGE" >/dev/null 2>&1 || true
+        done
+        warn_tenants_present
+        echo "[L3] Done. Pulled GHCR images and mounts/ are untouched."
         ;;
     4)
-        if [ "$FORCE" = false ]; then
-            read -r -p "[WARNING] NUKE will remove containers, volumes, local AND GHCR images, plus builder cache. Continue? (y/n): " CONFIRM
-            if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then echo "Cleanup cancelled."; exit 0; fi
-        fi
-        echo "[INFO] Performing nuke (full purge)..."
-        docker compose --profile dual --profile remote down -v --rmi local 2>/dev/null || true
-        docker rmi -f debian-template:latest ubuntu-template:latest alpine-template:latest arch-template:latest 2>/dev/null || true
-        docker rmi -f ghcr.io/1999azzar/ghost-machine-ubuntu:latest ghcr.io/1999azzar/ghost-machine-debian:latest ghcr.io/1999azzar/ghost-machine-alpine:latest ghcr.io/1999azzar/ghost-machine-arch:latest 2>/dev/null || true
-        docker builder prune -f 2>/dev/null || true
-        if [ "${HARD:-false}" = true ]; then
-            echo "[INFO] Hard nuke: wiping mounts/ (true 1st-user reset)..."
-            rm -rf mounts/ubuntu1 mounts/ubuntu2 mounts/tenants 2>/dev/null || true
-            mkdir -p mounts/ubuntu1 mounts/ubuntu2 mounts/tenants
-            touch mounts/ubuntu1/.gitkeep mounts/ubuntu2/.gitkeep mounts/tenants/.gitkeep 2>/dev/null || true
+        echo "[INFO] L4 — nuke. This will remove:"
+        echo "       - every Ghost container (main, tunnel, and tenant projects)"
+        echo "       - every Ghost network and Ghost-owned volume"
+        echo "       - every local template image AND every GHCR ghost-machine tag"
+        echo "       - all builder/buildx cache, and dangling images built from this project"
+        echo "       - the tenant registry (config/tenants.json reset)"
+        if [ "$HARD" = true ]; then
+            echo "       - mounts/ and snapshots/ (--hard: WORK AND BACKUPS ARE DELETED)"
         else
-            echo "[TIP] Add --hard to also wipe mounts/ for a true 1st-user nuke: ./clean.sh --nuke --hard -y"
+            echo "       mounts/ and snapshots/ are KEPT (add --hard to delete them)"
+        fi
+        confirm "This is a destructive, irreversible operation."
+        echo "[INFO] Removing containers, networks and volumes..."
+        run docker compose --profile dual --profile remote down -v --remove-orphans 2>/dev/null || true
+
+        for PROJECT in $(tenant_projects); do
+            echo "       tenant project: $PROJECT"
+            run docker compose -p "$PROJECT" -f "$TENANT_TEMPLATE" down -v --remove-orphans >/dev/null 2>&1 \
+                || run docker rm -f "$PROJECT" >/dev/null 2>&1 || true
+        done
+        for CONTAINER in $(ghost_containers); do
+            run docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+        done
+
+        echo "[INFO] Removing images..."
+        GHOST_IMAGE_LIST=$(ghost_images)
+        if [ -z "$GHOST_IMAGE_LIST" ]; then
+            echo "       (no Ghost images present)"
+        else
+            for IMAGE in $GHOST_IMAGE_LIST; do
+                echo "       $IMAGE"
+                run docker rmi -f "$IMAGE" >/dev/null 2>&1 || true
+            done
+        fi
+        run docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/1999AZZAR/ghost-machines" >/dev/null 2>&1 || true
+
+        echo "[INFO] Removing volumes and networks..."
+        for VOLUME in $(ghost_volumes); do
+            run docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
+        done
+        for NETWORK in $(ghost_networks); do
+            run docker network rm "$NETWORK" >/dev/null 2>&1 || true
+        done
+
+        echo "[INFO] Clearing build cache..."
+        run docker builder prune -af >/dev/null 2>&1 || true
+        if docker buildx version >/dev/null 2>&1; then
+            run docker buildx prune -af >/dev/null 2>&1 || true
+        fi
+
+        echo "[INFO] Resetting tenant registry..."
+        reset_tenant_registry
+
+        if [ "$HARD" = true ]; then
+            echo "[INFO] Hard nuke: wiping mounts/ and snapshots/..."
+            if [ "$DRY_RUN" = true ]; then
+                echo "    [dry-run] rm -rf mounts/ubuntu1 mounts/ubuntu2 mounts/tenants snapshots/*.tar.gz snapshots/*.sha256 snapshots/*.meta.json"
+            else
+                rm -rf mounts/ubuntu1 mounts/ubuntu2 mounts/tenants 2>/dev/null || true
+                rm -f snapshots/*.tar.gz snapshots/*.sha256 snapshots/*.meta.json 2>/dev/null || true
+                mkdir -p mounts/ubuntu1 mounts/ubuntu2 mounts/tenants snapshots
+                touch mounts/ubuntu1/.gitkeep mounts/ubuntu2/.gitkeep mounts/tenants/.gitkeep snapshots/.gitkeep 2>/dev/null || true
+            fi
+        else
+            echo "[TIP] Add --hard to also delete mounts/ and snapshots/ (true 1st-user nuke)."
+        fi
+
+        echo ""
+        if [ "$DRY_RUN" = true ]; then
+            echo "[L4] Dry run complete — nothing was removed."
+        else
+            echo "[L4] Nuke complete. Remaining Docker footprint for Ghost:"
+            docker system df 2>/dev/null || true
+            echo "[L4] mounts/ kept? $([ "$HARD" = true ] && echo no || echo yes) · registry reset · rebuild with ./start.sh"
         fi
         ;;
     *)

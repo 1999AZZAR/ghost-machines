@@ -68,12 +68,14 @@ Your files live in `mounts/`, not inside the container, so `stop` never deletes 
 
 ## clean.sh — Housekeeping
 
-**What:** Shuts down and cleans up. 4 levels: just stop, clear rooms, throw away images, nuke GHCR + builder. Add `--hard` with `--nuke` to also wipe `mounts/` (true 1st-user).
+**What:** Shuts down and cleans up, in four escalating levels. L4 is a real nuke: tenants, every image tag, volumes, networks, build cache and the tenant registry — while keeping your work in `mounts/` unless you ask for `--hard`.
 
 ```bash
-./clean.sh           # menu — choose level (5 options)
-./clean.sh -a -y     # deep clean, no questions
-./clean.sh --nuke --hard -y  # full nuke + mounts/
+./clean.sh --nuke --dry-run   # what would be removed? (changes nothing)
+./clean.sh -s -y              # stop containers + network
+./clean.sh -a -y              # + volumes + local images
+./clean.sh --nuke -y          # everything Docker-side, mounts/ kept
+./clean.sh --nuke --hard -y   # also delete mounts/ + snapshots/
 ```
 
 ## setup-host.sh — Building Setup (once)

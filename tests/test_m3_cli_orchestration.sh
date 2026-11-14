@@ -85,6 +85,90 @@ echo "$STOP_OUT" | grep -q "down --remove-orphans" || { echo "FAILED: stop verb"
 rm -rf "$STUB_DIR"
 echo "PASSED"
 
+# Test 7: Nuke really nukes (tenants, all tags, volumes, networks, cache, registry)
+echo -n "[TEST 7] clean.sh --nuke completeness... "
+grep -q -- "--dry-run" clean.sh || { echo "FAILED: no --dry-run"; exit 1; }
+grep -q "ghost-tenant-" clean.sh || { echo "FAILED: tenant projects not removed"; exit 1; }
+grep -qF 'ghcr\.io/1999azzar/ghost-machine-' clean.sh || { echo "FAILED: GHCR tags not matched"; exit 1; }
+grep -q "builder prune -af" clean.sh || { echo "FAILED: builder cache not fully pruned"; exit 1; }
+grep -q "buildx prune" clean.sh || { echo "FAILED: buildx cache not pruned"; exit 1; }
+grep -q "com.docker.compose.project" clean.sh || { echo "FAILED: volumes not scoped to this project"; exit 1; }
+grep -q 'image prune -f --filter "label=' clean.sh || { echo "FAILED: dangling prune is not label-scoped"; exit 1; }
+grep -q "config/tenants.json" clean.sh || { echo "FAILED: tenant registry not reset"; exit 1; }
+grep -q "snapshots/" clean.sh || { echo "FAILED: --hard does not clear snapshots"; exit 1; }
+for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
+    grep -q "org.opencontainers.image.source" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE not labeled for scoped pruning"; exit 1; }
+done
+./clean.sh --nuke --dry-run > /tmp/ghost-nuke-dry.log 2>&1 || { echo "FAILED: --dry-run exited non-zero"; exit 1; }
+grep -q "nothing was removed" /tmp/ghost-nuke-dry.log || { echo "FAILED: --dry-run did not report a no-op"; exit 1; }
+grep -q "down --remove-orphans\|down -v --remove-orphans" /tmp/ghost-nuke-dry.log || { echo "FAILED: --dry-run did not show container teardown"; exit 1; }
+rm -f /tmp/ghost-nuke-dry.log
+if [ -n "$(git status --porcelain config/tenants.json)" ]; then
+    echo "FAILED: --dry-run mutated the tenant registry"
+    exit 1
+fi
+echo "PASSED"
+
+# Test 8: Nuke command sequence against a stubbed docker
+echo -n "[TEST 8] clean.sh --nuke command sequence... "
+STUB_DIR=$(mktemp -d)
+DOCKER_LOG=$(mktemp)
+cat > "$STUB_DIR/docker" <<'STUB'
+#!/usr/bin/env bash
+echo "docker $*" >> "$DOCKER_LOG"
+case "$1/$2" in
+    images/--format)
+        printf 'ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0\nghcr.io/1999azzar/ghost-machine-ubuntu:latest\nubuntu-template:latest\nnginx:latest\n'
+        ;;
+    ps/-a)
+        echo "ghost-tenant-alice"
+        ;;
+    network/ls)
+        printf 'bridge\nhost\nghost_sandbox\n'
+        ;;
+    volume/ls)
+        echo "ghostvol"
+        ;;
+    volume/inspect)
+        echo "ghost-machines"
+        ;;
+    buildx/version)
+        exit 0
+        ;;
+    system/df)
+        echo "stub disk report"
+        ;;
+esac
+exit 0
+STUB
+chmod +x "$STUB_DIR/docker"
+cp config/tenants.json "${DOCKER_LOG}.registry"
+
+PATH="$STUB_DIR:$PATH" DOCKER_LOG="$DOCKER_LOG" ./clean.sh --nuke -y > "${DOCKER_LOG}.out" 2>&1 || { echo "FAILED: nuke exited non-zero"; cat "${DOCKER_LOG}.out"; exit 1; }
+
+assert_log() {
+    grep -qF "$1" "$DOCKER_LOG" || { echo "FAILED: missing '$1'"; cat "$DOCKER_LOG"; exit 1; }
+}
+assert_absent() {
+    if grep -qF "$1" "$DOCKER_LOG"; then echo "FAILED: unexpected '$1'"; exit 1; fi
+}
+assert_log "compose --profile dual --profile remote down -v --remove-orphans"
+assert_log "compose -p ghost-tenant-alice -f templates/docker-compose.tenant.yml down -v"
+assert_log "rmi -f ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0"
+assert_log "rmi -f ghcr.io/1999azzar/ghost-machine-ubuntu:latest"
+assert_log "rmi -f ubuntu-template:latest"
+assert_absent "rmi -f nginx:latest"
+assert_log "image prune -f --filter label=org.opencontainers.image.source"
+assert_log "volume rm -f ghostvol"
+assert_log "network rm ghost_sandbox"
+assert_log "builder prune -af"
+assert_log "buildx prune -af"
+grep -q '"tenants": {}' config/tenants.json || { echo "FAILED: tenant registry not reset"; exit 1; }
+
+cp "${DOCKER_LOG}.registry" config/tenants.json
+rm -rf "$STUB_DIR" "$DOCKER_LOG" "${DOCKER_LOG}.out" "${DOCKER_LOG}.registry"
+echo "PASSED"
+
 echo "=================================================="
 echo "ALL M3 TESTS PASSED SUCCESSFULLY!"
 echo "=================================================="

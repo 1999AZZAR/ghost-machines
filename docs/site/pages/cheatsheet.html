@@ -44,8 +44,10 @@ docker compose --profile dual config
 docker compose --profile dual stop            # pause, container kept
 docker compose --profile dual start           # resume
 ./start.sh stop                               # remove containers + network
-./clean.sh -a -y                              # + images, keeps mounts/
-./clean.sh --nuke --hard -y                   # + mounts/ (destructive)
+./clean.sh -a -y                              # + volume + local images, keeps mounts/
+./clean.sh --nuke --dry-run                   # preview a full purge
+./clean.sh --nuke -y                          # tenants, all image tags, cache, registry
+./clean.sh --nuke --hard -y                   # + mounts/ and snapshots/ (destructive)
 </code></pre>
 <h2 id="backup-restore">Backup / restore</h2>
 <pre><code class="language-bash">make snapshot

@@ -60,7 +60,7 @@ Mounts over the VM filesystem are slower and can report odd ownership. If owners
 
 ```bash
 ./start.sh stop
-./clean.sh -a -y            # containers + images, keeps mounts/
+./clean.sh --nuke -y        # containers, tenants, every image tag, cache, registry
 ./start.sh --prebuilt debian -m single
 ```
 

@@ -71,18 +71,33 @@ The entrypoint is chatty on purpose: SSH key injection, user sync, harness confi
 
 ## Cleanup levels
 
-`clean.sh` has four levels; only the last two touch images, only `--hard` touches your work.
+`clean.sh` has four levels. L4 is a genuine nuke: containers, images, caches and the tenant registry. Only `--hard` touches your data.
 
 ```bash
-./clean.sh              # interactive menu
-./clean.sh -s           # L1: stop + remove containers and network
-./clean.sh -v -y        # L2: L1 + volumes
-./clean.sh -a -y        # L3: L2 + local *-template images
-./clean.sh --nuke -y    # L4: L3 + GHCR prebuilts + builder cache
-./clean.sh --nuke --hard -y   # L4 + wipe mounts/
+./clean.sh                    # interactive menu
+./clean.sh -s -y              # L1: stop + remove containers and network
+./clean.sh -v -y              # L2: L1 + volumes
+./clean.sh -a -y              # L3: L2 + local template images (GHCR stays)
+./clean.sh --nuke --dry-run   # L4 preview: prints every command, changes nothing
+./clean.sh --nuke -y          # L4: full purge, keeps mounts/ and snapshots/
+./clean.sh --nuke --hard -y   # L4 + mounts/ and snapshots/ (data loss)
 ```
 
-`clean.sh` covers the main machines only. Tenants are removed individually with `./tenant.sh delete <id> --archive -y` ([Multi-Tenant](tenants.md)).
+What L4 (`--nuke`) removes:
+
+| Target | Detail |
+| :--- | :--- |
+| Containers | Main instances, the tunnel, and every `ghost-tenant-*` compose project |
+| Images | All local `*-template` tags **and** every GHCR tag (`latest`, `vX.Y.Z`, `latest-<sha>`) |
+| Dangling images | Only those carrying this project's OCI source label — other projects are untouched |
+| Volumes | Compose volumes belonging to `ghost-machines` / `ghost-tenant-*` only |
+| Networks | `ghost_sandbox` and any `ghost-machines_*` / `ghost-tenant-*` network |
+| Build cache | `docker builder prune -af` and `docker buildx prune -af` |
+| Registry | `config/tenants.json` reset to an empty registry |
+
+What it deliberately keeps: `mounts/` (your work) and `snapshots/` (your backups), unless `--hard` is passed. `--hard` deletes both and recreates the empty directories, returning the checkout to a first-run state.
+
+Every level supports `--dry-run`, which prints the exact Docker commands without executing them, and `-y` to skip the confirmation prompt. L1–L3 warn when tenant containers exist, because they only manage the main machines.
 
 ## Backup and restore
 
