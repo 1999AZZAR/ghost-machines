@@ -5,7 +5,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help test lint build-ubuntu build-debian build-alpine build-arch build-all start clean snapshot restore setup-host
+.PHONY: help test lint build-ubuntu build-debian build-alpine build-arch build-all start stop status logs restart prebuilt clean snapshot restore setup-host
 
 help: ## Show this help message
 	@echo "=================================================="
@@ -35,6 +35,21 @@ build-all: build-ubuntu build-debian build-alpine build-arch ## Build all 4 OS e
 
 start: ## Launch interactive engine & mode deployment
 	@./start.sh
+
+stop: ## Stop and remove containers (work in mounts/ is kept)
+	@./start.sh stop
+
+status: ## Show container state, SSH ports and image in use
+	@./start.sh status
+
+logs: ## Follow container logs
+	@./start.sh logs
+
+restart: ## Restart existing containers
+	@./start.sh restart
+
+prebuilt: ## Pull and run a GHCR image (make prebuilt ENGINE=debian MODE=single)
+	@./start.sh --prebuilt "$(or $(ENGINE),ubuntu)" -m "$(or $(MODE),single)"
 
 clean: ## Interactive or headless environment cleanup
 	@./clean.sh

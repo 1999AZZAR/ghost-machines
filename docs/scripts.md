@@ -4,17 +4,35 @@ Think of Ghost Machines as a hotel for developers. Each script is a staff member
 
 ## start.sh — Front Desk
 
-**What:** Starts your private workspace (a container). Handles login keys and picks which Linux flavor to use.
+**What:** Starts, stops and inspects your workspace (a container). Handles login keys, picks which Linux flavour to use, and decides whether to download a prebuilt image or build one.
 
-**Plain:** Like choosing a hotel room type — Ubuntu (standard), Debian (small), Alpine (tiny), Arch (newest).
+**Plain:** Like choosing a hotel room type — Ubuntu (standard), Debian (small), Alpine (tiny), Arch (newest) — and whether to take the ready-made room (prebuilt) or build it yourself (local build).
 
-**How:**
+**How to start:**
 ```bash
-./start.sh                        # asks: which room? how many?
-./start.sh -e ubuntu -m single    # ubuntu, 1 machine, no questions
+./start.sh                                  # asks: which room? how many?
+./start.sh --prebuilt ubuntu -m single      # ready-made image from GHCR (fast, no build)
+./start.sh -e debian -m single --build      # build the image from this repo (slow, first time only)
+```
+
+The `[IMAGE]` line it prints tells you which path you are on:
+```
+[IMAGE] ghcr.io/1999azzar/ghost-machine-debian:latest (GHCR prebuilt, no local build)
+[IMAGE] debian-template:latest (local build from Dockerfile.debian)
 ```
 
 Then connect: `ssh -p 2223 developer@localhost` (password `ghost`).
+
+**How to stop / check / resume:**
+```bash
+./start.sh status     # what is running, which image, which SSH port
+./start.sh logs       # follow the container log
+./start.sh restart    # restart in place (keeps containers)
+./start.sh stop       # remove containers + network — mounts/, images, .env stay
+```
+
+Your files live in `mounts/`, not inside the container, so `stop` never deletes work.
+`./clean.sh` is the destructive one (see below).
 
 ## tenant.sh — Hotel Manager
 
@@ -24,9 +42,8 @@ Then connect: `ssh -p 2223 developer@localhost` (password `ghost`).
 
 **How:**
 ```bash
-# Fast way (download ready-made room):
-docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
-./tenant.sh add alice --engine ubuntu
+# Fast way (ready-made image from GHCR):
+./tenant.sh add alice --engine ubuntu --prebuilt
 
 # Build from scratch (slower):
 ./tenant.sh add bob --engine arch --build
@@ -34,6 +51,8 @@ docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
 # Manage:
 ./tenant.sh list
 ./tenant.sh stats        # see CPU/RAM use
+./tenant.sh stop alice   # free CPU/RAM, keep the workspace
+./tenant.sh start alice
 ./tenant.sh delete bob -y
 ```
 

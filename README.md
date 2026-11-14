@@ -16,23 +16,22 @@ Ghost Machines provides reproducible container environments with dynamic host us
 - [Infrastructure as Code (IaC) Architecture](#infrastructure-as-code-iac-architecture)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Image Sources: Prebuilt vs Local Build](#image-sources-prebuilt-vs-local-build)
+- [Lifecycle: Start, Stop, Restart, Remove](#lifecycle-start-stop-restart-remove)
+- [Connecting to a Sandbox](#connecting-to-a-sandbox)
 - [Operating System Engines](#operating-system-engines)
 - [Deployment Modes & Resource Limits](#deployment-modes--resource-limits)
 - [Multi-Tenant Workspace-as-a-Service (WaaS)](#multi-tenant-workspace-as-a-service-waas)
 - [AI Harnesses & HeLa MCP Ecosystem](#ai-harnesses--hela-mcp-ecosystem)
-  - [AI Harness Suite](#ai-harness-suite)
-  - [HeLa Cellular MCP Stack](#hela-cellular-mcp-stack)
 - [Toolchain & Included Packages](#toolchain--included-packages)
 - [Security & Access Control](#security--access-control)
 - [UI/UX & Shell Stack](#uiux--shell-stack)
 - [State Snapshots & Recovery](#state-snapshots--recovery)
 - [Cleanup](#cleanup)
 - [Task Runner (Makefile) & Shell Shortcuts](#task-runner-makefile--shell-shortcuts)
+- [Troubleshooting](#troubleshooting)
 - [Testing & Quality Assurance](#testing--quality-assurance)
 - [License](#license)
-
-> **New to containers?** See [docs/scripts.md](docs/scripts.md) — plain-English guide to each `*.sh`.
-> Also: [docs/comparison-vs-vm.md](docs/comparison-vs-vm.md) (Ghost vs VM) · [docs/glossary.md](docs/glossary.md) (30-term glossary) · [ghost.glassgallery.my.id](https://ghost.glassgallery.my.id) (full web docs).
 
 ---
 
@@ -71,95 +70,287 @@ Ghost Machines is a practical implementation of **[Infrastructure as Code (IaC)]
 
 ## Quick Start
 
-### 1. Clone the Repository
+Three decisions, one command. **Engine** = Linux flavour, **mode** = how many machines, **image source** = prebuilt download or local build.
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/1999AZZAR/ghost-machines.git
 cd ghost-machines
 ```
 
-### 2. Configure the Host (Optional for Linux)
+### 2. Prepare the host (Linux only, once)
 
-Run the host setup script to install LXCFS and prepare systemd units:
-
-```bash
-make setup-host
-# Or directly:
-./setup-host.sh
-```
-
-### 3. Launch an Environment
-
-Launch interactively:
+Installs LXCFS so `htop`/`free` inside the sandbox report the container's limits instead of the host totals. Skipped automatically on macOS and WSL.
 
 ```bash
-make start
-# Or directly:
-./start.sh
+make setup-host      # or ./setup-host.sh
 ```
 
-Or pass flags directly for non-interactive startup:
+### 3. Pick an image source
+
+| | **Prebuilt (GHCR)** | **Local build** |
+| :--- | :--- | :--- |
+| First run | ~1 minute (pull) | 5–15 minutes (build) |
+| Size | 1.2–1.6 GB per engine | same, plus build cache |
+| Needs repo Dockerfiles | No | Yes |
+| Updates | `--pull` / `--build` | rebuild |
+| Best for | trying it, production, CI | editing the image, custom packages |
+
+**Prebuilt** — one package per engine, published on `v*` tags:
 
 ```bash
-# Launch Ubuntu engine in dual instance mode:
-./start.sh -e ubuntu -m dual
-
-# Launch Alpine engine on custom SSH port 2225 with image rebuild:
-./start.sh --engine alpine --mode single --port 2225 --build
-
-# Launch Debian engine in single instance mode:
-./start.sh -e debian -m single
+./start.sh --prebuilt ubuntu -m single
 ```
 
-### 4. Connect via SSH
+**Local build** — compiles the Dockerfile in this repo:
 
-Once the container starts, connect immediately using standard SSH:
+```bash
+./start.sh -e ubuntu -m single --build
+```
+
+Full details, tags and how to mix both: [Image Sources: Prebuilt vs Local Build](#image-sources-prebuilt-vs-local-build).
+
+### 4. Start
+
+```bash
+./start.sh                                  # interactive: asks engine + mode
+./start.sh --prebuilt ubuntu -m single      # 1 machine, 8 GB / 1 CPU
+./start.sh -e debian -m dual --build        # 2 machines, built locally
+./start.sh -e alpine -m power -p 2225       # heavy profile on a custom port
+```
+
+`start.sh` syncs your host UID/GID, wires your SSH key, and prints the image it is using (`[IMAGE] … GHCR prebuilt` vs `local build`) before starting.
+
+### 5. Connect
 
 ```bash
 ssh -p 2223 developer@localhost
 ```
 
-- **Default Username:** `developer`
-- **Default Password:** `ghost` (for both SSH login and `sudo`)
-- **Root Login:** `ssh -p 2223 root@localhost` (password: `ghost`)
-- **Key Authentication:** If `~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub` is present on your host, it is automatically mounted and authorized for passwordless access.
+| Mode | Container | Host port | Connect with |
+| :--- | :--- | :---: | :--- |
+| **Dual** (1st) | `ghost-machine1` | `2223` | `ssh -p 2223 developer@localhost` |
+| **Dual** (2nd) | `ghost-machine2` | `2224` | `ssh -p 2224 developer@localhost` |
+| **Single** | `ghost-machine-single` | `2223` | `ssh -p 2223 developer@localhost` |
+| **Power** | `ghost-machine-power` | `2223` | `ssh -p 2223 developer@localhost` |
+| **Half** | `ghost-machine-half` | `2223` | `ssh -p 2223 developer@localhost` |
 
+- **User:** `developer` · **Password:** `ghost` · **sudo:** `ghost`
+- **Root:** `ssh -p 2223 root@localhost` (password `ghost`)
+- **Key auth:** if `~/.ssh/id_ed25519.pub` / `~/.ssh/id_rsa.pub` exists on the host it is mounted and authorized automatically — no password needed.
+- **No SSH at all:** `docker exec -it ghost-machine-single bash`
+
+Lost track of the port or the container name? `./start.sh status` prints them:
+
+```text
+NAME                   IMAGE                                              STATUS          PORTS
+ghost-machine-single   ghcr.io/1999azzar/ghost-machine-ubuntu:latest      Up 2 minutes    0.0.0.0:2223->22/tcp
+
+SSH endpoints:
+  ghost-machine-single     ssh -p 2223 developer@localhost
+```
+
+More connection options (app ports, VS Code, Cloudflare Tunnel, host-key warnings): [Connecting to a Sandbox](#connecting-to-a-sandbox).
+
+### 6. Stop, resume, or remove
+
+```bash
+./start.sh status     # what is running, which image, which SSH port
+./start.sh stop       # remove containers + network — images, mounts/ and config stay
+./start.sh restart    # restart existing containers in place
+./start.sh logs       # follow the container log (entrypoint output, errors)
+./clean.sh -a -y      # also drop images (Level 3) — see Cleanup
+```
+
+Your work lives in `mounts/`, not in the container, so `stop`, `clean.sh`, even a full image rebuild leave it intact. Full matrix: [Lifecycle: Start, Stop, Restart, Remove](#lifecycle-start-stop-restart-remove).
+
+---
+
+## Image Sources: Prebuilt vs Local Build
+
+Every start uses exactly one image. `start.sh` resolves it in this order:
+
+1. `--image <ref>` (explicit)
+2. `--prebuilt [engine]` → `ghcr.io/1999azzar/ghost-machine-<engine>:latest`
+3. `GHOST_IMAGE` from your environment or `.env`
+4. Otherwise the local build tag for the engine: `ubuntu-template:latest`, `debian-template:latest`, `alpine-template:latest`, `arch-template:latest`
+
+If the resolved reference contains a `/` it is treated as a registry image: it is **pulled** instead of built, and `--build` is ignored with a notice.
+
+### Prebuilt images (GHCR)
+
+Published by `.github/workflows/publish.yml` on release tags (`v*`) and on manual dispatch, multi-arch (`linux/amd64`, `linux/arm64`):
+
+| Engine | Reference | Approx. size |
+| :--- | :--- | :--- |
+| Ubuntu | `ghcr.io/1999azzar/ghost-machine-ubuntu:latest` | ~1.38 GB amd64 / 1.21 GB arm64 |
+| Debian | `ghcr.io/1999azzar/ghost-machine-debian:latest` | ~1.36 GB / 1.20 GB |
+| Alpine | `ghcr.io/1999azzar/ghost-machine-alpine:latest` | ~1.59 GB / 1.32 GB |
+| Arch | `ghcr.io/1999azzar/ghost-machine-arch:latest` | ~1.63 GB both |
+
+Tags in each package: `latest`, the release tag (e.g. `v2.1.0`), and `latest-<short-sha>`.
+
+```bash
+# pull automatically if missing
+./start.sh --prebuilt debian -m single
+
+# or pull explicitly, then start
+docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
+./start.sh --image ghcr.io/1999azzar/ghost-machine-debian:latest -m single
+
+# refresh a prebuilt image you already have
+./start.sh --prebuilt debian -m single --pull
+
+# make it the default without repeating the flag
+echo 'GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest' >> .env
+./start.sh -e ubuntu -m single
+```
+
+Prebuilt images also provision the toolchain and harness CLIs at build time; `harness-update` keeps opencode/agy/rtk current at runtime, so an older image tag is not a version freeze.
+
+### Local build
+
+```bash
+# build + start in one step
+./start.sh -e ubuntu -m single --build
+
+# build only (no containers), usable later without --build
+make build-ubuntu        # Dockerfile        -> ubuntu-template:latest
+make build-debian        # Dockerfile.debian -> debian-template:latest
+make build-alpine        # Dockerfile.alpine -> alpine-template:latest
+make build-arch          # Dockerfile.arch   -> arch-template:latest
+make build-all           # all four
+
+# start from the local tag you just built
+./start.sh -e ubuntu -m single
+```
+
+If the local tag is missing and `--build` is not passed, Docker Compose builds it automatically, so the first `./start.sh` on a clean machine builds once and later runs reuse the image.
+
+Prebuilt images are built with `HOST_UID=1000` / `HOST_GID=1000`; the entrypoint re-syncs the `developer` account to your host IDs at start, so mounts still match your user.
+
+### Which one am I running right now?
+
+```bash
+./start.sh status                                          # STATUS table prints the IMAGE column
+docker inspect -f '{{.Config.Image}}' ghost-machine-single  # exact reference the container uses
+docker images | grep -E 'ghost-machine|template'           # what exists locally
+```
+
+`start.sh` also announces it on every launch: `[IMAGE] ghcr.io/… (GHCR prebuilt, no local build)` vs `[IMAGE] ubuntu-template:latest (local build from Dockerfile)`. A `ghcr.io/…` reference means you are on a pulled image; a `*-template:latest` tag means a local build.
+
+---
+
+## Lifecycle: Start, Stop, Restart, Remove
+
+`./start.sh` is the lifecycle entry point. The plain Docker Compose commands are listed too, in case you prefer them — they behave identically.
+
+| Goal | Command | Keeps |
+| :--- | :--- | :--- |
+| Start / (re)create containers | `./start.sh [flags]` | `mounts/`, images, `.env` |
+| Show state, image, SSH port | `./start.sh status` | — |
+| Restart in place (no recreate) | `./start.sh restart` | everything |
+| Pause (container kept, process stopped) | `docker compose --profile dual stop` | container, everything |
+| Resume a pause | `docker compose --profile dual start` | container, everything |
+| Stop and delete containers + network | `./start.sh stop` | `mounts/`, images, `.env` |
+| Delete containers + volumes | `./clean.sh -v -y` | `mounts/`, images |
+| Delete everything incl. images | `./clean.sh -a -y` | `mounts/` |
+| Wipe images **and** work | `./clean.sh --nuke --hard -y` | nothing |
+| Container log | `./start.sh logs` / `docker logs -f <name>` | — |
+| Shell without SSH | `docker exec -it ghost-machine-single bash` | — |
+| Refresh harness binaries | `./start.sh --update-harness` | — |
+
+Makefile shortcuts: `make stop`, `make status`, `make logs`, `make restart`, `make prebuilt ENGINE=debian MODE=single`.
+
+Notes:
+
+- **Only ports are re-created.** `./start.sh` reuses the existing image; add `--build` (local tag) or `--pull` (registry tag) to get a new one.
+- **Work survives everything except `--hard`.** Home directory = `mounts/ubuntu1`, `mounts/ubuntu2`, or `mounts/tenants/<id>`, bind-mounted from the host repo.
+- **Changing `.env` needs a recreate.** `./start.sh` alone updates most settings, but ports, tunnel token and image are applied on container creation: `./start.sh stop && ./start.sh …`.
+- **Tenants have their own lifecycle:** `./tenant.sh start|stop|restart <id>` (see [Multi-Tenant WaaS](#multi-tenant-workspace-as-a-service-waas)).
+
+---
+
+## Connecting to a Sandbox
+
+### SSH (default path)
+
+```bash
+ssh -p 2223 developer@localhost      # password: ghost
+ssh -p 2223 root@localhost           # password: ghost
+```
+
+If host keys change between recreations (normal — each new container gets a new SSH host key), the client refuses with `Host key verification failed`. Clear the stale entry:
+
+```bash
+ssh-keygen -R "[localhost]:2223"
+```
+
+or use the helper that skips the check:
+
+```bash
+source aliases.sh
+ghost-ssh single        # developer@localhost:G1_PORT
+ghost-ssh 2             # second machine in dual mode
+```
+
+### Editor / IDE
+
+Any tool that speaks SSH works. VS Code: **Remote-SSH → Connect to Host → `ssh -p 2223 developer@localhost`**. JetBrains Gateway, Zed remote, `rsync`, `scp -P 2223`, and `sftp -P 2223` use the same host/port/user.
+
+### Reaching a web/app server inside the sandbox
+
+Only port 22 is published to the host. Forward anything else over SSH instead of editing compose:
+
+```bash
+# inside the sandbox: vite --port 3000 / uvicorn --port 8000 / whatever
+ssh -p 2223 -L 3000:localhost:3000 developer@localhost
+# now browse http://localhost:3000 on your host
+```
+
+### Remote access over the internet (Cloudflare Tunnel)
+
+```bash
+# .env
+TUNNEL_TOKEN=eyJ...
+./start.sh --prebuilt ubuntu -m single
+```
+
+`start.sh` enables the `remote` compose profile and runs `cloudflared`. Point a public hostname at the service (`ssh://ghost1:22`) in the Cloudflare dashboard, then from your laptop:
+
+```bash
+cloudflared access ssh --hostname ghost.example.com
+# and in ~/.ssh/config:
+# Host ghost
+#   HostName ghost.example.com
+#   ProxyCommand cloudflared access ssh --hostname %h
+#   User developer
+```
+
+No router ports are opened; access is gated by Cloudflare Access policies.
+
+### Keeping access working
+
+- `SSH_PASSWORD_AUTH=false` disables password login — make sure a host key is authorized first (`~/.ssh/*.pub`), otherwise you lock yourself out until you set it back to `true` and recreate with `./start.sh stop && ./start.sh …`.
+- The `developer` account has passwordless-shell sudo with password `ghost`; for anything stronger, replace it (`passwd`, `usermod -L root`) inside the sandbox after connecting.
+
+---
 
 ---
 
 ## Operating System Engines
 
-Ghost Machines provides four base engines. Each image is configured with identical toolchains, editor setups, and MCP server configurations.
+Ghost Machines provides four base engines. Each image is configured with identical toolchains, editor setups, and MCP server configurations — they differ only in the base distro and package manager.
 
-> **Prebuilt images (GHCR):** 4 separate packages published on release tags (`v*`) via `.github/workflows/publish.yml:1` — pull only the one you need:
->
-> **Ubuntu** (recommended, PPA support) — ~1.38 GB amd64 / 1.21 GB arm64
-> ```bash
-> docker pull ghcr.io/1999azzar/ghost-machine-ubuntu:latest
-> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:latest ./start.sh -e ubuntu -m single
-> ```
-> **Debian** (slim, stable) — ~1.36 GB amd64 / 1.20 GB arm64
-> ```bash
-> docker pull ghcr.io/1999azzar/ghost-machine-debian:latest
-> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-debian:latest ./start.sh -e debian -m single
-> ```
-> **Alpine** (ultra-light, musl) — ~1.59 GB amd64 / 1.32 GB arm64
-> ```bash
-> docker pull ghcr.io/1999azzar/ghost-machine-alpine:latest
-> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-alpine:latest ./start.sh -e alpine -m single
-> ```
-> **Arch** (rolling release) — ~1.63 GB both arches
-> ```bash
-> docker pull ghcr.io/1999azzar/ghost-machine-arch:latest
-> GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-arch:latest ./start.sh -e arch -m single
-> ```
+| Engine | Base Image | Package Manager | Flag | Intended Use |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ubuntu** | `ubuntu:latest` | `apt-get` | `-e ubuntu` | Default development workstation with PPA support. |
+| **Debian** | `debian:stable-slim` | `apt-get` | `-e debian` | Minimal footprint and stable package base. |
+| **Alpine** | `alpine:latest` | `apk` | `-e alpine` | Lightweight musl-based security sandbox. |
+| **Arch Linux** | `archlinux:latest` | `pacman` | `-e arch` | Rolling release with current package upstream. |
 
-| Engine | Base Image | Package Manager | Intended Use |
-| :--- | :--- | :--- | :--- |
-| **Ubuntu** | `ubuntu:latest` | `apt-get` | Default development workstation with PPA support. |
-| **Debian** | `debian:stable-slim` | `apt-get` | Minimal footprint and stable package base. |
-| **Alpine** | `alpine:latest` | `apk` | Lightweight musl-based security sandbox. |
-| **Arch Linux** | `archlinux:latest` | `pacman` | Rolling release with current package upstream. |
+Either source works for every engine — prebuilt (`./start.sh --prebuilt debian -m single`) or local build (`./start.sh -e debian -m single --build`). See [Image Sources](#image-sources-prebuilt-vs-local-build).
 
 ---
 
@@ -510,6 +701,28 @@ cat aliases.sh >> ~/.bashrc && source ~/.bashrc
 - `ghost-logs [container]`: View real-time container log output.
 - `ghost-ssh [1|2|single|power|half]`: Connect directly over SSH.
 - `start-ghost`: Open the interactive launcher.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+| :--- | :--- | :--- |
+| `Bind for 0.0.0.0:2223 failed: port is already allocated` | another container/process holds the port | start on another port: `./start.sh … -p 2225` (dual mode uses `2225` and `2226`), or `./start.sh stop` first |
+| `ssh: connect to host localhost port 2223: Connection refused` | container not running, still initializing, or a different port | `./start.sh status`, then `./start.sh logs` if it is starting |
+| `Permission denied (publickey,password)` | `SSH_PASSWORD_AUTH=false` and no authorized key | set `SSH_PASSWORD_AUTH=true` in `.env`, `./start.sh stop && ./start.sh …`; or add your pubkey to `~/.ssh/authorized_keys` |
+| `Host key verification failed` | new container = new SSH host key | `ssh-keygen -R "[localhost]:2223"` or `ghost-ssh` |
+| `Permission denied` writing in `~/` (mounted project) | container UID ≠ host UID | re-run `./start.sh` (re-syncs `HOST_UID`/`HOST_GID`); last resort `sudo chown -R "$(id -u):$(id -g)" mounts/` |
+| `--build` appears to do nothing | image reference is a registry tag | use the local tag (`-e ubuntu` without `GHOST_IMAGE`) or drop `GHOST_IMAGE` from `.env` |
+| Image unexpectedly rebuilt on first run | no local image and no prebuilt pulled | expected: Compose builds the missing tag. Use `--prebuilt` to avoid the build |
+| `denied` / `401` pulling from GHCR | private/renamed package or anonymous rate limit | `echo $GH_TOKEN \| docker login ghcr.io -u <user> --password-stdin` |
+| `htop`/`free` show host RAM | LXCFS not installed (or disabled) | `make setup-host` on Linux; on macOS/WSL this is expected (`--no-lxcfs`) |
+| `permission denied /var/run/docker.sock` | user not in `docker` group | `sudo usermod -aG docker $USER` then re-login |
+| Harness CLI missing or stale inside the sandbox | build-time download failed (offline) | `harness-update` inside the sandbox, or `./start.sh --update-harness`, or wait for the entrypoint refresh and check `docker exec <name> cat /var/log/ghost-harness-update.log` |
+| Container restarts in a loop | entrypoint or sshd config error | `./start.sh logs`; fix, then `./start.sh stop && ./start.sh …` |
+| Need to start over completely | accumulated images/volumes | `./clean.sh --nuke -y` (keeps `mounts/`), add `--hard` to wipe work too |
+
+Still stuck? `./start.sh status`, `./start.sh logs`, and `docker compose --profile dual config` (resolved compose file with your variables) answer most of it.
 
 ---
 

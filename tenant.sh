@@ -45,15 +45,21 @@ Options for 'add':
   -m, --mem <memory>    Memory limit [default: 4G]
   -u, --user <name>     Workspace user [default: developer]
   -k, --pubkey <path>   Host SSH public key path for key-based login
-  -b, --build           Force rebuild of base image
+  -b, --build           Build the image locally instead of pulling
+      --prebuilt        Use the GHCR prebuilt image for the chosen engine
+      --image <ref>     Use an explicit image reference (pulled if missing)
+      --pull            Force-pull the image before starting
   -y, --yes             Skip interactive prompts
 
 Examples:
-  ./tenant.sh add alice --engine debian --cpu 2.0 --mem 4G --port 2225
-  ./tenant.sh add bob --engine arch --cpu 4.0 --mem 8G
+  ./tenant.sh add alice --prebuilt --engine debian --port 2225   # GHCR, no build
+  ./tenant.sh add bob --engine arch --build --cpu 4.0 --mem 8G   # local build
+  ./tenant.sh add carol --image ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0
   ./tenant.sh list
-  ./tenant.sh snapshot alice
-  ./tenant.sh delete bob --archive
+  ./tenant.sh stats
+  ./tenant.sh stop alice
+  ./tenant.sh start alice
+  ./tenant.sh delete bob -y
 HELP
 }
 
@@ -149,6 +155,9 @@ cmd_add() {
     local USER_NAME="developer"
     local PUBKEY_PATH=""
     local DO_BUILD=false
+    local EXPLICIT_IMAGE=""
+    local PREBUILT=false
+    local PULL_IMAGE=false
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -180,6 +189,26 @@ cmd_add() {
                 DO_BUILD=true
                 shift
                 ;;
+            --image)
+                if [ -z "${2:-}" ]; then
+                    echo "[ERROR] --image requires an image reference"
+                    exit 1
+                fi
+                EXPLICIT_IMAGE="$2"
+                shift 2
+                ;;
+            --prebuilt)
+                PREBUILT=true
+                shift
+                ;;
+            --pull)
+                PULL_IMAGE=true
+                shift
+                ;;
+            -y|--yes)
+                # provisioning is non-interactive; accepted for script compatibility
+                shift
+                ;;
             *)
                 echo "[ERROR] Unknown option: $1"
                 exit 1
@@ -187,25 +216,47 @@ cmd_add() {
         esac
     done
 
-    # Select Dockerfile and Image tag based on engine (respect TENANT_IMAGE/GHOST_IMAGE if set externally for GHCR prebuilt)
+    # Select Dockerfile and resolve the image: --image > --prebuilt > TENANT_IMAGE/GHOST_IMAGE > local tag
     local DOCKERFILE="Dockerfile.debian"
+    case "$ENGINE" in
+        debian) DOCKERFILE="Dockerfile.debian" ;;
+        ubuntu) DOCKERFILE="Dockerfile" ;;
+        alpine) DOCKERFILE="Dockerfile.alpine" ;;
+        arch) DOCKERFILE="Dockerfile.arch" ;;
+        *) echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."; exit 1 ;;
+    esac
+
+    local GHCR_PREFIX="ghcr.io/1999azzar/ghost-machine"
     local IMAGE_TAG="${TENANT_IMAGE:-${GHOST_IMAGE:-}}"
-    if [ -z "$IMAGE_TAG" ]; then
-        case "$ENGINE" in
-            debian) DOCKERFILE="Dockerfile.debian"; IMAGE_TAG="debian-template:latest" ;;
-            ubuntu) DOCKERFILE="Dockerfile"; IMAGE_TAG="ubuntu-template:latest" ;;
-            alpine) DOCKERFILE="Dockerfile.alpine"; IMAGE_TAG="alpine-template:latest" ;;
-            arch) DOCKERFILE="Dockerfile.arch"; IMAGE_TAG="arch-template:latest" ;;
-            *) echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."; exit 1 ;;
-        esac
+    if [ -n "$EXPLICIT_IMAGE" ]; then
+        IMAGE_TAG="$EXPLICIT_IMAGE"
+    elif [ "$PREBUILT" = true ]; then
+        IMAGE_TAG="${GHCR_PREFIX}-${ENGINE}:latest"
+    elif [ -z "$IMAGE_TAG" ]; then
+        IMAGE_TAG="${ENGINE}-template:latest"
+        [ "$ENGINE" = "ubuntu" ] && IMAGE_TAG="ubuntu-template:latest"
+    fi
+
+    # A reference containing "/" is a registry image: pull it instead of building
+    local IS_PREBUILT=false
+    case "$IMAGE_TAG" in
+        */*) IS_PREBUILT=true ;;
+    esac
+    if [ "$IS_PREBUILT" = true ] && [ "$DO_BUILD" = true ]; then
+        echo "[INFO] $IMAGE_TAG is a registry image; skipping local build (drop --build to silence)."
+        DO_BUILD=false
+    fi
+    if [ "$IS_PREBUILT" = true ]; then
+        if ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+            echo "[PULL] $IMAGE_TAG not present locally — pulling it now..."
+            docker pull "$IMAGE_TAG"
+        elif [ "$PULL_IMAGE" = true ]; then
+            echo "[PULL] Refreshing $IMAGE_TAG from the registry..."
+            docker pull "$IMAGE_TAG"
+        fi
+        echo "[IMAGE] $IMAGE_TAG (GHCR prebuilt, no local build)"
     else
-        case "$ENGINE" in
-            debian) DOCKERFILE="Dockerfile.debian" ;;
-            ubuntu) DOCKERFILE="Dockerfile" ;;
-            alpine) DOCKERFILE="Dockerfile.alpine" ;;
-            arch) DOCKERFILE="Dockerfile.arch" ;;
-            *) echo "[ERROR] Unsupported engine '$ENGINE'. Choose debian, ubuntu, alpine, or arch."; exit 1 ;;
-        esac
+        echo "[IMAGE] $IMAGE_TAG (local build from $DOCKERFILE)"
     fi
 
     # Auto-allocate port if not provided
