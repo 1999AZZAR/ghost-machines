@@ -110,13 +110,42 @@ if [ "$(id -u)" -ne 0 ] && [ ! -w "$BIN_DIR" ]; then
 fi
 
 # --- Serialise concurrent refreshes -------------------------------------------
-LOCK_FILE="${HARNESS_LOCK:-${STAMP}.lock}"
-if command -v flock >/dev/null 2>&1; then
-    mkdir -p "$(dirname "$LOCK_FILE")" 2>/dev/null || true
-    if { exec 9>"$LOCK_FILE"; } 2>/dev/null; then
-        flock -w 900 9 || die "another harness-update is still running"
+# A directory lock, not flock: utilit-linux flock and BusyBox flock have
+# incompatible option sets (BusyBox has no -w), and Alpine ships BusyBox.
+LOCK_DIR="${HARNESS_LOCK:-${STAMP}.lock}"
+LOCK_WAIT="${HARNESS_LOCK_WAIT:-900}"        # seconds to wait for a peer
+LOCK_STALE="${HARNESS_LOCK_STALE:-1800}"     # seconds before a lock is abandoned
+LOCK_HELD=false
+
+# Single cleanup path: a failed run must not wedge the lock or leak the temp dir.
+trap 'if [ "$LOCK_HELD" = true ]; then rmdir "$LOCK_DIR" 2>/dev/null || true; fi; if [ -n "${TMP_ROOT:-}" ]; then rm -rf "$TMP_ROOT"; fi' EXIT
+
+acquire_lock() {
+    local parent waited=0 age
+    parent=$(dirname "$LOCK_DIR")
+    if ! mkdir -p "$parent" 2>/dev/null || [ ! -w "$parent" ]; then
+        return 0    # cannot serialise here; proceed rather than hang
     fi
-fi
+    # Migrate a leftover lock file from older versions.
+    if [ -f "$LOCK_DIR" ]; then
+        rm -f "$LOCK_DIR" 2>/dev/null || true
+    fi
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+        age=$(( $(date +%s) - $(stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0) ))
+        if [ "$age" -gt "$LOCK_STALE" ]; then
+            rm -rf "$LOCK_DIR" 2>/dev/null || true
+            continue
+        fi
+        sleep 2
+        waited=$((waited + 2))
+        if [ "$waited" -ge "$LOCK_WAIT" ]; then
+            die "another harness-update is still running (lock: $LOCK_DIR)"
+        fi
+    done
+    LOCK_HELD=true
+}
+
+acquire_lock
 
 PRIV=()
 run() {
@@ -149,7 +178,6 @@ fi
 
 # --- Helpers ------------------------------------------------------------------
 TMP_ROOT="$(mktemp -d)"
-trap 'rm -rf "$TMP_ROOT"' EXIT
 
 # fetch_script <url> <home> <log> [installer args...]
 fetch_script() {
