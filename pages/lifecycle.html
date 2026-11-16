@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lifecycle & Cleanup — Ghost Machines</title>
+<meta name="description" content="Start, stop, pause, restart, inspect and remove sandboxes without losing work.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div class="doc-shell">
+  <aside class="doc-sidebar" aria-label="Documentation sections">
+    <div class="doc-brand">
+      <a href="../index.html" class="doc-brand-title">Ghost Machines</a>
+      <div class="doc-brand-meta">docs · docker compose · 4 engines · MIT</div>
+    </div>
+    <nav aria-label="Documentation">
+      <details class="doc-mobile-nav" open>
+        <summary>Browse documentation</summary>
+        <div class="doc-nav-section">OVERVIEW</div><ol class="doc-nav" start="0"><li><a href="../index.html"><span class="doc-nav-num">00</span> <span>Overview</span></a></li></ol><div class="doc-nav-section">GETTING STARTED</div><ol class="doc-nav" start="1"><li><a href="start.html"><span class="doc-nav-num">01</span> <span>Getting Started</span></a></li><li><a href="images.html"><span class="doc-nav-num">02</span> <span>Prebuilt vs Build</span></a></li><li><a href="engines.html"><span class="doc-nav-num">03</span> <span>Engines & Toolchain</span></a></li></ol><div class="doc-nav-section">OPERATE</div><ol class="doc-nav" start="4"><li><a href="lifecycle.html" aria-current="page"><span class="doc-nav-num">04</span> <span>Lifecycle & Cleanup</span></a></li><li><a href="connecting.html"><span class="doc-nav-num">05</span> <span>Connecting</span></a></li><li><a href="configuration.html"><span class="doc-nav-num">06</span> <span>Configuration</span></a></li><li><a href="troubleshooting.html"><span class="doc-nav-num">07</span> <span>Troubleshooting</span></a></li></ol><div class="doc-nav-section">REFERENCE</div><ol class="doc-nav" start="8"><li><a href="architecture.html"><span class="doc-nav-num">08</span> <span>Architecture</span></a></li><li><a href="tenant.html"><span class="doc-nav-num">09</span> <span>Multi-Tenant (WaaS)</span></a></li><li><a href="security.html"><span class="doc-nav-num">10</span> <span>Security & Hardening</span></a></li><li><a href="scripts.html"><span class="doc-nav-num">11</span> <span>Scripts Guide</span></a></li><li><a href="glossary.html"><span class="doc-nav-num">12</span> <span>Glossary</span></a></li><li><a href="comparison.html"><span class="doc-nav-num">13</span> <span>Ghost vs VM</span></a></li></ol><div class="doc-nav-section">PROJECT</div><ol class="doc-nav" start="14"><li><a href="contributing.html"><span class="doc-nav-num">14</span> <span>Contributing</span></a></li><li><a href="cheatsheet.html"><span class="doc-nav-num">15</span> <span>Cheatsheet</span></a></li></ol>
+      </details>
+    </nav>
+  </aside>
+  <div class="doc-main">
+    <div class="doc-topbar">
+      <span class="doc-topbar-title">DOC_04 // GHOST-MACHINES</span>
+      <div class="topbar-actions">
+        <a class="btn" href="https://asciinema.org/a/sDNJP7aYOabLz0k6" target="_blank" rel="noopener noreferrer">Demo</a>
+        <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
+        <a class="btn" href="https://github.com/1999AZZAR/ghost-machines" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+    <main id="main-content" class="doc-content">
+      <header class="specimen-plate">
+        <div class="specimen-ref"><span>DOC_04 // GHOST-MACHINES</span><span>DOSSIER: LIFECYCLE</span></div>
+        <h1 class="doc-title">Lifecycle & Cleanup</h1>
+        <p class="doc-lead">Start, stop, pause, restart, inspect and remove sandboxes without losing work.</p>
+      </header>
+      <figure class="figure-plate">
+        <div class="figure-mat"><img src="../assets/blotcat/04-lifecycle.png" alt="Blotcat lifting a workbench out of a crushed crate" loading="lazy"></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>04 · Lifecycle · the container goes, the work stays</span></figcaption>
+      </figure>
+<p>A Ghost Machine is disposable by design: the container is cattle, <code>mounts/</code> is the pet. Every command below is about <em>how much</em> you throw away.</p>
+<h2 id="state-model">State model</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Layer</th>
+<th style="text-align: left;">Lives in</th>
+<th style="text-align: left;">Dies when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Image</td>
+<td style="text-align: left;">Docker's image store</td>
+<td style="text-align: left;"><code>clean.sh -a</code>, <code>--nuke</code>, or <code>--build</code> replaces the tag</td>
+</tr>
+<tr>
+<td style="text-align: left;">Container</td>
+<td style="text-align: left;">Docker (ephemeral filesystem)</td>
+<td style="text-align: left;"><code>stop</code>, <code>restart</code> recreates, any rebuild</td>
+</tr>
+<tr>
+<td style="text-align: left;">Home / projects / dotfiles</td>
+<td style="text-align: left;"><code>mounts/ubuntu1</code>, <code>mounts/ubuntu2</code>, <code>mounts/tenants/&lt;id&gt;</code> on the host</td>
+<td style="text-align: left;">only <code>clean.sh --nuke --hard</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Config</td>
+<td style="text-align: left;"><code>.env</code>, <code>docker-compose.yml</code></td>
+<td style="text-align: left;">your git checkout</td>
+</tr>
+</tbody>
+</table>
+<h2 id="command-matrix">Command matrix</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Goal</th>
+<th style="text-align: left;">Command</th>
+<th style="text-align: left;">Keeps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Start / create containers</td>
+<td style="text-align: left;"><code>./start.sh [flags]</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images, <code>.env</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Show state, image, SSH port</td>
+<td style="text-align: left;"><code>./start.sh status</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Restart in place (no recreate)</td>
+<td style="text-align: left;"><code>./start.sh restart</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Pause (container kept, stopped)</td>
+<td style="text-align: left;"><code>docker compose --profile dual stop</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Resume a pause</td>
+<td style="text-align: left;"><code>docker compose --profile dual start</code></td>
+<td style="text-align: left;">container, everything</td>
+</tr>
+<tr>
+<td style="text-align: left;">Stop and delete containers + network</td>
+<td style="text-align: left;"><code>./start.sh stop</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images, <code>.env</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete containers + volumes</td>
+<td style="text-align: left;"><code>./clean.sh -v -y</code></td>
+<td style="text-align: left;"><code>mounts/</code>, images</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delete everything including images</td>
+<td style="text-align: left;"><code>./clean.sh -a -y</code></td>
+<td style="text-align: left;"><code>mounts/</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Purge images and work</td>
+<td style="text-align: left;"><code>./clean.sh --nuke --hard -y</code></td>
+<td style="text-align: left;">nothing</td>
+</tr>
+<tr>
+<td style="text-align: left;">Follow logs</td>
+<td style="text-align: left;"><code>./start.sh logs</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Shell without SSH</td>
+<td style="text-align: left;"><code>docker exec -it ghost-machine-single bash</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr>
+<td style="text-align: left;">Refresh agent harnesses</td>
+<td style="text-align: left;"><code>./start.sh --update-harness</code></td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<p>Makefile shortcuts: <code>make start</code>, <code>make status</code>, <code>make logs</code>, <code>make restart</code>, <code>make stop</code>, <code>make prebuilt ENGINE=debian MODE=single</code>.</p>
+<h2 id="start-and-recreate">Start and recreate</h2>
+<p><code>./start.sh</code> is idempotent: it creates what is missing and reuses what is running. Add <code>--build</code> (local tag) or <code>--pull</code> (registry tag) to move to a newer image.</p>
+<p>Some settings only apply at container creation:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Setting</th>
+<th style="text-align: left;">Applies on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Ports (<code>-p</code>), container names, tunnel token</td>
+<td style="text-align: left;">new container → <code>./start.sh stop &amp;&amp; ./start.sh …</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Image (<code>--image</code>, <code>--prebuilt</code>, <code>--pull</code>, <code>--build</code>)</td>
+<td style="text-align: left;">new container</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_HARNESS_UPDATE</code>, interval</td>
+<td style="text-align: left;">next container start (entrypoint reads it)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH</code>, keys</td>
+<td style="text-align: left;">new container (entrypoint rewrites <code>sshd_config</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">CPU/RAM limits (mode or <code>.env</code>)</td>
+<td style="text-align: left;">new container</td>
+</tr>
+</tbody>
+</table>
+<p>Changing mode (<code>single</code> → <code>power</code>) also creates a <em>different</em> container name; the old one keeps running until you stop it. Use <code>./start.sh status</code> to see what is actually up.</p>
+<h2 id="restart-pause-resume">Restart, pause, resume</h2>
+<ul>
+<li><code>./start.sh restart</code> = <code>docker compose restart</code>: same container, processes restarted, filesystem and IP kept. Cheapest fix for a wedged sshd.</li>
+<li>Pause/resume keeps the container object (and its ephemeral filesystem) between runs:</li>
+</ul>
+<pre><code class="language-bash">docker compose --profile dual stop      # both profiles, safe even if unused
+docker compose --profile dual start
+</code></pre>
+<ul>
+<li><code>./start.sh stop</code> deletes containers and the compose network. Anything installed with <code>apt</code> inside them is gone; <code>mounts/</code> is untouched.</li>
+</ul>
+<h2 id="logs-and-diagnostics">Logs and diagnostics</h2>
+<pre><code class="language-bash">./start.sh logs                                              # compose logs, follows
+docker logs -f ghost-machine-single                          # same, raw
+docker exec ghost-machine-single cat /var/log/ghost-harness-update.log
+docker exec ghost-machine-single journalctl -u ssh 2&gt;/dev/null || true
+</code></pre>
+<p>The entrypoint is chatty on purpose: SSH key injection, user sync, harness config generation and the background harness refresh all log there. Most "it didn't start" reports are answered by the first 50 lines.</p>
+<h2 id="cleanup-levels">Cleanup levels</h2>
+<p><code>clean.sh</code> has four levels. L4 is a genuine nuke: containers, images, caches and the tenant registry. Only <code>--hard</code> touches your data.</p>
+<pre><code class="language-bash">./clean.sh                    # interactive menu
+./clean.sh -s -y              # L1: stop + remove containers and network
+./clean.sh -v -y              # L2: L1 + volumes
+./clean.sh -a -y              # L3: L2 + local template images (GHCR stays)
+./clean.sh --nuke --dry-run   # L4 preview: prints every command, changes nothing
+./clean.sh --nuke -y          # L4: full purge, keeps mounts/ and snapshots/
+./clean.sh --nuke --keep-cache -y   # L4 but keep the shared Docker build cache
+./clean.sh --nuke --hard -y   # L4 + mounts/ and snapshots/ (data loss)
+</code></pre>
+<p>What L4 (<code>--nuke</code>) removes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Target</th>
+<th style="text-align: left;">Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Containers</td>
+<td style="text-align: left;">Main instances, the tunnel, and every <code>ghost-tenant-*</code> compose project</td>
+</tr>
+<tr>
+<td style="text-align: left;">Images</td>
+<td style="text-align: left;">All local <code>*-template</code> tags <strong>and</strong> every GHCR tag (<code>latest</code>, <code>vX.Y.Z</code>, <code>latest-&lt;sha&gt;</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Dangling images</td>
+<td style="text-align: left;">Only those carrying this project's OCI source label (images built from the current Dockerfiles) — other projects are untouched</td>
+</tr>
+<tr>
+<td style="text-align: left;">Volumes</td>
+<td style="text-align: left;">Compose volumes belonging to <code>ghost-machines</code> / <code>ghost-tenant-*</code> only</td>
+</tr>
+<tr>
+<td style="text-align: left;">Networks</td>
+<td style="text-align: left;"><code>ghost_sandbox</code> and any <code>ghost-machines_*</code> / <code>ghost-tenant-*</code> network</td>
+</tr>
+<tr>
+<td style="text-align: left;">Build cache</td>
+<td style="text-align: left;"><code>docker builder prune -af</code> and <code>docker buildx prune -af</code>. Host-wide — Docker cannot scope build cache per project. Add <code>--keep-cache</code> to skip this step</td>
+</tr>
+<tr>
+<td style="text-align: left;">Registry</td>
+<td style="text-align: left;"><code>config/tenants.json</code> restored to its committed (empty) state — no spurious git diff</td>
+</tr>
+</tbody>
+</table>
+<p>What it deliberately keeps: <code>mounts/</code> (your work) and <code>snapshots/</code> (your backups), unless <code>--hard</code> is passed. <code>--hard</code> deletes both and recreates the empty directories, returning the checkout to a first-run state.</p>
+<p>Every level supports <code>--dry-run</code>, which prints the exact Docker commands without executing them, and <code>-y</code> to skip the confirmation prompt. <code>--keep-cache</code> (with <code>--nuke</code>) skips the build-cache purge, which is the only host-wide step. L1–L3 warn when tenant containers exist, because they only manage the main machines. <code>--hard</code> outside <code>--nuke</code> is rejected rather than silently ignored.</p>
+<h2 id="backup-and-restore">Backup and restore</h2>
+<p>Snapshots archive <code>mounts/</code> while skipping caches (<code>node_modules/.cache</code>, <code>.npm/_cacache</code>, <code>target/</code>, <code>__pycache__</code>, <code>.pytest_cache</code>, logs):</p>
+<pre><code class="language-bash">make snapshot                                   # snapshots/ghost_snapshot_&lt;ts&gt;.tar.gz
+./snapshot.sh -o my_backup.tar.gz               # named archive
+./snapshot.sh --all                             # include caches too
+
+make restore
+./restore.sh my_backup.tar.gz                   # verifies SHA-256, atomic rollback on failure
+./restore.sh -y my_backup.tar.gz                # non-interactive
+./restore.sh -k my_backup.tar.gz                # keep the pre-restore backup
+</code></pre>
+<p>Every snapshot writes three files: the archive, <code>&lt;archive&gt;.sha256</code>, and <code>&lt;archive&gt;.meta.json</code> (timestamp, architecture, file counts, hash). Restore validates the checksum, backs up the current mounts, and rolls back automatically if extraction fails. Tenants have their own snapshot/restore commands.</p>
+      <footer class="doc-footer">
+        <span>MIT LICENSE · AZZAR</span>
+        <span>ARCHIVAL_RECORD_SEALED // GHOST_MACHINES</span>
+      </footer>
+    </main>
+    <nav class="doc-toc" aria-label="On this page">
+      <div class="doc-toc-title">ON THIS PAGE</div>
+      <ol id="tocList"><li><a href="#state-model"><span class="doc-nav-num">01</span> State model</a></li><li><a href="#command-matrix"><span class="doc-nav-num">02</span> Command matrix</a></li><li><a href="#start-and-recreate"><span class="doc-nav-num">03</span> Start and recreate</a></li><li><a href="#restart-pause-resume"><span class="doc-nav-num">04</span> Restart, pause, resume</a></li><li><a href="#logs-and-diagnostics"><span class="doc-nav-num">05</span> Logs and diagnostics</a></li><li><a href="#cleanup-levels"><span class="doc-nav-num">06</span> Cleanup levels</a></li><li><a href="#backup-and-restore"><span class="doc-nav-num">07</span> Backup and restore</a></li></ol>
+    </nav>
+  </div>
+</div>
+
+<div class="cmd-backdrop" id="cmdPalette" role="dialog" aria-label="Search documentation">
+  <div class="cmd-modal">
+    <div class="cmd-input-row">
+      <span aria-hidden="true">§</span>
+      <input type="text" class="cmd-input" id="cmdInput" aria-label="Search pages and sections" placeholder="Search pages and sections…">
+      <span class="cmd-item-tag">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+  </div>
+</div>
+<script type="application/json" id="search-index">[{"t":"Ghost Machines","u":"index.html","k":"page"},{"t":"Getting Started","u":"start.html","k":"page"},{"t":"Images: Prebuilt vs Build","u":"images.html","k":"page"},{"t":"Engines & Toolchain","u":"engines.html","k":"page"},{"t":"Lifecycle & Cleanup","u":"lifecycle.html","k":"page"},{"t":"Connecting","u":"connecting.html","k":"page"},{"t":"Configuration","u":"configuration.html","k":"page"},{"t":"Troubleshooting","u":"troubleshooting.html","k":"page"},{"t":"Architecture","u":"architecture.html","k":"page"},{"t":"Multi-Tenant (WaaS)","u":"tenant.html","k":"page"},{"t":"Security & Hardening","u":"security.html","k":"page"},{"t":"Scripts Guide","u":"scripts.html","k":"page"},{"t":"Glossary","u":"glossary.html","k":"page"},{"t":"Ghost vs VM","u":"comparison.html","k":"page"},{"t":"Contributing","u":"contributing.html","k":"page"},{"t":"Cheatsheet","u":"cheatsheet.html","k":"page"},{"t":"Step 1 \u2014 Clone","u":"start.html#step-1-clone","k":"section","p":"Getting Started"},{"t":"Step 2 \u2014 Prepare the host (Linux, once)","u":"start.html#step-2-prepare-the-host-linux-once","k":"section","p":"Getting Started"},{"t":"Step 3 \u2014 Pick an image source","u":"start.html#step-3-pick-an-image-source","k":"section","p":"Getting Started"},{"t":"Step 4 \u2014 Start","u":"start.html#step-4-start","k":"section","p":"Getting Started"},{"t":"Step 5 \u2014 Connect","u":"start.html#step-5-connect","k":"section","p":"Getting Started"},{"t":"Step 6 \u2014 Stop, resume, remove","u":"start.html#step-6-stop-resume-remove","k":"section","p":"Getting Started"},{"t":"Where next","u":"start.html#where-next","k":"section","p":"Getting Started"},{"t":"Prebuilt images (GHCR)","u":"images.html#prebuilt-images-ghcr","k":"section","p":"Prebuilt vs Build"},{"t":"Local build","u":"images.html#local-build","k":"section","p":"Prebuilt vs Build"},{"t":"Pinning, upgrading, rolling back","u":"images.html#pinning-upgrading-rolling-back","k":"section","p":"Prebuilt vs Build"},{"t":"Harnesses are never pinned","u":"images.html#harnesses-are-never-pinned","k":"section","p":"Prebuilt vs Build"},{"t":"Which image am I actually running?","u":"images.html#which-image-am-i-actually-running","k":"section","p":"Prebuilt vs Build"},{"t":"Offline / air-gapped hosts","u":"images.html#offline-air-gapped-hosts","k":"section","p":"Prebuilt vs Build"},{"t":"What is installed","u":"engines.html#what-is-installed","k":"section","p":"Engines & Toolchain"},{"t":"Version policy","u":"engines.html#version-policy","k":"section","p":"Engines & Toolchain"},{"t":"Engine caveats","u":"engines.html#engine-caveats","k":"section","p":"Engines & Toolchain"},{"t":"Choosing the HeLa profile","u":"engines.html#choosing-the-hela-profile","k":"section","p":"Engines & Toolchain"},{"t":"Adding a package or changing an engine","u":"engines.html#adding-a-package-or-changing-an-engine","k":"section","p":"Engines & Toolchain"},{"t":"State model","u":"lifecycle.html#state-model","k":"section","p":"Lifecycle & Cleanup"},{"t":"Command matrix","u":"lifecycle.html#command-matrix","k":"section","p":"Lifecycle & Cleanup"},{"t":"Start and recreate","u":"lifecycle.html#start-and-recreate","k":"section","p":"Lifecycle & Cleanup"},{"t":"Restart, pause, resume","u":"lifecycle.html#restart-pause-resume","k":"section","p":"Lifecycle & Cleanup"},{"t":"Logs and diagnostics","u":"lifecycle.html#logs-and-diagnostics","k":"section","p":"Lifecycle & Cleanup"},{"t":"Cleanup levels","u":"lifecycle.html#cleanup-levels","k":"section","p":"Lifecycle & Cleanup"},{"t":"Backup and restore","u":"lifecycle.html#backup-and-restore","k":"section","p":"Lifecycle & Cleanup"},{"t":"Where to connect","u":"connecting.html#where-to-connect","k":"section","p":"Connecting"},{"t":"Credentials","u":"connecting.html#credentials","k":"section","p":"Connecting"},{"t":"Host key warnings after a rebuild","u":"connecting.html#host-key-warnings-after-a-rebuild","k":"section","p":"Connecting"},{"t":"Without SSH","u":"connecting.html#without-ssh","k":"section","p":"Connecting"},{"t":"Reaching services inside the sandbox","u":"connecting.html#reaching-services-inside-the-sandbox","k":"section","p":"Connecting"},{"t":"Editors","u":"connecting.html#editors","k":"section","p":"Connecting"},{"t":"Remote access over the internet (Cloudflare Tunnel)","u":"connecting.html#remote-access-over-the-internet-cloudflare-tunnel","k":"section","p":"Connecting"},{"t":"Multiple people, one host","u":"connecting.html#multiple-people-one-host","k":"section","p":"Connecting"},{"t":"Precedence","u":"configuration.html#precedence","k":"section","p":"Configuration"},{"t":"Core variables","u":"configuration.html#core-variables","k":"section","p":"Configuration"},{"t":"Ports and names","u":"configuration.html#ports-and-names","k":"section","p":"Configuration"},{"t":"Access","u":"configuration.html#access","k":"section","p":"Configuration"},{"t":"Resources","u":"configuration.html#resources","k":"section","p":"Configuration"},{"t":"Agents and MCP","u":"configuration.html#agents-and-mcp","k":"section","p":"Configuration"},{"t":"Tenant variables","u":"configuration.html#tenant-variables","k":"section","p":"Configuration"},{"t":"LXCFS","u":"configuration.html#lxcfs","k":"section","p":"Configuration"},{"t":"Profiles","u":"configuration.html#profiles","k":"section","p":"Configuration"},{"t":"Passing arguments to Compose","u":"configuration.html#passing-arguments-to-compose","k":"section","p":"Configuration"},{"t":"Minimal .env","u":"configuration.html#minimal-env","k":"section","p":"Configuration"},{"t":"Symptom \u2192 fix","u":"troubleshooting.html#symptom-fix","k":"section","p":"Troubleshooting"},{"t":"Diagnostics","u":"troubleshooting.html#diagnostics","k":"section","p":"Troubleshooting"},{"t":"First boot is slow","u":"troubleshooting.html#first-boot-is-slow","k":"section","p":"Troubleshooting"},{"t":"Flaky Docker Desktop / OrbStack on macOS","u":"troubleshooting.html#flaky-docker-desktop-orbstack-on-macos","k":"section","p":"Troubleshooting"},{"t":"When all else fails","u":"troubleshooting.html#when-all-else-fails","k":"section","p":"Troubleshooting"},{"t":"Components","u":"architecture.html#components","k":"section","p":"Architecture"},{"t":"Boot sequence","u":"architecture.html#boot-sequence","k":"section","p":"Architecture"},{"t":"Resource footprint","u":"architecture.html#resource-footprint","k":"section","p":"Architecture"},{"t":"Mounts","u":"architecture.html#mounts","k":"section","p":"Architecture"},{"t":"Network","u":"architecture.html#network","k":"section","p":"Architecture"},{"t":"Inside the image","u":"architecture.html#inside-the-image","k":"section","p":"Architecture"},{"t":"Extending","u":"architecture.html#extending","k":"section","p":"Architecture"},{"t":"Isolation guarantees","u":"tenant.html#isolation-guarantees","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Provision","u":"tenant.html#provision","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Operate","u":"tenant.html#operate","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Registry","u":"tenant.html#registry","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Snapshots and upgrades","u":"tenant.html#snapshots-and-upgrades","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Deleting someone's work","u":"tenant.html#deleting-someones-work","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Cleanup interactions","u":"tenant.html#cleanup-interactions","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Defaults and their risk","u":"security.html#defaults-and-their-risk","k":"section","p":"Security & Hardening"},{"t":"Hardening checklist","u":"security.html#hardening-checklist","k":"section","p":"Security & Hardening"},{"t":"P0 \u2014 before exposing to tenants or the internet","u":"security.html#p0-before-exposing-to-tenants-or-the-internet","k":"section","p":"Security & Hardening"},{"t":"P1 \u2014 container hardening","u":"security.html#p1-container-hardening","k":"section","p":"Security & Hardening"},{"t":"P2 \u2014 SSH hardening","u":"security.html#p2-ssh-hardening","k":"section","p":"Security & Hardening"},{"t":"Network exposure","u":"security.html#network-exposure","k":"section","p":"Security & Hardening"},{"t":"Secrets","u":"security.html#secrets","k":"section","p":"Security & Hardening"},{"t":"Audit","u":"security.html#audit","k":"section","p":"Security & Hardening"},{"t":"start.sh \u2014 Front Desk","u":"scripts.html#startsh-front-desk","k":"section","p":"Scripts Guide"},{"t":"tenant.sh \u2014 Hotel Manager","u":"scripts.html#tenantsh-hotel-manager","k":"section","p":"Scripts Guide"},{"t":"snapshot.sh &amp; restore.sh \u2014 Backup &amp; Undo","u":"scripts.html#snapshotsh-restoresh-backup-undo","k":"section","p":"Scripts Guide"},{"t":"clean.sh \u2014 Housekeeping","u":"scripts.html#cleansh-housekeeping","k":"section","p":"Scripts Guide"},{"t":"setup-host.sh \u2014 Building Setup (once)","u":"scripts.html#setup-hostsh-building-setup-once","k":"section","p":"Scripts Guide"},{"t":"entrypoint.sh \u2014 Room Butler (automatic)","u":"scripts.html#entrypointsh-room-butler-automatic","k":"section","p":"Scripts Guide"},{"t":"aliases.sh \u2014 Shortcuts","u":"scripts.html#aliasessh-shortcuts","k":"section","p":"Scripts Guide"},{"t":"TL;DR","u":"comparison.html#tldr","k":"section","p":"Ghost vs VM"},{"t":"Architecture","u":"comparison.html#architecture","k":"section","p":"Ghost vs VM"},{"t":"Pros / Cons","u":"comparison.html#pros-cons","k":"section","p":"Ghost vs VM"},{"t":"Ghost Machines \u2714\ufe0f","u":"comparison.html#ghost-machines","k":"section","p":"Ghost vs VM"},{"t":"Ghost Machines \u274c","u":"comparison.html#ghost-machines_1","k":"section","p":"Ghost vs VM"},{"t":"Regular VM \u2714\ufe0f","u":"comparison.html#regular-vm","k":"section","p":"Ghost vs VM"},{"t":"Regular VM \u274c","u":"comparison.html#regular-vm_1","k":"section","p":"Ghost vs VM"},{"t":"Decision Matrix","u":"comparison.html#decision-matrix","k":"section","p":"Ghost vs VM"},{"t":"Cost Example (16GB host)","u":"comparison.html#cost-example-16gb-host","k":"section","p":"Ghost vs VM"},{"t":"Security Note","u":"comparison.html#security-note","k":"section","p":"Ghost vs VM"},{"t":"Further Reading","u":"comparison.html#further-reading","k":"section","p":"Ghost vs VM"},{"t":"Repo layout","u":"contributing.html#repo-layout","k":"section","p":"Contributing"},{"t":"Dev loop","u":"contributing.html#dev-loop","k":"section","p":"Contributing"},{"t":"Test suites","u":"contributing.html#test-suites","k":"section","p":"Contributing"},{"t":"Documentation rules","u":"contributing.html#documentation-rules","k":"section","p":"Contributing"},{"t":"Documentation deployment","u":"contributing.html#documentation-deployment","k":"section","p":"Contributing"},{"t":"The tour film","u":"contributing.html#the-tour-film","k":"section","p":"Contributing"},{"t":"Release process","u":"contributing.html#release-process","k":"section","p":"Contributing"},{"t":"Adding an engine","u":"contributing.html#adding-an-engine","k":"section","p":"Contributing"},{"t":"Style","u":"contributing.html#style","k":"section","p":"Contributing"},{"t":"Start","u":"cheatsheet.html#start","k":"section","p":"Cheatsheet"},{"t":"Connect","u":"cheatsheet.html#connect","k":"section","p":"Cheatsheet"},{"t":"Inspect","u":"cheatsheet.html#inspect","k":"section","p":"Cheatsheet"},{"t":"Stop / restart / remove","u":"cheatsheet.html#stop-restart-remove","k":"section","p":"Cheatsheet"},{"t":"Backup / restore","u":"cheatsheet.html#backup-restore","k":"section","p":"Cheatsheet"},{"t":"Agents","u":"cheatsheet.html#agents","k":"section","p":"Cheatsheet"},{"t":"Tenants","u":"cheatsheet.html#tenants","k":"section","p":"Cheatsheet"},{"t":"Images","u":"cheatsheet.html#images","k":"section","p":"Cheatsheet"},{"t":"Config","u":"cheatsheet.html#config","k":"section","p":"Cheatsheet"},{"t":"Develop","u":"cheatsheet.html#develop","k":"section","p":"Cheatsheet"},{"t":"Fixes for the usual three","u":"cheatsheet.html#fixes-for-the-usual-three","k":"section","p":"Cheatsheet"}]</script>
+<script>
+(function () {
+  var dataEl = document.getElementById("search-index");
+  var index = dataEl ? JSON.parse(dataEl.textContent) : [];
+  var palette = document.getElementById("cmdPalette");
+  var input = document.getElementById("cmdInput");
+  var results = document.getElementById("cmdResults");
+  var active = -1;
+
+  function esc(value) {
+    return String(value).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function render(items) {
+    active = -1;
+    if (!items.length) {
+      results.innerHTML = '<div class="cmd-empty">no matches</div>';
+      return;
+    }
+    results.innerHTML = items.map(function (item) {
+      return '<a class="cmd-item" href="' + item.u + '">' +
+        '<span>' + esc(item.t) + (item.p ? ' <span class="cmd-item-tag">' + esc(item.p) + '</span>' : '') + '</span>' +
+        '<span class="cmd-item-tag">' + item.k + '</span></a>';
+    }).join("");
+  }
+
+  function filter() {
+    var q = input.value.trim().toLowerCase();
+    var hits = !q ? index.filter(function (i) { return i.k === "page"; })
+      : index.filter(function (i) { return i.t.toLowerCase().indexOf(q) !== -1; });
+    render(hits.slice(0, 24));
+  }
+
+  function openPalette() {
+    palette.style.display = "flex";
+    input.value = "";
+    filter();
+    input.focus();
+  }
+
+  function closePalette() {
+    palette.style.display = "none";
+  }
+
+  function move(delta) {
+    var items = results.querySelectorAll(".cmd-item");
+    if (!items.length) return;
+    active = (active + delta + items.length) % items.length;
+    items.forEach(function (el, i) { el.classList.toggle("is-active", i === active); });
+    items[active].scrollIntoView({ block: "nearest" });
+  }
+
+  document.querySelectorAll(".open-cmd-palette").forEach(function (btn) {
+    btn.addEventListener("click", openPalette);
+  });
+  palette.addEventListener("click", function (event) {
+    if (event.target === palette) closePalette();
+  });
+  input.addEventListener("input", filter);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowDown") { event.preventDefault(); move(1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); move(-1); }
+    else if (event.key === "Enter") {
+      var current = results.querySelectorAll(".cmd-item")[active] ||
+        results.querySelector(".cmd-item");
+      if (current) window.location.href = current.getAttribute("href");
+    } else if (event.key === "Escape") closePalette();
+  });
+  document.addEventListener("keydown", function (event) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      palette.style.display === "flex" ? closePalette() : openPalette();
+    } else if (event.key === "Escape") {
+      closePalette();
+    }
+  });
+
+  document.querySelectorAll(".doc-nav a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      var drawer = document.querySelector(".doc-mobile-nav");
+      if (drawer) drawer.open = false;
+    });
+  });
+
+  document.querySelectorAll(".doc-content pre").forEach(function (el) {
+    var b = document.createElement("button");
+    b.className = "copy-btn";
+    b.textContent = "copy";
+    b.setAttribute("aria-label", "Copy code");
+    b.addEventListener("click", function () {
+      var code = el.querySelector("code");
+      navigator.clipboard.writeText(code ? code.innerText : el.innerText).then(function () {
+        b.textContent = "copied";
+        setTimeout(function () { b.textContent = "copy"; }, 1200);
+      });
+    });
+    el.appendChild(b);
+  });
+
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('#tocList a[href^="#"]'));
+  var heads = tocLinks.map(function (a) {
+    return document.getElementById(a.getAttribute("href").slice(1));
+  }).filter(Boolean);
+  if ("IntersectionObserver" in window && heads.length) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        tocLinks.forEach(function (a) {
+          a.classList.toggle("is-active", a.getAttribute("href") === "#" + entry.target.id);
+        });
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    heads.forEach(function (h) { observer.observe(h); });
+  }
+})();
+</script>
+</body>
+</html>

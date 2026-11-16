@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuration — Ghost Machines</title>
+<meta name="description" content="Every environment variable and build arg, its default, and when it takes effect.">
+<link rel="icon" href="../favicon.png" type="image/png">
+<link rel="manifest" href="../manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div class="doc-shell">
+  <aside class="doc-sidebar" aria-label="Documentation sections">
+    <div class="doc-brand">
+      <a href="../index.html" class="doc-brand-title">Ghost Machines</a>
+      <div class="doc-brand-meta">docs · docker compose · 4 engines · MIT</div>
+    </div>
+    <nav aria-label="Documentation">
+      <details class="doc-mobile-nav" open>
+        <summary>Browse documentation</summary>
+        <div class="doc-nav-section">OVERVIEW</div><ol class="doc-nav" start="0"><li><a href="../index.html"><span class="doc-nav-num">00</span> <span>Overview</span></a></li></ol><div class="doc-nav-section">GETTING STARTED</div><ol class="doc-nav" start="1"><li><a href="start.html"><span class="doc-nav-num">01</span> <span>Getting Started</span></a></li><li><a href="images.html"><span class="doc-nav-num">02</span> <span>Prebuilt vs Build</span></a></li><li><a href="engines.html"><span class="doc-nav-num">03</span> <span>Engines & Toolchain</span></a></li></ol><div class="doc-nav-section">OPERATE</div><ol class="doc-nav" start="4"><li><a href="lifecycle.html"><span class="doc-nav-num">04</span> <span>Lifecycle & Cleanup</span></a></li><li><a href="connecting.html"><span class="doc-nav-num">05</span> <span>Connecting</span></a></li><li><a href="configuration.html" aria-current="page"><span class="doc-nav-num">06</span> <span>Configuration</span></a></li><li><a href="troubleshooting.html"><span class="doc-nav-num">07</span> <span>Troubleshooting</span></a></li></ol><div class="doc-nav-section">REFERENCE</div><ol class="doc-nav" start="8"><li><a href="architecture.html"><span class="doc-nav-num">08</span> <span>Architecture</span></a></li><li><a href="tenant.html"><span class="doc-nav-num">09</span> <span>Multi-Tenant (WaaS)</span></a></li><li><a href="security.html"><span class="doc-nav-num">10</span> <span>Security & Hardening</span></a></li><li><a href="scripts.html"><span class="doc-nav-num">11</span> <span>Scripts Guide</span></a></li><li><a href="glossary.html"><span class="doc-nav-num">12</span> <span>Glossary</span></a></li><li><a href="comparison.html"><span class="doc-nav-num">13</span> <span>Ghost vs VM</span></a></li></ol><div class="doc-nav-section">PROJECT</div><ol class="doc-nav" start="14"><li><a href="contributing.html"><span class="doc-nav-num">14</span> <span>Contributing</span></a></li><li><a href="cheatsheet.html"><span class="doc-nav-num">15</span> <span>Cheatsheet</span></a></li></ol>
+      </details>
+    </nav>
+  </aside>
+  <div class="doc-main">
+    <div class="doc-topbar">
+      <span class="doc-topbar-title">DOC_06 // GHOST-MACHINES</span>
+      <div class="topbar-actions">
+        <a class="btn" href="https://asciinema.org/a/sDNJP7aYOabLz0k6" target="_blank" rel="noopener noreferrer">Demo</a>
+        <button class="btn open-cmd-palette" type="button">Search ⌘K</button>
+        <a class="btn" href="https://github.com/1999AZZAR/ghost-machines" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+    <main id="main-content" class="doc-content">
+      <header class="specimen-plate">
+        <div class="specimen-ref"><span>DOC_06 // GHOST-MACHINES</span><span>DOSSIER: CONFIGURATION</span></div>
+        <h1 class="doc-title">Configuration</h1>
+        <p class="doc-lead">Every environment variable and build arg, its default, and when it takes effect.</p>
+      </header>
+      <figure class="figure-plate">
+        <div class="figure-mat"><img src="../assets/blotcat/06-configuration.png" alt="Blotcat turning labelled dials on a small panel" loading="lazy"></div>
+        <figcaption class="figure-caption"><strong>FIG.</strong><span>06 · Configuration · knobs and when they apply</span></figcaption>
+      </figure>
+<p>All configuration is environment variables. <code>.env</code> in the repo root is the canonical place; <code>start.sh</code> reads it and passes values to Docker Compose.</p>
+<h2 id="precedence">Precedence</h2>
+<ol>
+<li>CLI flags (<code>./start.sh -e debian -m single -p 2225 …</code>)</li>
+<li>Variables exported in your shell</li>
+<li><code>.env</code></li>
+<li>Defaults in <code>docker-compose.yml</code></li>
+</ol>
+<p><code>start.sh</code> hardens <code>.env</code> to <code>600</code> on every run if it is more permissive.</p>
+<h2 id="core-variables">Core variables</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+<th style="text-align: left;">Applies on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GHOST_USER</code></td>
+<td style="text-align: left;"><code>developer</code></td>
+<td style="text-align: left;">Non-root account inside the sandbox.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HOST_UID</code></td>
+<td style="text-align: left;">host <code>id -u</code></td>
+<td style="text-align: left;">UID the account is synced to, so mounts match your user.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HOST_GID</code></td>
+<td style="text-align: left;">host <code>id -g</code></td>
+<td style="text-align: left;">Same for the group.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_IMAGE</code></td>
+<td style="text-align: left;">engine default</td>
+<td style="text-align: left;">Image reference; anything containing <code>/</code> is pulled, a plain tag is built.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>GHOST_DOCKERFILE</code></td>
+<td style="text-align: left;">engine default</td>
+<td style="text-align: left;">Dockerfile used when building. Set automatically by <code>-e</code>/<code>--prebuilt</code>.</td>
+<td style="text-align: left;">build</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HELA_PROFILE</code></td>
+<td style="text-align: left;"><code>dev-workspace</code></td>
+<td style="text-align: left;">HeLa cells installed in runtime mode. <code>minimal</code>, <code>dev-workspace</code>, <code>headless-server</code>, <code>research</code>, <code>web-devops</code>, <code>android-testing</code>, <code>3d-modeling</code>, <code>all</code>.</td>
+<td style="text-align: left;">build</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HELA_SNAPSHOT</code></td>
+<td style="text-align: left;"><code>v1.9.5</code></td>
+<td style="text-align: left;">Pinned ecosystem snapshot. v1.9.6 ships a phenotype pin the installer's catalog check rejects, so the build stays on the last verified snapshot.</td>
+<td style="text-align: left;">build</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ports-and-names">Ports and names</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>G1_PORT</code></td>
+<td style="text-align: left;"><code>2223</code></td>
+<td style="text-align: left;">Host port for the first machine (<code>-p N</code> sets this).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G2_PORT</code></td>
+<td style="text-align: left;"><code>2224</code></td>
+<td style="text-align: left;">Host port for the second machine in dual mode (<code>-p N</code> sets <code>N+1</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G1_NAME</code></td>
+<td style="text-align: left;"><code>ghost-machine1</code></td>
+<td style="text-align: left;">Container name in dual mode.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G2_NAME</code></td>
+<td style="text-align: left;"><code>ghost-machine2</code></td>
+<td style="text-align: left;">Second container name in dual mode.</td>
+</tr>
+</tbody>
+</table>
+<p>In single/power/half mode the names are fixed by <code>start.sh</code>: <code>ghost-machine-single</code>, <code>ghost-machine-power</code>, <code>ghost-machine-half</code>.</p>
+<h2 id="access">Access</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+<th style="text-align: left;">Applies on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>SSH_PASSWORD_AUTH</code></td>
+<td style="text-align: left;"><code>true</code></td>
+<td style="text-align: left;"><code>false</code> disables password login entirely (key-only). Lock-out risk — see <a href="connecting.html">Connecting</a>.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>SSH_AUTH_KEY_PATH</code></td>
+<td style="text-align: left;">auto-detected</td>
+<td style="text-align: left;">Host public key to authorize. Auto-detected from <code>~/.ssh/id_ed25519.pub</code>, <code>~/.ssh/id_rsa.pub</code>, <code>~/.ssh/authorized_keys</code>.</td>
+<td style="text-align: left;">create</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TUNNEL_TOKEN</code></td>
+<td style="text-align: left;">empty</td>
+<td style="text-align: left;">Cloudflare Tunnel token. A real token (&gt;10 chars) enables the <code>remote</code> profile.</td>
+<td style="text-align: left;">create</td>
+</tr>
+</tbody>
+</table>
+<h2 id="resources">Resources</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>G1_CPU</code></td>
+<td style="text-align: left;"><code>1.0</code></td>
+<td style="text-align: left;">CPU quota for the first machine. <code>start.sh</code> overwrites it per mode.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G1_MEM</code></td>
+<td style="text-align: left;"><code>8G</code></td>
+<td style="text-align: left;">Memory limit for the first machine.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G2_CPU</code></td>
+<td style="text-align: left;"><code>1.0</code></td>
+<td style="text-align: left;">CPU quota for the second machine (dual only).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>G2_MEM</code></td>
+<td style="text-align: left;"><code>8G</code></td>
+<td style="text-align: left;">Memory limit for the second machine (dual only).</td>
+</tr>
+</tbody>
+</table>
+<p>Mode presets (the mode always wins over a hand-edited value):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Mode</th>
+<th style="text-align: center;">Instances</th>
+<th style="text-align: center;">CPU</th>
+<th style="text-align: center;">RAM</th>
+<th style="text-align: left;">Container names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>single</code></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1.0</td>
+<td style="text-align: center;">8G</td>
+<td style="text-align: left;"><code>ghost-machine-single</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>dual</code></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">1.0 each</td>
+<td style="text-align: center;">8G each</td>
+<td style="text-align: left;"><code>ghost-machine1</code>, <code>ghost-machine2</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>power</code></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">2.0</td>
+<td style="text-align: center;">16G</td>
+<td style="text-align: left;"><code>ghost-machine-power</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>half</code></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">50% host</td>
+<td style="text-align: center;">50% host</td>
+<td style="text-align: left;"><code>ghost-machine-half</code></td>
+</tr>
+</tbody>
+</table>
+<p>To pin a custom value, start Compose yourself with the variables you want after selecting the mode.</p>
+<h2 id="agents-and-mcp">Agents and MCP</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>GHOST_HARNESS_UPDATE</code></td>
+<td style="text-align: left;"><code>latest</code></td>
+<td style="text-align: left;"><code>latest</code> = refresh stale binaries at start, <code>always</code> = every start, <code>off</code> = never.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>HARNESS_UPDATE_INTERVAL_HOURS</code></td>
+<td style="text-align: left;"><code>24</code></td>
+<td style="text-align: left;">Staleness window for <code>latest</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>MCP_ECOSYSTEM_LOCAL_PATH</code></td>
+<td style="text-align: left;"><code>/dev/null</code></td>
+<td style="text-align: left;">Mount a local <code>hela-mcp-ecosystem</code> checkout at <code>/opt/mcp-ecosystem-local</code> for developing the ecosystem itself. The image's runtime lives in <code>/opt/hela</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="tenant-variables">Tenant variables</h2>
+<p><code>tenant.sh</code> sets these itself; they are listed for completeness and overrides. Defaults live in <code>templates/docker-compose.tenant.yml</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Variable</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>TENANT_IMAGE</code></td>
+<td style="text-align: left;">engine tag</td>
+<td style="text-align: left;">Image for a tenant (overrides engine default).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_DOCKERFILE</code></td>
+<td style="text-align: left;"><code>Dockerfile.debian</code></td>
+<td style="text-align: left;">Dockerfile used when building a tenant.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_USER</code></td>
+<td style="text-align: left;"><code>developer</code></td>
+<td style="text-align: left;">Workspace user.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_PORT</code></td>
+<td style="text-align: left;">auto (<code>&gt;=2225</code>)</td>
+<td style="text-align: left;">Host SSH port.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_CPU</code></td>
+<td style="text-align: left;"><code>2.0</code></td>
+<td style="text-align: left;">CPU quota.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_MEM</code></td>
+<td style="text-align: left;"><code>4G</code></td>
+<td style="text-align: left;">Memory limit.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_MOUNT_PATH</code></td>
+<td style="text-align: left;"><code>mounts/tenants/&lt;id&gt;</code></td>
+<td style="text-align: left;">Persistent workspace.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>TENANT_AUTH_KEY_PATH</code></td>
+<td style="text-align: left;">auto</td>
+<td style="text-align: left;">Authorized public key.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lxcfs">LXCFS</h2>
+<p><code>start.sh</code> detects <code>/var/lib/lxcfs/proc</code> and mounts <code>cpuinfo</code>, <code>meminfo</code>, <code>stat</code>, <code>swaps</code> and <code>uptime</code> read-only into the sandbox so resource tools report cgroup limits. With LXCFS absent (macOS, WSL, plain Docker without lxcfs) the mounts fall back to <code>/dev/null</code>, which Docker tolerates. Force the fallback with <code>--no-lxcfs</code>.</p>
+<h2 id="profiles">Profiles</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Profile</th>
+<th style="text-align: left;">Enabled by</th>
+<th style="text-align: left;">Adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>dual</code></td>
+<td style="text-align: left;"><code>-m dual</code> / <code>./start.sh dual</code></td>
+<td style="text-align: left;">second machine (<code>ghost2</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>remote</code></td>
+<td style="text-align: left;">valid <code>TUNNEL_TOKEN</code></td>
+<td style="text-align: left;"><code>cloudflared</code> tunnel container</td>
+</tr>
+</tbody>
+</table>
+<h2 id="passing-arguments-to-compose">Passing arguments to Compose</h2>
+<p>Anything unknown to <code>start.sh</code> is forwarded:</p>
+<pre><code class="language-bash">./start.sh -e debian -m single -- --force-recreate
+docker compose --profile dual config      # inspect the resolved configuration
+</code></pre>
+<h2 id="minimal-env">Minimal <code>.env</code></h2>
+<pre><code class="language-bash">GHOST_USER=developer
+G1_PORT=2223
+SSH_PASSWORD_AUTH=true
+# TUNNEL_TOKEN=...
+# GHOST_IMAGE=ghcr.io/1999azzar/ghost-machine-ubuntu:v2.1.0
+# GHOST_HARNESS_UPDATE=latest
+</code></pre>
+<p>Everything is optional; the defaults work on a laptop. <code>.env.example</code> mirrors this file — if you add a variable there, add it here too (the docs test enforces that).</p>
+      <footer class="doc-footer">
+        <span>MIT LICENSE · AZZAR</span>
+        <span>ARCHIVAL_RECORD_SEALED // GHOST_MACHINES</span>
+      </footer>
+    </main>
+    <nav class="doc-toc" aria-label="On this page">
+      <div class="doc-toc-title">ON THIS PAGE</div>
+      <ol id="tocList"><li><a href="#precedence"><span class="doc-nav-num">01</span> Precedence</a></li><li><a href="#core-variables"><span class="doc-nav-num">02</span> Core variables</a></li><li><a href="#ports-and-names"><span class="doc-nav-num">03</span> Ports and names</a></li><li><a href="#access"><span class="doc-nav-num">04</span> Access</a></li><li><a href="#resources"><span class="doc-nav-num">05</span> Resources</a></li><li><a href="#agents-and-mcp"><span class="doc-nav-num">06</span> Agents and MCP</a></li><li><a href="#tenant-variables"><span class="doc-nav-num">07</span> Tenant variables</a></li><li><a href="#lxcfs"><span class="doc-nav-num">08</span> LXCFS</a></li><li><a href="#profiles"><span class="doc-nav-num">09</span> Profiles</a></li><li><a href="#passing-arguments-to-compose"><span class="doc-nav-num">10</span> Passing arguments to Compose</a></li><li><a href="#minimal-env"><span class="doc-nav-num">11</span> Minimal .env</a></li></ol>
+    </nav>
+  </div>
+</div>
+
+<div class="cmd-backdrop" id="cmdPalette" role="dialog" aria-label="Search documentation">
+  <div class="cmd-modal">
+    <div class="cmd-input-row">
+      <span aria-hidden="true">§</span>
+      <input type="text" class="cmd-input" id="cmdInput" aria-label="Search pages and sections" placeholder="Search pages and sections…">
+      <span class="cmd-item-tag">ESC</span>
+    </div>
+    <div class="cmd-results" id="cmdResults"></div>
+  </div>
+</div>
+<script type="application/json" id="search-index">[{"t":"Ghost Machines","u":"index.html","k":"page"},{"t":"Getting Started","u":"start.html","k":"page"},{"t":"Images: Prebuilt vs Build","u":"images.html","k":"page"},{"t":"Engines & Toolchain","u":"engines.html","k":"page"},{"t":"Lifecycle & Cleanup","u":"lifecycle.html","k":"page"},{"t":"Connecting","u":"connecting.html","k":"page"},{"t":"Configuration","u":"configuration.html","k":"page"},{"t":"Troubleshooting","u":"troubleshooting.html","k":"page"},{"t":"Architecture","u":"architecture.html","k":"page"},{"t":"Multi-Tenant (WaaS)","u":"tenant.html","k":"page"},{"t":"Security & Hardening","u":"security.html","k":"page"},{"t":"Scripts Guide","u":"scripts.html","k":"page"},{"t":"Glossary","u":"glossary.html","k":"page"},{"t":"Ghost vs VM","u":"comparison.html","k":"page"},{"t":"Contributing","u":"contributing.html","k":"page"},{"t":"Cheatsheet","u":"cheatsheet.html","k":"page"},{"t":"Step 1 \u2014 Clone","u":"start.html#step-1-clone","k":"section","p":"Getting Started"},{"t":"Step 2 \u2014 Prepare the host (Linux, once)","u":"start.html#step-2-prepare-the-host-linux-once","k":"section","p":"Getting Started"},{"t":"Step 3 \u2014 Pick an image source","u":"start.html#step-3-pick-an-image-source","k":"section","p":"Getting Started"},{"t":"Step 4 \u2014 Start","u":"start.html#step-4-start","k":"section","p":"Getting Started"},{"t":"Step 5 \u2014 Connect","u":"start.html#step-5-connect","k":"section","p":"Getting Started"},{"t":"Step 6 \u2014 Stop, resume, remove","u":"start.html#step-6-stop-resume-remove","k":"section","p":"Getting Started"},{"t":"Where next","u":"start.html#where-next","k":"section","p":"Getting Started"},{"t":"Prebuilt images (GHCR)","u":"images.html#prebuilt-images-ghcr","k":"section","p":"Prebuilt vs Build"},{"t":"Local build","u":"images.html#local-build","k":"section","p":"Prebuilt vs Build"},{"t":"Pinning, upgrading, rolling back","u":"images.html#pinning-upgrading-rolling-back","k":"section","p":"Prebuilt vs Build"},{"t":"Harnesses are never pinned","u":"images.html#harnesses-are-never-pinned","k":"section","p":"Prebuilt vs Build"},{"t":"Which image am I actually running?","u":"images.html#which-image-am-i-actually-running","k":"section","p":"Prebuilt vs Build"},{"t":"Offline / air-gapped hosts","u":"images.html#offline-air-gapped-hosts","k":"section","p":"Prebuilt vs Build"},{"t":"What is installed","u":"engines.html#what-is-installed","k":"section","p":"Engines & Toolchain"},{"t":"Version policy","u":"engines.html#version-policy","k":"section","p":"Engines & Toolchain"},{"t":"Engine caveats","u":"engines.html#engine-caveats","k":"section","p":"Engines & Toolchain"},{"t":"Choosing the HeLa profile","u":"engines.html#choosing-the-hela-profile","k":"section","p":"Engines & Toolchain"},{"t":"Adding a package or changing an engine","u":"engines.html#adding-a-package-or-changing-an-engine","k":"section","p":"Engines & Toolchain"},{"t":"State model","u":"lifecycle.html#state-model","k":"section","p":"Lifecycle & Cleanup"},{"t":"Command matrix","u":"lifecycle.html#command-matrix","k":"section","p":"Lifecycle & Cleanup"},{"t":"Start and recreate","u":"lifecycle.html#start-and-recreate","k":"section","p":"Lifecycle & Cleanup"},{"t":"Restart, pause, resume","u":"lifecycle.html#restart-pause-resume","k":"section","p":"Lifecycle & Cleanup"},{"t":"Logs and diagnostics","u":"lifecycle.html#logs-and-diagnostics","k":"section","p":"Lifecycle & Cleanup"},{"t":"Cleanup levels","u":"lifecycle.html#cleanup-levels","k":"section","p":"Lifecycle & Cleanup"},{"t":"Backup and restore","u":"lifecycle.html#backup-and-restore","k":"section","p":"Lifecycle & Cleanup"},{"t":"Where to connect","u":"connecting.html#where-to-connect","k":"section","p":"Connecting"},{"t":"Credentials","u":"connecting.html#credentials","k":"section","p":"Connecting"},{"t":"Host key warnings after a rebuild","u":"connecting.html#host-key-warnings-after-a-rebuild","k":"section","p":"Connecting"},{"t":"Without SSH","u":"connecting.html#without-ssh","k":"section","p":"Connecting"},{"t":"Reaching services inside the sandbox","u":"connecting.html#reaching-services-inside-the-sandbox","k":"section","p":"Connecting"},{"t":"Editors","u":"connecting.html#editors","k":"section","p":"Connecting"},{"t":"Remote access over the internet (Cloudflare Tunnel)","u":"connecting.html#remote-access-over-the-internet-cloudflare-tunnel","k":"section","p":"Connecting"},{"t":"Multiple people, one host","u":"connecting.html#multiple-people-one-host","k":"section","p":"Connecting"},{"t":"Precedence","u":"configuration.html#precedence","k":"section","p":"Configuration"},{"t":"Core variables","u":"configuration.html#core-variables","k":"section","p":"Configuration"},{"t":"Ports and names","u":"configuration.html#ports-and-names","k":"section","p":"Configuration"},{"t":"Access","u":"configuration.html#access","k":"section","p":"Configuration"},{"t":"Resources","u":"configuration.html#resources","k":"section","p":"Configuration"},{"t":"Agents and MCP","u":"configuration.html#agents-and-mcp","k":"section","p":"Configuration"},{"t":"Tenant variables","u":"configuration.html#tenant-variables","k":"section","p":"Configuration"},{"t":"LXCFS","u":"configuration.html#lxcfs","k":"section","p":"Configuration"},{"t":"Profiles","u":"configuration.html#profiles","k":"section","p":"Configuration"},{"t":"Passing arguments to Compose","u":"configuration.html#passing-arguments-to-compose","k":"section","p":"Configuration"},{"t":"Minimal .env","u":"configuration.html#minimal-env","k":"section","p":"Configuration"},{"t":"Symptom \u2192 fix","u":"troubleshooting.html#symptom-fix","k":"section","p":"Troubleshooting"},{"t":"Diagnostics","u":"troubleshooting.html#diagnostics","k":"section","p":"Troubleshooting"},{"t":"First boot is slow","u":"troubleshooting.html#first-boot-is-slow","k":"section","p":"Troubleshooting"},{"t":"Flaky Docker Desktop / OrbStack on macOS","u":"troubleshooting.html#flaky-docker-desktop-orbstack-on-macos","k":"section","p":"Troubleshooting"},{"t":"When all else fails","u":"troubleshooting.html#when-all-else-fails","k":"section","p":"Troubleshooting"},{"t":"Components","u":"architecture.html#components","k":"section","p":"Architecture"},{"t":"Boot sequence","u":"architecture.html#boot-sequence","k":"section","p":"Architecture"},{"t":"Resource footprint","u":"architecture.html#resource-footprint","k":"section","p":"Architecture"},{"t":"Mounts","u":"architecture.html#mounts","k":"section","p":"Architecture"},{"t":"Network","u":"architecture.html#network","k":"section","p":"Architecture"},{"t":"Inside the image","u":"architecture.html#inside-the-image","k":"section","p":"Architecture"},{"t":"Extending","u":"architecture.html#extending","k":"section","p":"Architecture"},{"t":"Isolation guarantees","u":"tenant.html#isolation-guarantees","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Provision","u":"tenant.html#provision","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Operate","u":"tenant.html#operate","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Registry","u":"tenant.html#registry","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Snapshots and upgrades","u":"tenant.html#snapshots-and-upgrades","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Deleting someone's work","u":"tenant.html#deleting-someones-work","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Cleanup interactions","u":"tenant.html#cleanup-interactions","k":"section","p":"Multi-Tenant (WaaS)"},{"t":"Defaults and their risk","u":"security.html#defaults-and-their-risk","k":"section","p":"Security & Hardening"},{"t":"Hardening checklist","u":"security.html#hardening-checklist","k":"section","p":"Security & Hardening"},{"t":"P0 \u2014 before exposing to tenants or the internet","u":"security.html#p0-before-exposing-to-tenants-or-the-internet","k":"section","p":"Security & Hardening"},{"t":"P1 \u2014 container hardening","u":"security.html#p1-container-hardening","k":"section","p":"Security & Hardening"},{"t":"P2 \u2014 SSH hardening","u":"security.html#p2-ssh-hardening","k":"section","p":"Security & Hardening"},{"t":"Network exposure","u":"security.html#network-exposure","k":"section","p":"Security & Hardening"},{"t":"Secrets","u":"security.html#secrets","k":"section","p":"Security & Hardening"},{"t":"Audit","u":"security.html#audit","k":"section","p":"Security & Hardening"},{"t":"start.sh \u2014 Front Desk","u":"scripts.html#startsh-front-desk","k":"section","p":"Scripts Guide"},{"t":"tenant.sh \u2014 Hotel Manager","u":"scripts.html#tenantsh-hotel-manager","k":"section","p":"Scripts Guide"},{"t":"snapshot.sh &amp; restore.sh \u2014 Backup &amp; Undo","u":"scripts.html#snapshotsh-restoresh-backup-undo","k":"section","p":"Scripts Guide"},{"t":"clean.sh \u2014 Housekeeping","u":"scripts.html#cleansh-housekeeping","k":"section","p":"Scripts Guide"},{"t":"setup-host.sh \u2014 Building Setup (once)","u":"scripts.html#setup-hostsh-building-setup-once","k":"section","p":"Scripts Guide"},{"t":"entrypoint.sh \u2014 Room Butler (automatic)","u":"scripts.html#entrypointsh-room-butler-automatic","k":"section","p":"Scripts Guide"},{"t":"aliases.sh \u2014 Shortcuts","u":"scripts.html#aliasessh-shortcuts","k":"section","p":"Scripts Guide"},{"t":"TL;DR","u":"comparison.html#tldr","k":"section","p":"Ghost vs VM"},{"t":"Architecture","u":"comparison.html#architecture","k":"section","p":"Ghost vs VM"},{"t":"Pros / Cons","u":"comparison.html#pros-cons","k":"section","p":"Ghost vs VM"},{"t":"Ghost Machines \u2714\ufe0f","u":"comparison.html#ghost-machines","k":"section","p":"Ghost vs VM"},{"t":"Ghost Machines \u274c","u":"comparison.html#ghost-machines_1","k":"section","p":"Ghost vs VM"},{"t":"Regular VM \u2714\ufe0f","u":"comparison.html#regular-vm","k":"section","p":"Ghost vs VM"},{"t":"Regular VM \u274c","u":"comparison.html#regular-vm_1","k":"section","p":"Ghost vs VM"},{"t":"Decision Matrix","u":"comparison.html#decision-matrix","k":"section","p":"Ghost vs VM"},{"t":"Cost Example (16GB host)","u":"comparison.html#cost-example-16gb-host","k":"section","p":"Ghost vs VM"},{"t":"Security Note","u":"comparison.html#security-note","k":"section","p":"Ghost vs VM"},{"t":"Further Reading","u":"comparison.html#further-reading","k":"section","p":"Ghost vs VM"},{"t":"Repo layout","u":"contributing.html#repo-layout","k":"section","p":"Contributing"},{"t":"Dev loop","u":"contributing.html#dev-loop","k":"section","p":"Contributing"},{"t":"Test suites","u":"contributing.html#test-suites","k":"section","p":"Contributing"},{"t":"Documentation rules","u":"contributing.html#documentation-rules","k":"section","p":"Contributing"},{"t":"Documentation deployment","u":"contributing.html#documentation-deployment","k":"section","p":"Contributing"},{"t":"The tour film","u":"contributing.html#the-tour-film","k":"section","p":"Contributing"},{"t":"Release process","u":"contributing.html#release-process","k":"section","p":"Contributing"},{"t":"Adding an engine","u":"contributing.html#adding-an-engine","k":"section","p":"Contributing"},{"t":"Style","u":"contributing.html#style","k":"section","p":"Contributing"},{"t":"Start","u":"cheatsheet.html#start","k":"section","p":"Cheatsheet"},{"t":"Connect","u":"cheatsheet.html#connect","k":"section","p":"Cheatsheet"},{"t":"Inspect","u":"cheatsheet.html#inspect","k":"section","p":"Cheatsheet"},{"t":"Stop / restart / remove","u":"cheatsheet.html#stop-restart-remove","k":"section","p":"Cheatsheet"},{"t":"Backup / restore","u":"cheatsheet.html#backup-restore","k":"section","p":"Cheatsheet"},{"t":"Agents","u":"cheatsheet.html#agents","k":"section","p":"Cheatsheet"},{"t":"Tenants","u":"cheatsheet.html#tenants","k":"section","p":"Cheatsheet"},{"t":"Images","u":"cheatsheet.html#images","k":"section","p":"Cheatsheet"},{"t":"Config","u":"cheatsheet.html#config","k":"section","p":"Cheatsheet"},{"t":"Develop","u":"cheatsheet.html#develop","k":"section","p":"Cheatsheet"},{"t":"Fixes for the usual three","u":"cheatsheet.html#fixes-for-the-usual-three","k":"section","p":"Cheatsheet"}]</script>
+<script>
+(function () {
+  var dataEl = document.getElementById("search-index");
+  var index = dataEl ? JSON.parse(dataEl.textContent) : [];
+  var palette = document.getElementById("cmdPalette");
+  var input = document.getElementById("cmdInput");
+  var results = document.getElementById("cmdResults");
+  var active = -1;
+
+  function esc(value) {
+    return String(value).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  function render(items) {
+    active = -1;
+    if (!items.length) {
+      results.innerHTML = '<div class="cmd-empty">no matches</div>';
+      return;
+    }
+    results.innerHTML = items.map(function (item) {
+      return '<a class="cmd-item" href="' + item.u + '">' +
+        '<span>' + esc(item.t) + (item.p ? ' <span class="cmd-item-tag">' + esc(item.p) + '</span>' : '') + '</span>' +
+        '<span class="cmd-item-tag">' + item.k + '</span></a>';
+    }).join("");
+  }
+
+  function filter() {
+    var q = input.value.trim().toLowerCase();
+    var hits = !q ? index.filter(function (i) { return i.k === "page"; })
+      : index.filter(function (i) { return i.t.toLowerCase().indexOf(q) !== -1; });
+    render(hits.slice(0, 24));
+  }
+
+  function openPalette() {
+    palette.style.display = "flex";
+    input.value = "";
+    filter();
+    input.focus();
+  }
+
+  function closePalette() {
+    palette.style.display = "none";
+  }
+
+  function move(delta) {
+    var items = results.querySelectorAll(".cmd-item");
+    if (!items.length) return;
+    active = (active + delta + items.length) % items.length;
+    items.forEach(function (el, i) { el.classList.toggle("is-active", i === active); });
+    items[active].scrollIntoView({ block: "nearest" });
+  }
+
+  document.querySelectorAll(".open-cmd-palette").forEach(function (btn) {
+    btn.addEventListener("click", openPalette);
+  });
+  palette.addEventListener("click", function (event) {
+    if (event.target === palette) closePalette();
+  });
+  input.addEventListener("input", filter);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowDown") { event.preventDefault(); move(1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); move(-1); }
+    else if (event.key === "Enter") {
+      var current = results.querySelectorAll(".cmd-item")[active] ||
+        results.querySelector(".cmd-item");
+      if (current) window.location.href = current.getAttribute("href");
+    } else if (event.key === "Escape") closePalette();
+  });
+  document.addEventListener("keydown", function (event) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault();
+      palette.style.display === "flex" ? closePalette() : openPalette();
+    } else if (event.key === "Escape") {
+      closePalette();
+    }
+  });
+
+  document.querySelectorAll(".doc-nav a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      var drawer = document.querySelector(".doc-mobile-nav");
+      if (drawer) drawer.open = false;
+    });
+  });
+
+  document.querySelectorAll(".doc-content pre").forEach(function (el) {
+    var b = document.createElement("button");
+    b.className = "copy-btn";
+    b.textContent = "copy";
+    b.setAttribute("aria-label", "Copy code");
+    b.addEventListener("click", function () {
+      var code = el.querySelector("code");
+      navigator.clipboard.writeText(code ? code.innerText : el.innerText).then(function () {
+        b.textContent = "copied";
+        setTimeout(function () { b.textContent = "copy"; }, 1200);
+      });
+    });
+    el.appendChild(b);
+  });
+
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('#tocList a[href^="#"]'));
+  var heads = tocLinks.map(function (a) {
+    return document.getElementById(a.getAttribute("href").slice(1));
+  }).filter(Boolean);
+  if ("IntersectionObserver" in window && heads.length) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        tocLinks.forEach(function (a) {
+          a.classList.toggle("is-active", a.getAttribute("href") === "#" + entry.target.id);
+        });
+      });
+    }, { rootMargin: "-20% 0px -70% 0px" });
+    heads.forEach(function (h) { observer.observe(h); });
+  }
+})();
+</script>
+</body>
+</html>
