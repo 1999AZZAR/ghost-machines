@@ -5,7 +5,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help test lint docs docs-check build-ubuntu build-debian build-alpine build-arch build-all start stop status logs restart prebuilt clean snapshot restore setup-host
+.PHONY: help test lint docs docs-check video build-ubuntu build-debian build-alpine build-arch build-all start stop status logs restart prebuilt clean snapshot restore setup-host
 
 help: ## Show this help message
 	@echo "=================================================="
@@ -24,6 +24,9 @@ docs: ## Regenerate the static documentation site from docs/*.md
 
 docs-check: ## Verify docs links, examples, facts and generated site
 	@./tests/test_docs.sh
+
+video: ## Re-render the 3-minute tour (HyperFrames)
+	@cd video/ghost-machines-explainer && npx hyperframes check && npx hyperframes render
 
 build-ubuntu: ## Build Ubuntu Master Template
 	docker build -t ubuntu-template:latest -f Dockerfile .

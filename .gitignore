@@ -84,3 +84,8 @@ brag-output*/
 brag.mp4
 brag.jpg
 brag.poster.mp4
+
+# HyperFrames project build artifacts
+video/**/renders/
+video/**/.hyperframes/
+video/**/node_modules/

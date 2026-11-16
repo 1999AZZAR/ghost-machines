@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --paper: #f6f5f1;
+        --paper-2: #ebebe7;
+        --ink: #111110;
+        --ink-body: #333330;
+        --muted: #6b6b68;
+        --faint: #62625f;
+        --rule: #e2e1dc;
+        --rule-strong: #cfcec8;
+        --accent: #0f6f6f;
+        --accent-soft: rgba(15, 111, 111, 0.08);
+        --mono: "JetBrains Mono", ui-monospace, monospace;
+        --sans: "Inter", system-ui, sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden;
+        background: var(--paper); color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      #root { position: relative; width: 100%; height: 100%; background: var(--paper); }
+      .scene { position: absolute; inset: 0; }
+      .inner { position: absolute; inset: 0; }
+
+      /* frame */
+      .frame-marks { position: absolute; inset: 0; pointer-events: none; }
+      .mark { position: absolute; font-family: var(--mono); font-size: 28px; letter-spacing: 0.14em; color: var(--faint); text-transform: uppercase; }
+      .mark.tl { left: 64px; top: 56px; }
+      .mark.tr { right: 64px; top: 56px; }
+      .mark.bl { left: 64px; bottom: 52px; }
+      .mark.br { right: 64px; bottom: 52px; }
+      .rule { position: absolute; background: var(--rule-strong); }
+      .rule.h { height: 1px; left: 64px; right: 64px; top: 92px; }
+      .rule.hb { height: 1px; left: 64px; right: 64px; bottom: 92px; }
+      #progress-wrap { position: absolute; left: 64px; right: 64px; bottom: 76px; height: 2px; background: var(--rule); }
+      #progress { height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; }
+
+      /* type */
+      .display { font-size: 132px; line-height: 0.98; letter-spacing: -0.035em; font-weight: 700; }
+      .display.sm { font-size: 96px; }
+      .display.xl { font-size: 168px; }
+      .lede { font-size: 38px; line-height: 1.35; color: var(--ink-body); font-weight: 400; max-width: 1180px; }
+      .mono { font-family: var(--mono); }
+      .label { font-family: var(--mono); font-size: 28px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+      .accent { color: var(--accent); }
+      .quiet { color: var(--muted); }
+      .center { display: flex; flex-direction: column; justify-content: center; padding: 0 128px; }
+
+      .kicker { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+      .kicker .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+      /* s2 lines */
+      #s2 .stage { position: absolute; left: 128px; top: 300px; width: 1664px; }
+      #s2 .line { position: absolute; left: 0; top: 0; font-size: 92px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+      #s2 .line .small { font-size: 54px; font-weight: 500; letter-spacing: -0.01em; color: var(--muted); }
+      #s2 .sketch { position: absolute; left: 128px; bottom: 170px; width: 900px; }
+      #s2 .sketch text { font-family: var(--mono); font-size: 28px; fill: var(--muted); }
+
+      /* s3 rail */
+      #s3 .head { position: absolute; left: 128px; top: 210px; }
+      #s3 .rail { position: absolute; left: 128px; right: 128px; top: 500px; height: 200px; }
+      #s3 .rail-line { position: absolute; left: 0; right: 0; top: 96px; height: 2px; background: var(--rule-strong); }
+      #s3 .engine { position: absolute; width: 300px; top: 0; }
+      #s3 .engine .box { width: 74px; height: 74px; border: 2px solid var(--ink); background: var(--paper); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 28px; }
+      #s3 .engine .name { margin-top: 22px; font-family: var(--mono); font-size: 30px; letter-spacing: 0.02em; }
+      #s3 .engine .note { margin-top: 6px; font-family: var(--mono); font-size: 28px; color: var(--muted); }
+      #s3 .routes { position: absolute; left: 128px; top: 760px; display: flex; gap: 120px; }
+      #s3 .route { display: flex; align-items: baseline; gap: 16px; }
+      #s3 .route .k { font-family: var(--mono); font-size: 28px; color: var(--ink); }
+      #s3 .route .v { font-family: var(--mono); font-size: 28px; color: var(--muted); }
+      #s3 .foot { position: absolute; left: 128px; bottom: 150px; font-family: var(--mono); font-size: 28px; color: var(--muted); }
+
+      /* s4 terminal */
+      #s4 .term {
+        position: absolute; left: 128px; top: 190px; width: 1664px; height: 700px;
+        background: #141412; border: 1px solid #2a2a26; border-radius: 6px; overflow: hidden;
+      }
+      #s4 .bar { height: 46px; display: flex; align-items: center; gap: 10px; padding: 0 18px; border-bottom: 1px solid #2a2a26; }
+      #s4 .dot { width: 12px; height: 12px; border-radius: 50%; background: #3a3a34; }
+      #s4 .bar .title { margin-left: 12px; font-family: var(--mono); font-size: 28px; color: #8d8d84; }
+      #s4 .body { padding: 28px 32px; font-family: var(--mono); font-size: 30px; line-height: 1.75; color: #e9e8e2; }
+      #s4 .row { white-space: pre; }
+      #s4 .prompt { color: #7fc4c4; }
+      #s4 .out { color: #a9a8a0; }
+      #s4 .ok { color: #9fd3a8; }
+      #s4 .cmd { color: #f3f2ec; }
+      #s4 .head { position: absolute; left: 128px; top: 108px; }
+
+      /* s5 images */
+      #s5 .head { position: absolute; left: 128px; top: 200px; }
+      #s5 figure { position: absolute; width: 740px; margin: 0; }
+      #s5 figure img { width: 100%; display: block; border: 1px solid var(--rule-strong); background: #fff; }
+      #s5 figcaption { margin-top: 12px; font-family: var(--mono); font-size: 28px; color: var(--muted); }
+      #s5 .a { left: 128px; top: 466px; }
+      #s5 .b { right: 128px; top: 466px; }
+      #s5 .stamp { display: none; }
+
+      /* s6 team */
+      #s6 .head { position: absolute; left: 128px; top: 220px; }
+      #s6 .rows { position: absolute; left: 128px; top: 470px; width: 1180px; }
+      #s6 .row { display: flex; justify-content: space-between; align-items: baseline; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+      #s6 .row .who { font-family: var(--mono); font-size: 30px; }
+      #s6 .row .what { font-family: var(--mono); font-size: 28px; color: var(--muted); }
+      #s6 .counter { position: absolute; right: 128px; top: 470px; text-align: right; }
+      #s6 .counter .n { font-size: 150px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+      #s6 .counter .c { font-family: var(--mono); font-size: 28px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+
+      /* s7 end */
+      #s7 .end { position: absolute; left: 128px; bottom: 190px; }
+      #s7 .url { font-size: 68px; font-weight: 700; letter-spacing: -0.03em; }
+      #s7 .repo { margin-top: 18px; font-family: var(--mono); font-size: 28px; color: var(--muted); }
+      #s7 .mit { margin-top: 40px; font-family: var(--mono); font-size: 28px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-plbr" id="root" data-composition-id="main" data-start="0" data-duration="180" data-width="1920" data-height="1080">
+
+      <audio data-hf-id="hf-xnk0" id="bed" class="clip" data-start="0" data-duration="180" data-volume="0.32" src="assets/bed.m4a"></audio>
+
+      <div data-hf-id="hf-zj9a" class="clip frame-marks" data-start="0" data-duration="180" data-track-index="0" id="frame">
+        <div data-hf-id="hf-8qgi" class="rule h"></div>
+        <div data-hf-id="hf-liho" class="rule hb"></div>
+        <div data-hf-id="hf-imfv" class="mark tl">Ghost Machines · explainer</div>
+        <div data-hf-id="hf-ppgb" class="mark tr">docs · docker compose</div>
+        <div data-hf-id="hf-xow4" class="mark bl">1920 × 1080 · 30fps</div>
+        <div data-hf-id="hf-voda" class="mark br">MIT · 2026</div>
+        <div data-hf-id="hf-azml" id="progress-wrap"><div data-hf-id="hf-o6ww" id="progress"></div></div>
+      </div>
+
+      <section data-hf-id="hf-ct90" class="clip scene" id="s1" data-start="0" data-duration="12" data-track-index="1">
+        <div data-hf-id="hf-rmpv" class="inner center">
+          <div data-hf-id="hf-eupx" class="kicker" id="s1-k"><span data-hf-id="hf-9gry" class="dot"></span><span data-hf-id="hf-eila" class="label">Disposable dev environments</span></div>
+          <h1 data-hf-id="hf-7vvm" class="display xl" id="s1-h">Ghost Machines</h1>
+          <p data-hf-id="hf-9de6" class="lede" id="s1-l" style="margin-top: 28px">Reproducible Linux sandboxes for developers and autonomous agents.</p>
+          <p data-hf-id="hf-5nw4" class="label" id="s1-m" style="margin-top: 44px">4 engines · 2 image sources · one toolchain</p>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-xxe8" class="clip scene" id="s2" data-start="12" data-duration="28" data-track-index="2">
+        <div data-hf-id="hf-lm34" class="inner">
+          <div data-hf-id="hf-tan6" class="stage">
+            <div data-hf-id="hf-uunl" class="line" id="s2-a">A dev environment<br data-hf-id="hf-x5px" />is usually a pet.</div>
+            <div data-hf-id="hf-fq5a" class="line" id="s2-b">This one is <span data-hf-id="hf-3ffa" class="accent">cattle.</span></div>
+            <div data-hf-id="hf-wsdr" class="line" id="s2-c" style="font-size: 76px">Throw the container away.<br data-hf-id="hf-rsrt" /><span data-hf-id="hf-3uxc" class="accent">Keep the work.</span></div>
+          </div>
+          <svg data-hf-id="hf-2lmo" class="sketch" id="s2-s" viewBox="0 0 900 240" fill="none" stroke="#111110" stroke-width="3">
+            <rect data-hf-id="hf-62l4" x="40" y="70" width="230" height="150" />
+            <path data-hf-id="hf-t8o5" d="M40 70 L75 40 H265 L230 70" />
+            <path data-hf-id="hf-a7y6" d="M150 70 V220" />
+            <rect data-hf-id="hf-xqam" x="560" y="80" width="300" height="24" />
+            <path data-hf-id="hf-ztdx" d="M580 104 V190 M840 104 V190" />
+            <rect data-hf-id="hf-xiew" x="620" y="40" width="170" height="40" />
+            <text data-hf-id="hf-veox" x="40" y="20">container</text>
+            <text data-hf-id="hf-98ff" x="560" y="20">host · mounts/</text>
+            <path data-hf-id="hf-pe6p" d="M330 150 H520" stroke="#0f6f6f" stroke-dasharray="8 8" />
+            <path data-hf-id="hf-8h5m" d="M520 150 l-14 -8 v16 z" fill="#0f6f6f" stroke="none" />
+          </svg>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-3cly" class="clip scene" id="s3" data-start="40" data-duration="34" data-track-index="3">
+        <div data-hf-id="hf-bug8" class="inner">
+          <div data-hf-id="hf-z992" class="head">
+            <div data-hf-id="hf-7j0z" class="kicker"><span data-hf-id="hf-zcc2" class="dot"></span><span data-hf-id="hf-xn28" class="label">Engines</span></div>
+            <h2 data-hf-id="hf-q4hd" class="display sm">Four shells.<br data-hf-id="hf-szow" />One toolchain.</h2>
+          </div>
+          <div data-hf-id="hf-qzq8" class="rail">
+            <div data-hf-id="hf-b3tb" class="rail-line"></div>
+            <div data-hf-id="hf-p0j2" class="engine" style="left: 0" id="s3-e1"><div data-hf-id="hf-gtz4" class="box">01</div><div data-hf-id="hf-9diu" class="name">ubuntu</div><div data-hf-id="hf-ofel" class="note">apt · PPA</div></div>
+            <div data-hf-id="hf-rl1i" class="engine" style="left: 380px" id="s3-e2"><div data-hf-id="hf-fn21" class="box">02</div><div data-hf-id="hf-jzus" class="name">debian</div><div data-hf-id="hf-5izz" class="note">apt · slim</div></div>
+            <div data-hf-id="hf-faid" class="engine" style="left: 760px" id="s3-e3"><div data-hf-id="hf-g1d2" class="box">03</div><div data-hf-id="hf-yz0i" class="name">alpine</div><div data-hf-id="hf-kgys" class="note">apk · musl</div></div>
+            <div data-hf-id="hf-p6df" class="engine" style="left: 1140px" id="s3-e4"><div data-hf-id="hf-eufz" class="box">04</div><div data-hf-id="hf-55d1" class="name">arch</div><div data-hf-id="hf-w9hk" class="note">pacman · rolling</div></div>
+          </div>
+          <div data-hf-id="hf-6bta" class="routes">
+            <div data-hf-id="hf-8ja3" class="route" id="s3-r1"><span data-hf-id="hf-n8d7" class="k">pull</span><span data-hf-id="hf-y8qa" class="v">prebuilt GHCR · ~1 min</span></div>
+            <div data-hf-id="hf-xnsg" class="route" id="s3-r2"><span data-hf-id="hf-qgbo" class="k">build</span><span data-hf-id="hf-clpj" class="v">local Dockerfile · 5–15 min</span></div>
+          </div>
+          <div data-hf-id="hf-su58" class="foot" id="s3-f">start.sh prints the image it picked: prebuilt or local build.</div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-hthl" class="clip scene" id="s4" data-start="74" data-duration="38" data-track-index="4">
+        <div data-hf-id="hf-anj5" class="inner">
+          <div data-hf-id="hf-gwvu" class="head"><span data-hf-id="hf-bhro" class="label">Five minutes from clone to shell</span></div>
+          <div data-hf-id="hf-d8se" class="term">
+            <div data-hf-id="hf-ufsv" class="bar"><span data-hf-id="hf-zqn3" class="dot"></span><span data-hf-id="hf-04y4" class="dot"></span><span data-hf-id="hf-0j95" class="dot"></span><span data-hf-id="hf-xiij" class="title">developer@ghost — zsh</span></div>
+            <div data-hf-id="hf-2t3w" class="body">
+              <div data-hf-id="hf-ilt9" class="row" id="r1"><span data-hf-id="hf-1pbg" class="prompt">~/ghost-machines $</span> <span data-hf-id="hf-ucub" class="cmd">./start.sh --prebuilt ubuntu -m single</span></div>
+              <div data-hf-id="hf-fgcx" class="row out" id="r2">[IMAGE] ghcr.io/1999azzar/ghost-machine-ubuntu:latest (GHCR prebuilt)</div>
+              <div data-hf-id="hf-yiub" class="row out" id="r3">[MODE] single · 1 CPU / 8G · port 2223</div>
+              <div data-hf-id="hf-ug5c" class="row" id="r4"><span data-hf-id="hf-o7ic" class="prompt">~/ghost-machines $</span> <span data-hf-id="hf-un84" class="cmd">ssh -p 2223 developer@localhost</span></div>
+              <div data-hf-id="hf-5237" class="row ok" id="r5">developer@ghost:~$ fastfetch    # shell inside the sandbox</div>
+              <div data-hf-id="hf-z5x6" class="row" id="r6"><span data-hf-id="hf-n0l9" class="prompt">~/ghost-machines $</span> <span data-hf-id="hf-glql" class="cmd">./start.sh status</span></div>
+              <div data-hf-id="hf-qccj" class="row out" id="r7">ghost-machine-single   Up 2 minutes   0.0.0.0:2223-&gt;22/tcp</div>
+              <div data-hf-id="hf-99r0" class="row" id="r8"><span data-hf-id="hf-newa" class="prompt">~/ghost-machines $</span> <span data-hf-id="hf-im1f" class="cmd">./start.sh stop</span></div>
+              <div data-hf-id="hf-toza" class="row ok" id="r9">containers removed · mounts/ untouched</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-5kfa" class="clip scene" id="s5" data-start="112" data-duration="32" data-track-index="5">
+        <div data-hf-id="hf-b1u6" class="inner">
+          <div data-hf-id="hf-hb6v" class="head">
+            <div data-hf-id="hf-h303" class="kicker"><span data-hf-id="hf-0xk6" class="dot"></span><span data-hf-id="hf-onuq" class="label">What survives</span></div>
+            <h2 data-hf-id="hf-vkfl" class="display sm">The container is disposable.<br data-hf-id="hf-sldv" /><span data-hf-id="hf-n6zo" class="accent">Your work is not.</span></h2>
+          </div>
+          <figure data-hf-id="hf-nysu" class="a"><img data-hf-id="hf-u1in" src="assets/00-overview.png" alt="A container packed away; the shelf labelled mounts/ stays" /><figcaption data-hf-id="hf-dmp4">throwaway crate · persistent shelf</figcaption></figure>
+          <figure data-hf-id="hf-k0ot" class="b"><img data-hf-id="hf-6z9h" src="assets/04-lifecycle.png" alt="A workbench carried out of a crushed crate" /><figcaption data-hf-id="hf-gtoi">the bench leaves with you</figcaption></figure>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-mscw" class="clip scene" id="s6" data-start="144" data-duration="20" data-track-index="6">
+        <div data-hf-id="hf-9ux3" class="inner">
+          <div data-hf-id="hf-hphw" class="head">
+            <div data-hf-id="hf-gop2" class="kicker"><span data-hf-id="hf-1bv7" class="dot"></span><span data-hf-id="hf-mktq" class="label">One host, many workspaces</span></div>
+            <h2 data-hf-id="hf-ya0y" class="display sm">A tenant per person.<br data-hf-id="hf-qluq" />An agent stack per sandbox.</h2>
+          </div>
+          <div data-hf-id="hf-hnc7" class="rows">
+            <div data-hf-id="hf-z5xb" class="row" id="t1"><span data-hf-id="hf-gyld" class="who">alice</span><span data-hf-id="hf-afrq" class="what">port 2225 · 2 CPU · 4G</span></div>
+            <div data-hf-id="hf-qi1g" class="row" id="t2"><span data-hf-id="hf-hkeu" class="who">bob</span><span data-hf-id="hf-tuxt" class="what">port 2226 · 2 CPU · 4G</span></div>
+            <div data-hf-id="hf-r9p9" class="row" id="t3"><span data-hf-id="hf-qvqs" class="who">carol</span><span data-hf-id="hf-5vfc" class="what">port 2227 · 2 CPU · 4G</span></div>
+          </div>
+          <div data-hf-id="hf-el44" class="counter">
+            <div data-hf-id="hf-1j3q" class="n" id="s6-n">0</div>
+            <div data-hf-id="hf-ewxy" class="c">HeLa MCP tools · dev-workspace</div>
+          </div>
+        </div>
+      </section>
+
+      <section data-hf-id="hf-0cq9" class="clip scene" id="s7" data-start="164" data-duration="16" data-track-index="7">
+        <div data-hf-id="hf-a984" class="inner">
+          <div data-hf-id="hf-jl0p" class="head" style="position:absolute; left:128px; top:260px">
+            <div data-hf-id="hf-gae1" class="kicker"><span data-hf-id="hf-1q68" class="dot"></span><span data-hf-id="hf-kmig" class="label">Read it, run it</span></div>
+            <h2 data-hf-id="hf-mxvr" class="display sm">Docs, demo, and source.</h2>
+          </div>
+          <div data-hf-id="hf-zh6v" class="end">
+            <div data-hf-id="hf-udin" class="url" id="s7-u">ghost.glassgallery.my.id</div>
+            <div data-hf-id="hf-cqof" class="repo" id="s7-r">github.com/1999AZZAR/ghost-machines</div>
+            <div data-hf-id="hf-hccn" class="mit" id="s7-m">MIT · Docker Compose · 4 engines · 2 image sources</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // initial states
+      gsap.set("#s1-k, #s1-l, #s1-m", { opacity: 0, y: 18 });
+      gsap.set("#s1-h", { opacity: 0, y: 34 });
+      gsap.set("#s2-a", { opacity: 0, y: 26 });
+      gsap.set("#s2-b", { opacity: 0, y: 26 });
+      gsap.set("#s2-c", { opacity: 0, y: 26 });
+      gsap.set("#s2-s", { opacity: 0 });
+      gsap.set("#s3 .head, #s3 .foot", { opacity: 0, y: 20 });
+      gsap.set("#s3 .engine", { opacity: 0, y: 24 });
+      gsap.set("#s3 .route", { opacity: 0, y: 16 });
+      gsap.set("#s3 .rail-line", { scaleX: 0, transformOrigin: "0 50%" });
+      gsap.set("#s4 .head", { opacity: 0 });
+      gsap.set("#s4 .term", { opacity: 0, y: 26 });
+      gsap.set("#s4 .row", { opacity: 0, x: -12 });
+      gsap.set("#s5 .head", { opacity: 0, y: 20 });
+      gsap.set("#s5 figure", { opacity: 0, y: 26 });
+      gsap.set("#s6 .head", { opacity: 0, y: 20 });
+      gsap.set("#s6 .row", { opacity: 0, x: -14 });
+      gsap.set("#s6 .counter", { opacity: 0, y: 20 });
+      gsap.set("#s7 .head, #s7 .end", { opacity: 0, y: 24 });
+      gsap.set("#s1 .inner, #s2 .inner, #s3 .inner, #s4 .inner, #s5 .inner, #s6 .inner, #s7 .inner", { opacity: 1 });
+
+      const fadeOut = (sel, at, dur = 0.45) =>
+        tl.to(sel, { opacity: 0, duration: dur, ease: "power2.in" }, at);
+
+      // S1 0-12
+      tl.to("#s1-h", { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" }, 0.25);
+      tl.to("#s1-k", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.95);
+      tl.to("#s1-l", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 1.25);
+      tl.to("#s1-m", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.9);
+      fadeOut("#s1 .inner", 11.2);
+
+      // S2 12-40
+      tl.to("#s2-a", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 12.4);
+      fadeOut("#s2-a", 17.4, 0.4);
+      tl.to("#s2-b", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 18.2);
+      fadeOut("#s2-b", 23.4, 0.4);
+      tl.to("#s2-c", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 24.2);
+      tl.to("#s2-s", { opacity: 1, duration: 0.7, ease: "power1.out" }, 25.6);
+      fadeOut("#s2 .inner", 39.2);
+
+      // S3 40-74
+      tl.to("#s3 .head", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 40.4);
+      tl.to("#s3 .rail-line", { scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 42.2);
+      tl.to("#s3 .engine", { opacity: 1, y: 0, duration: 0.55, stagger: 0.45, ease: "power2.out" }, 42.6);
+      tl.to("#s3 .route", { opacity: 1, y: 0, duration: 0.5, stagger: 0.6, ease: "power2.out" }, 52.0);
+      tl.to("#s3 .foot", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 56.4);
+      fadeOut("#s3 .inner", 73.2);
+
+      // S4 74-112
+      tl.to("#s4 .head", { opacity: 1, duration: 0.5 }, 74.4);
+      tl.to("#s4 .term", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 74.8);
+      gsap.utils.toArray("#s4 .row").forEach((row, i) => {
+        tl.to(row, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 76.0 + i * 3.6);
+      });
+      fadeOut("#s4 .inner", 111.2);
+
+      // S5 112-144
+      tl.to("#s5 .head", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 112.4);
+      tl.to("#s5 .a", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 116.0);
+      tl.to("#s5 .b", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 121.0);
+      fadeOut("#s5 .inner", 143.2);
+
+      // S6 144-164
+      tl.to("#s6 .head", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 144.4);
+      tl.to("#s6 .row", { opacity: 1, x: 0, duration: 0.5, stagger: 0.35, ease: "power2.out" }, 147.0);
+      tl.to("#s6 .counter", { opacity: 1, y: 0, duration: 0.5 }, 148.6);
+      tl.to({ v: 0 }, {
+        v: 234, duration: 1.6, ease: "power2.out",
+        onUpdate: function () { document.getElementById("s6-n").textContent = Math.round(this.targets()[0].v); }
+      }, 149.0);
+      fadeOut("#s6 .inner", 163.2);
+
+      // S7 164-180
+      tl.to("#s7 .head", { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 164.4);
+      tl.to("#s7 .end", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 166.0);
+      gsap.set("#progress", { scaleX: 0 });
+      tl.to("#progress", { scaleX: 1, duration: 180, ease: "none" }, 0);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

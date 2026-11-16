@@ -215,5 +215,11 @@
     "id": "sDNJP7aYOabLz0k6",
     "url": "https://asciinema.org/a/sDNJP7aYOabLz0k6",
     "caption": "PLATE 00 \u00b7 terminal demo \u00b7 clone \u2192 start \u2192 ssh \u2192 stop"
+  },
+  "video": {
+    "src": "assets/video/ghost-machines-explainer.mp4",
+    "poster": "assets/blotcat/02-images.png",
+    "youtube": "",
+    "caption": "3-minute tour \u00b7 what it is, how a sandbox starts, what survives"
   }
 }

@@ -261,6 +261,38 @@ def figure_html(figure: dict, rel_root: str) -> str:
 """
 
 
+def video_html(rel_root: str) -> str:
+    """Embed the tour: YouTube when an id is configured, else the local MP4."""
+    video = MANIFEST_DATA.get("video")
+    if not video:
+        return ""
+    caption = f"""      <figure class="figure-plate">
+        <div class="video-frame">"""
+    if video.get("youtube"):
+        player = (
+            f'<iframe src="https://www.youtube-nocookie.com/embed/{video["youtube"]}" '
+            f'title="Ghost Machines tour" allow="accelerometer; autoplay; clipboard-write; '
+            f'encrypted-media; gyroscope; picture-in-picture; web-share" '
+            f'allowfullscreen loading="lazy"></iframe>'
+        )
+    else:
+        poster = f' poster="{rel_root}{video["poster"]}"' if video.get("poster") else ""
+        player = (
+            f'<video controls preload="metadata"{poster}>'
+            f'<source src="{rel_root}{video["src"]}" type="video/mp4">'
+            f"Your browser cannot play this video."
+            f"</video>"
+        )
+    return (
+        caption
+        + player
+        + f"""</div>
+        <figcaption class="figure-caption"><strong>FILM.</strong><span>{video['caption']}</span></figcaption>
+      </figure>
+"""
+    )
+
+
 def demo_link() -> str:
     demo = MANIFEST_DATA.get("demo")
     if not demo:
@@ -288,7 +320,8 @@ def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: 
     html = rewrite_links(body, "pages/" if is_home else "")
     plate = figure_html(entry["figure"], rel_root) if entry.get("figure") else ""
     if is_home:
-        plate = demo_html(rel_root) + plate
+        tour = video_html(rel_root)
+        plate = tour + (plate if tour else demo_html(rel_root) + plate)
     home_figure = MANIFEST_DATA.get("home", {}).get("figure")
     if is_home and home_figure and (SITE / home_figure["src"]).exists():
         plate += figure_html(home_figure, rel_root)
@@ -410,6 +443,10 @@ def main() -> int:
             entry["figure"] = None
         body, toc = render_markdown(source.read_text())
         outputs[PAGES / f"{entry['slug']}.html"] = page_html(entry, body, toc, False)
+
+    video = manifest.get("video")
+    if video and video.get("src") and not (SITE / video["src"]).exists():
+        sys.exit(f"missing video: {video['src']}")
 
     home_source = DOCS / HOME["source"]
     if not home_source.exists():
