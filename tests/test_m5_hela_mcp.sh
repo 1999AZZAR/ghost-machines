@@ -34,7 +34,10 @@ echo -n "[TEST 2] Dockerfile HeLa runtime directives... "
 for DOCKERFILE in Dockerfile Dockerfile.debian Dockerfile.alpine Dockerfile.arch; do
     grep -q "Hela-Ecosystem/hela-mcp-ecosystem" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE clones the wrong repo"; exit 1; }
     grep -q "ARG HELA_PROFILE=dev-workspace" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing HELA_PROFILE build arg"; exit 1; }
-    grep -q "setup.mjs --profile \"\$HELA_PROFILE\" --mode runtime" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE not installing in runtime mode"; exit 1; }
+    grep -q "setup.mjs" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing setup.mjs"; exit 1; }
+    grep -q -- "--profile \"\$HELA_PROFILE\"" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing profile"; exit 1; }
+    grep -q -- "--snapshot \"\$HELA_SNAPSHOT\"" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing pinned snapshot"; exit 1; }
+    grep -q -- "--mode runtime" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE not installing in runtime mode"; exit 1; }
     grep -q "\-\-prefix /opt/hela" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing managed prefix"; exit 1; }
     grep -q "generate-config.mjs \"\$HELA_PROFILE\" --backend antigravity" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing antigravity fragment"; exit 1; }
     grep -q "generate-config.mjs \"\$HELA_PROFILE\" --backend opencode" "$DOCKERFILE" || { echo "FAILED: $DOCKERFILE missing opencode fragment"; exit 1; }
