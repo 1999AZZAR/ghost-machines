@@ -21,6 +21,7 @@ All configuration is environment variables. `.env` in the repo root is the canon
 | `GHOST_IMAGE` | engine default | Image reference; anything containing `/` is pulled, a plain tag is built. | create |
 | `GHOST_DOCKERFILE` | engine default | Dockerfile used when building. Set automatically by `-e`/`--prebuilt`. | build |
 | `HELA_PROFILE` | `dev-workspace` | HeLa cells installed in runtime mode. `minimal`, `dev-workspace`, `headless-server`, `research`, `web-devops`, `android-testing`, `3d-modeling`, `all`. | build |
+| `HELA_SNAPSHOT` | `v1.9.5` | Pinned ecosystem snapshot. v1.9.6 ships a phenotype pin the installer's catalog check rejects, so the build stays on the last verified snapshot. | build |
 
 ## Ports and names
 

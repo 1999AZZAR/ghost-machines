@@ -73,6 +73,8 @@ HELA_PROFILE=headless-server ./start.sh -e debian -m single --build
 HELA_PROFILE=minimal ./start.sh -e alpine -m single --build
 ```
 
+The ecosystem snapshot is pinned (`--snapshot v1.9.5`, `HELA_SNAPSHOT` build arg) because v1.9.6 fails the installer's catalog verification: its phenotype pin reports a mismatched version. Bump the pin once an upstream snapshot verifies cleanly.
+
 `minimal` (3 cells) is the lightest, `headless-server` (7, no browser) is the CI default elsewhere, `dev-workspace` (8, includes browser + design) is the sandbox default. Check the installed profile inside the sandbox:
 
 ```bash

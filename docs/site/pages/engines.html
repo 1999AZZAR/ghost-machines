@@ -144,6 +144,7 @@ opencode --version &amp;&amp; agy --version &amp;&amp; rtk --version
 <pre><code class="language-bash">HELA_PROFILE=headless-server ./start.sh -e debian -m single --build
 HELA_PROFILE=minimal ./start.sh -e alpine -m single --build
 </code></pre>
+<p>The ecosystem snapshot is pinned (<code>--snapshot v1.9.5</code>, <code>HELA_SNAPSHOT</code> build arg) because v1.9.6 fails the installer's catalog verification: its phenotype pin reports a mismatched version. Bump the pin once an upstream snapshot verifies cleanly.</p>
 <p><code>minimal</code> (3 cells) is the lightest, <code>headless-server</code> (7, no browser) is the CI default elsewhere, <code>dev-workspace</code> (8, includes browser + design) is the sandbox default. Check the installed profile inside the sandbox:</p>
 <pre><code class="language-bash">node /opt/hela-src/setup.mjs doctor --prefix /opt/hela
 </code></pre>

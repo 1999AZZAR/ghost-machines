@@ -107,7 +107,7 @@ npx hyperframes check      # lint, layout, contrast, audio
 npx hyperframes render     # writes renders/*.mp4 (git-ignored)
 ```
 
-Publish a new cut by copying the render over `docs/site/assets/video/ghost-machines-explainer.mp4`. To switch the site to a YouTube embed instead of the local file, upload it unlisted and set `video.youtube` to the video id in `docs/site/site.json`; the builder prefers YouTube when an id is present and the local file otherwise.
+Publish a new cut by copying the render over `docs/site/assets/video/ghost-machines-explainer.mp4`. The site currently embeds the unlisted YouTube upload (`video.youtube` in `docs/site/site.json`, id `NwVL8K1JfBw`); the builder prefers YouTube when an id is set and falls back to the local MP4 otherwise. Re-upload a new cut to the same channel, then update the id.
 
 ## Release process
 

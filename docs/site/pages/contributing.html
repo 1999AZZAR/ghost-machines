@@ -173,7 +173,7 @@ nix shell nixpkgs#python3Packages.markdown -c python3 tools/build_site.py
 npx hyperframes check      # lint, layout, contrast, audio
 npx hyperframes render     # writes renders/*.mp4 (git-ignored)
 </code></pre>
-<p>Publish a new cut by copying the render over <code>docs/site/assets/video/ghost-machines-explainer.mp4</code>. To switch the site to a YouTube embed instead of the local file, upload it unlisted and set <code>video.youtube</code> to the video id in <code>docs/site/site.json</code>; the builder prefers YouTube when an id is present and the local file otherwise.</p>
+<p>Publish a new cut by copying the render over <code>docs/site/assets/video/ghost-machines-explainer.mp4</code>. The site currently embeds the unlisted YouTube upload (<code>video.youtube</code> in <code>docs/site/site.json</code>, id <code>NwVL8K1JfBw</code>); the builder prefers YouTube when an id is set and falls back to the local MP4 otherwise. Re-upload a new cut to the same channel, then update the id.</p>
 <h2 id="release-process">Release process</h2>
 <ol>
 <li>Merge to <code>master</code> with the suite green.</li>
