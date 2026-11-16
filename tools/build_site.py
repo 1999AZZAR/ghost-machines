@@ -321,7 +321,7 @@ def page_html(entry: dict, body: str, toc: list[tuple[str, str, int]], is_home: 
     plate = figure_html(entry["figure"], rel_root) if entry.get("figure") else ""
     if is_home:
         tour = video_html(rel_root)
-        plate = tour + (plate if tour else demo_html(rel_root) + plate)
+        plate = tour + demo_html(rel_root) + plate
     home_figure = MANIFEST_DATA.get("home", {}).get("figure")
     if is_home and home_figure and (SITE / home_figure["src"]).exists():
         plate += figure_html(home_figure, rel_root)
