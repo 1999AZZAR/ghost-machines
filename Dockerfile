@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 3. Node.js (Latest Current)
-RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -88,7 +88,7 @@ RUN chmod +x /usr/local/bin/harness-update \
 RUN add-apt-repository -y ppa:zhangsongcui3371/fastfetch \
     && apt-get update && apt-get install -y --no-install-recommends fastfetch \
     && bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
-    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
+    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" --no-nix --no-packages --force || true \
     && git clone --depth=1 https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii \
     && [ -f /root/.config/fastfetch/config.jsonc ] && sed -i 's/"format": "{1}"/"format": "{all}"/g' /root/.config/fastfetch/config.jsonc || true \
     && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -101,9 +101,12 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # A single hela-runtime endpoint advertises the selected profile; cells start on demand.
 # Override with --build-arg HELA_PROFILE=<minimal|dev-workspace|headless-server|research|web-devops|android-testing|3d-modeling|all>
 ARG HELA_PROFILE=dev-workspace
+# v1.9.6 (latest-stable) ships a phenotype pin whose built server reports a
+# mismatched version, which fails the installer's catalog verification.
+ARG HELA_SNAPSHOT=v1.9.5
 RUN git clone --depth=1 https://github.com/Hela-Ecosystem/hela-mcp-ecosystem.git /opt/hela-src \
     && cd /opt/hela-src \
-    && node setup.mjs --profile "$HELA_PROFILE" --mode runtime --client skip \
+    && node setup.mjs --snapshot "$HELA_SNAPSHOT" --profile "$HELA_PROFILE" --mode runtime --client skip \
            --prefix /opt/hela --root /opt/hela-src --non-interactive --without-model \
     && rm -rf /opt/hela/.build-home \
     && chmod -R a+rX /opt/hela \

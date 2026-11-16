@@ -92,7 +92,7 @@ RUN chmod +x /usr/local/bin/harness-update \
 
 # 8. UI/UX STACK (1. Oh-My-Bash, 2. Alias-Hub, 3. Neofetch-ASCII)
 RUN bash -c "$(wget -qO- https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended \
-    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" || true \
+    && bash -c "$(wget -qO- https://raw.githubusercontent.com/1999AZZAR/alias-hub/master/install.sh)" --no-nix --no-packages --force || true \
     && git clone --depth=1 https://github.com/1999AZZAR/neofetch_ascii.git /root/.local/share/neofetch_ascii \
     && [ -f /root/.config/fastfetch/config.jsonc ] && sed -i 's/"format": "{1}"/"format": "{all}"/g' /root/.config/fastfetch/config.jsonc || true
 
@@ -104,9 +104,12 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # A single hela-runtime endpoint advertises the selected profile; cells start on demand.
 # Override with --build-arg HELA_PROFILE=<minimal|dev-workspace|headless-server|research|web-devops|android-testing|3d-modeling|all>
 ARG HELA_PROFILE=dev-workspace
+# v1.9.6 (latest-stable) ships a phenotype pin whose built server reports a
+# mismatched version, which fails the installer's catalog verification.
+ARG HELA_SNAPSHOT=v1.9.5
 RUN git clone --depth=1 https://github.com/Hela-Ecosystem/hela-mcp-ecosystem.git /opt/hela-src \
     && cd /opt/hela-src \
-    && node setup.mjs --profile "$HELA_PROFILE" --mode runtime --client skip \
+    && node setup.mjs --snapshot "$HELA_SNAPSHOT" --profile "$HELA_PROFILE" --mode runtime --client skip \
            --prefix /opt/hela --root /opt/hela-src --non-interactive --without-model \
     && rm -rf /opt/hela/.build-home \
     && chmod -R a+rX /opt/hela \

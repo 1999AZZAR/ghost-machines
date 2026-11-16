@@ -3,6 +3,11 @@
 
 set -e
 
+# Tenants are provisioned from a locally built image here. Keep that build cheap:
+# this suite tests tenant lifecycle (registry, storage, ports, teardown), while
+# the Dockerfile smoke job covers the full dev-workspace HeLa profile.
+export HELA_PROFILE="${HELA_PROFILE:-minimal}"
+
 echo "=================================================="
 echo "RUNNING M6 MULTI-TENANT WORKSPACE ORCHESTRATION TESTS"
 echo "=================================================="
