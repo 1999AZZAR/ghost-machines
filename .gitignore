@@ -89,3 +89,6 @@ brag.poster.mp4
 video/**/renders/
 video/**/.hyperframes/
 video/**/node_modules/
+
+# HyperFrames scaffold metadata
+video/**/.thumbnails/
